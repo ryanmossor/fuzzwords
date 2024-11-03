@@ -38,7 +38,8 @@ type gameSettings struct {
 }
 
 type player struct {
-	curHealth  int
+	curHealth  	int
+	lettersUsed	string
 }
 
 type turn struct {
@@ -80,7 +81,7 @@ func main() {
 		maxPromptStrikes: 3,
 		startingHealth: 2,
 		maxHealth: 5,
-		promptMode: Classic,
+		promptMode: Fuzzy,
 	}
 
 	p := player{curHealth: cfg.startingHealth}
@@ -104,6 +105,7 @@ func main() {
 			result := validateAnswer(&t, &words, cfg)
 			if result.isValid {
 				fmt.Println("Correct!")
+				processLetters(t, &p, cfg)
 				time.Sleep(750 * time.Millisecond)
 				break
 			} else {
@@ -195,9 +197,21 @@ func validateAnswer(t *turn, wordLists *wordLists, s gameSettings) result {
 	return result{isValid: true}
 }
 
-// func processLetters(t turn, p player) {
-// 	TODO: keep track of letters used; increase health when all used
-// }
+func processLetters(t turn, p *player, s gameSettings) {
+	for i := 0; i < len(t.answer); i++ {
+		c := string(t.answer[i])
+		if !strings.Contains(p.lettersUsed, c) {
+			p.lettersUsed += c
+		}
+	}
+
+	if len(p.lettersUsed) == 26 {
+		p.lettersUsed = ""
+		if p.curHealth < s.maxHealth {
+			p.curHealth += 1
+		}
+	}
+}
 
 func binarySearch(list []string, target string) int {
 	low, high := 0, len(list) - 1
