@@ -17,13 +17,21 @@ type wordLists struct {
 	used	   map[string]bool
 }
 
-type config struct {
+type PromptMode int
+
+const (
+	Fuzzy PromptMode = iota
+	Classic
+)
+
+type gameSettings struct {
 	minPromptLen		int
 	maxPromptLen		int
 	minTurnDuration		int
 	maxPromptStrikes	int
 	startingHealth		int
 	maxHealth			int
+	promptMode			PromptMode
 	// TODO: add cfg for hints after each strike?
 	// hintsEnabled		bool
 	// charsPerHint		int
@@ -31,7 +39,6 @@ type config struct {
 
 type player struct {
 	curHealth  int
-	cfg		   config
 }
 
 type turn struct {
@@ -66,34 +73,35 @@ func main() {
 
 	words := wordLists{FULL_MAP: arrToMap(wordList), available: wordList, used: make(map[string]bool) }
 
-	cfg := config{
+	cfg := gameSettings{
 		minPromptLen: 2,
 		maxPromptLen: 3,
 		minTurnDuration: 10,
 		maxPromptStrikes: 3,
 		startingHealth: 2,
 		maxHealth: 5,
+		promptMode: Classic,
 	}
 
-	p := player{curHealth: cfg.startingHealth, cfg: cfg}
+	p := player{curHealth: cfg.startingHealth}
 
 	reader := bufio.NewReader(os.Stdin)
 	clear()
 
 	for len(wordList) > 0 {
-		var t turn = generatePrompt(wordList, p)
+		var t turn = generatePrompt(wordList, cfg)
 
-		for t.strikes < p.cfg.maxPromptStrikes {
+		for t.strikes < cfg.maxPromptStrikes {
 			fmt.Println()
-			fmt.Fprintf(os.Stdin, "[ Health: %d / %d ]\n", p.curHealth, p.cfg.maxHealth)
-			fmt.Fprintf(os.Stdin, "[ Strikes: %d / %d ]\n", t.strikes, p.cfg.maxPromptStrikes)
+			fmt.Fprintf(os.Stdin, "[ Health: %d / %d ]\n", p.curHealth, cfg.maxHealth)
+			fmt.Fprintf(os.Stdin, "[ Strikes: %d / %d ]\n", t.strikes, cfg.maxPromptStrikes)
 			fmt.Println("Prompt:", strings.ToUpper(t.prompt))
 			fmt.Print("Answer: ")
 
 			answer, _ := reader.ReadString('\n')
 			t.answer = strings.ToLower(strings.TrimSpace(answer))
 
-			result := validateAnswer(&t, &words)
+			result := validateAnswer(&t, &words, cfg)
 			if result.isValid {
 				fmt.Println("Correct!")
 				time.Sleep(750 * time.Millisecond)
@@ -104,7 +112,7 @@ func main() {
 			}
 		}
 
-		if t.strikes == p.cfg.maxPromptStrikes {
+		if t.strikes == cfg.maxPromptStrikes {
 			fmt.Println("Prompt failed. Possible answer:", t.sourceWord)
 			p.curHealth -= 1
 
@@ -125,46 +133,60 @@ func main() {
 	os.Exit(0)
 }
 
-func generatePrompt(wordList []string, p player) turn {
+func generatePrompt(wordList []string, cfg gameSettings) turn {
 	wordIdx := rand.Intn(len(wordList))
 	word := wordList[wordIdx]
 
 	promptStr := ""
 	minIdx := 0
 
-	loopLen := min(len(word), p.cfg.maxPromptLen)
-	for i := loopLen; i > 0; i-- {
-		substr := string(word[minIdx:])
-		randomMax := len(substr) - i
-		randomIdx := 0
-		if randomMax > 0 {
-			randomIdx = rand.Intn(randomMax)
+	switch cfg.promptMode {
+	case Fuzzy:
+		loopLen := min(len(word), cfg.maxPromptLen)
+		for i := loopLen; i > 0; i-- {
+			substr := word[minIdx:]
+			randomMax := len(substr) - i
+			randomIdx := 0
+			if randomMax > 0 {
+				randomIdx = rand.Intn(randomMax)
+			}
+			minIdx += randomIdx + 1
+			c := substr[randomIdx]
+			promptStr += string(c)
 		}
-		minIdx += randomIdx + 1
-		c := substr[randomIdx]
-		promptStr += string(c)
+	case Classic:
+		randomMax := len(word) - cfg.maxPromptLen
+		randomIdx := rand.Intn(randomMax)
+		promptStr = word[randomIdx:cfg.maxPromptLen + randomIdx]
 	}
 
 	return turn{sourceWord: word, prompt: promptStr, strikes: 0}
 }
 
-func validateAnswer(t *turn, wordLists *wordLists) result {
+func validateAnswer(t *turn, wordLists *wordLists, s gameSettings) result {
 	if wordLists.used[t.answer] {
 		return result{isValid: false, reason: "Word has already been used. Try again."}
 	} else if !wordLists.FULL_MAP[t.answer] {
 		return result{isValid: false, reason: "Invalid word. Try again."}
 	}
 
-	subIdx := 0
-	for i := 0; i < len(t.prompt); i++ {
-		substr := t.answer[subIdx:]
-		currentPromptChar := t.prompt[i]
+	switch s.promptMode {
+	case Fuzzy:
+		subIdx := 0
+		for i := 0; i < len(t.prompt); i++ {
+			substr := t.answer[subIdx:]
+			currentPromptChar := t.prompt[i]
 
-		if !strings.Contains(substr, string(currentPromptChar)) {
+			if !strings.Contains(substr, string(currentPromptChar)) {
+				return result{isValid: false, reason: "Word does not satisfy the prompt. Try again."}
+			}
+
+			subIdx += strings.Index(substr, string(currentPromptChar)) + 1
+		}
+	case Classic:
+		if !strings.Contains(t.answer, string(t.prompt)) {
 			return result{isValid: false, reason: "Word does not satisfy the prompt. Try again."}
 		}
-
-		subIdx += strings.Index(substr, string(currentPromptChar)) + 1
 	}
 
 	wordLists.available = remove(wordLists.available, binarySearch(wordLists.available, t.answer))
