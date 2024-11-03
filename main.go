@@ -12,11 +12,8 @@ import (
 	"time"
 )
 
-type wordLists struct {
-	FULL_MAP   map[string]bool
-	available  []string
-	used	   map[string]bool
-}
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const EASIER_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWY" // X and Z removed
 
 type PromptMode int
 const (
@@ -30,37 +27,41 @@ const (
 	MaxLives
 )
 
-const Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+type WordLists struct {
+	FULL_MAP   map[string]bool
+	available  []string
+	used	   map[string]bool
+}
 
-type gameSettings struct {
-	minPromptLen		int
-	maxPromptLen		int
-	minTurnDuration		int
-	maxPromptStrikes	int
-	startingHealth		int
-	maxHealth			int
-	promptMode			PromptMode
+type GameSettings struct {
+	health_initial			int
+	health_max				int
+	prompt_len_min			int
+	prompt_len_max			int
+	prompt_mode				PromptMode
+	prompt_strikes_max		int
+	turn_duration_min		int
 	// TODO: add cfg for hints after each strike?
-	// hintsEnabled		bool
-	// charsPerHint		int
+	// hints_enabled			bool
+	// hint_chars_per_turn		int
 }
 
-type player struct {
-	curHealth  		int
-	lettersUsed		[]string
-	unusedLetters 	[]string
+type Player struct {
+	current_health 		int
+	letters_used		[]string
+	letters_remaining 	[]string
 }
 
-type turn struct {
-	sourceWord string
-	prompt 	   string
-	answer     string
-	strikes	   int
+type Turn struct {
+	source_word string
+	prompt 	   	string
+	answer     	string
+	strikes	   	int
 }
 
-type result struct {
-	isValid	   bool
-	msg	   	   string
+type Result struct {
+	is_valid	bool
+	msg	   	   	string
 }
 
 func clear() {
@@ -75,64 +76,68 @@ func clear() {
 } 
 
 func main() {
-	wordList, err := readLines("./wordlist.txt")
+	word_list, err := readLines("./wordlist.txt")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	words := wordLists{FULL_MAP: arrToMap(wordList), available: wordList, used: make(map[string]bool) }
-
-	cfg := gameSettings{
-		minPromptLen: 2,
-		maxPromptLen: 3,
-		minTurnDuration: 10,
-		maxPromptStrikes: 3,
-		startingHealth: 2,
-		maxHealth: 5,
-		promptMode: Fuzzy,
+	words := WordLists{
+		FULL_MAP: arrToMap(word_list),
+		available: word_list,
+		used: make(map[string]bool),
 	}
 
-	p := player{
-		curHealth: cfg.startingHealth,
-		lettersUsed: []string {},
-		unusedLetters: strings.Split(Alphabet, ""),
+	cfg := GameSettings{
+		health_initial: 2,
+		health_max: 5,
+		prompt_len_max: 3,
+		prompt_len_min: 2,
+		prompt_mode: Fuzzy,
+		prompt_strikes_max: 3,
+		turn_duration_min: 10,
+	}
+
+	player := Player{
+		current_health: cfg.health_initial,
+		letters_used: []string {},
+		letters_remaining: strings.Split(ALPHABET, ""),
 	}
 
 	reader := bufio.NewReader(os.Stdin)
 	clear()
 
-	for len(wordList) > 0 {
-		var t turn = generatePrompt(wordList, cfg)
+	for len(word_list) > 0 {
+		turn := generatePrompt(word_list, cfg)
 
-		for t.strikes < cfg.maxPromptStrikes {
-			fmt.Fprintf(os.Stdin, "[ Health: %d / %d ]\n", p.curHealth, cfg.maxHealth)
-			fmt.Fprintf(os.Stdin, "[ Strikes: %d / %d ]\n", t.strikes, cfg.maxPromptStrikes)
-			fmt.Println("Unused letters:", p.unusedLetters)
-			fmt.Println("Prompt:", strings.ToUpper(t.prompt))
+		for turn.strikes < cfg.prompt_strikes_max {
+			fmt.Fprintf(os.Stdin, "[ Health: %d / %d ]\n", player.current_health, cfg.health_max)
+			fmt.Fprintf(os.Stdin, "[ Strikes: %d / %d ]\n", turn.strikes, cfg.prompt_strikes_max)
+			fmt.Println("Unused letters:", player.letters_remaining)
+			fmt.Println("Prompt:", strings.ToUpper(turn.prompt))
 			fmt.Print("Answer: ")
 
 			answer, _ := reader.ReadString('\n')
-			t.answer = strings.ToLower(strings.TrimSpace(answer))
+			turn.answer = strings.ToLower(strings.TrimSpace(answer))
 
-			result := validateAnswer(&t, &words, cfg)
-			if result.isValid {
+			result := validateAnswer(&turn, &words, cfg)
+			if result.is_valid {
 				fmt.Println("Correct!")
-				processLetters(t, &p, cfg)
+				processLetters(turn, &player, cfg)
 				time.Sleep(750 * time.Millisecond)
 				break
 			} else {
-				t.strikes += 1
+				turn.strikes += 1
 				fmt.Println(result.msg)
 				fmt.Println()
 			}
 		}
 
-		if t.strikes == cfg.maxPromptStrikes {
-			fmt.Println("Prompt failed. Possible answer:", t.sourceWord)
-			p.curHealth -= 1
+		if turn.strikes == cfg.prompt_strikes_max {
+			fmt.Println("Prompt failed. Possible answer:", turn.source_word)
+			player.current_health -= 1
 
-			if p.curHealth == 0 {
+			if player.current_health == 0 {
 				fmt.Println()
 				fmt.Println("===== GAME OVER =====")
 				fmt.Println()
@@ -149,90 +154,89 @@ func main() {
 	os.Exit(0)
 }
 
-func generatePrompt(wordList []string, cfg gameSettings) turn {
-	wordIdx := rand.Intn(len(wordList))
-	word := wordList[wordIdx]
+func generatePrompt(word_list []string, cfg GameSettings) Turn {
+	word_idx := rand.Intn(len(word_list))
+	word := word_list[word_idx]
+	prompt_str := ""
 
-	promptStr := ""
-	minIdx := 0
-
-	switch cfg.promptMode {
+	switch cfg.prompt_mode {
 	case Fuzzy:
-		loopLen := min(len(word), cfg.maxPromptLen)
-		for i := loopLen; i > 0; i-- {
-			substr := word[minIdx:]
-			randomMax := len(substr) - i
-			randomIdx := 0
-			if randomMax > 0 {
-				randomIdx = rand.Intn(randomMax)
+		min_idx := 0
+		loop_len := min(len(word), cfg.prompt_len_max)
+		for i := loop_len; i > 0; i-- {
+			substr := word[min_idx:]
+			rand_max := len(substr) - i
+			rand_idx := 0
+			if rand_max > 0 {
+				rand_idx = rand.Intn(rand_max)
 			}
-			minIdx += randomIdx + 1
-			c := substr[randomIdx]
-			promptStr += string(c)
+			min_idx += rand_idx + 1
+			c := substr[rand_idx]
+			prompt_str += string(c)
 		}
 	case Classic:
-		randomMax := len(word) - cfg.maxPromptLen
+		randomMax := len(word) - cfg.prompt_len_max
 		randomIdx := rand.Intn(randomMax)
-		promptStr = word[randomIdx:cfg.maxPromptLen + randomIdx]
+		prompt_str = word[randomIdx:cfg.prompt_len_max + randomIdx]
 	}
 
-	return turn{sourceWord: word, prompt: promptStr, strikes: 0}
+	return Turn{ source_word: word, prompt: prompt_str, strikes: 0 }
 }
 
-func validateAnswer(t *turn, wordLists *wordLists, cfg gameSettings) result {
-	if wordLists.used[t.answer] {
-		return result{isValid: false, msg: "Word has already been used. Try again."}
-	} else if !wordLists.FULL_MAP[t.answer] {
-		return result{isValid: false, msg: "Invalid word. Try again."}
+func validateAnswer(turn *Turn, word_lists *WordLists, cfg GameSettings) Result {
+	if word_lists.used[turn.answer] {
+		return Result{ is_valid: false, msg: "Word has already been used. Try again." }
+	} else if !word_lists.FULL_MAP[turn.answer] {
+		return Result{ is_valid: false, msg: "Invalid word. Try again." }
 	}
 
-	switch cfg.promptMode {
+	switch cfg.prompt_mode {
 	case Fuzzy:
-		subIdx := 0
-		for i := 0; i < len(t.prompt); i++ {
-			substr := t.answer[subIdx:]
-			currentPromptChar := t.prompt[i]
+		sub_idx := 0
+		for i := 0; i < len(turn.prompt); i++ {
+			substr := turn.answer[sub_idx:]
+			current_prompt_char := turn.prompt[i]
 
-			if !strings.Contains(substr, string(currentPromptChar)) {
-				return result{isValid: false, msg: "Word does not satisfy the prompt. Try again."}
+			if !strings.Contains(substr, string(current_prompt_char)) {
+				return Result{ is_valid: false, msg: "Word does not satisfy the prompt. Try again." }
 			}
 
-			subIdx += strings.Index(substr, string(currentPromptChar)) + 1
+			sub_idx += strings.Index(substr, string(current_prompt_char)) + 1
 		}
 	case Classic:
-		if !strings.Contains(t.answer, string(t.prompt)) {
-			return result{isValid: false, msg: "Word does not satisfy the prompt. Try again."}
+		if !strings.Contains(turn.answer, string(turn.prompt)) {
+			return Result{ is_valid: false, msg: "Word does not satisfy the prompt. Try again." }
 		}
 	}
 
-	wordLists.available = remove(wordLists.available, binarySearch(wordLists.available, t.answer))
-	wordLists.used[t.answer] = true
+	word_lists.available = remove(word_lists.available, binarySearch(word_lists.available, turn.answer))
+	word_lists.used[turn.answer] = true
 
-	return result{isValid: true}
+	return Result{ is_valid: true }
 }
 
-func processLetters(t turn, p *player, cfg gameSettings) {
-	for i := 0; i < len(t.answer); i++ {
-		c := strings.ToUpper(string(t.answer[i]))
+func processLetters(turn Turn, player *Player, cfg GameSettings) {
+	for i := 0; i < len(turn.answer); i++ {
+		c := strings.ToUpper(string(turn.answer[i]))
 
-		if !slices.Contains(p.lettersUsed, c) {
-			p.lettersUsed = append(p.lettersUsed, c)
+		if !slices.Contains(player.letters_used, c) {
+			player.letters_used = append(player.letters_used, c)
 		}
 
-		if slices.Contains(p.unusedLetters, c) {
-			p.unusedLetters = remove(p.unusedLetters, slices.Index(p.unusedLetters, c))
+		if slices.Contains(player.letters_remaining, c) {
+			player.letters_remaining = remove(player.letters_remaining, slices.Index(player.letters_remaining, c))
 		}
 	}
 
-	if len(p.lettersUsed) == len(Alphabet) {
-		p.lettersUsed = []string { }
-		if p.curHealth < cfg.maxHealth {
-			p.curHealth += 1
+	if len(player.letters_used) == len(ALPHABET) {
+		player.letters_used = []string { }
+		if player.current_health < cfg.health_max {
+			player.current_health += 1
 		}
-		p.unusedLetters = strings.Split(Alphabet, "")
+		player.letters_remaining = strings.Split(ALPHABET, "")
 	}
 
-	slices.Sort(p.lettersUsed)
+	slices.Sort(player.letters_used)
 }
 
 func binarySearch(list []string, target string) int {
@@ -257,11 +261,11 @@ func remove(list []string, i int) []string {
 }
 
 func arrToMap(lines []string) map[string]bool {
-	var wordMap = make(map[string]bool)
+	var word_map = make(map[string]bool)
 	for _, word := range lines {
-		wordMap[word] = true
+		word_map[word] = true
 	}
-	return wordMap
+	return word_map
 }
 
 func readLines(path string) ([]string, error) {
