@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 )
@@ -18,11 +19,18 @@ type wordLists struct {
 }
 
 type PromptMode int
-
 const (
 	Fuzzy PromptMode = iota
 	Classic
 )
+
+type WinCondition int
+const (
+	Endless WinCondition = iota
+	MaxLives
+)
+
+const Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 type gameSettings struct {
 	minPromptLen		int
@@ -38,8 +46,9 @@ type gameSettings struct {
 }
 
 type player struct {
-	curHealth  	int
-	lettersUsed	string
+	curHealth  		int
+	lettersUsed		[]string
+	unusedLetters 	[]string
 }
 
 type turn struct {
@@ -51,7 +60,7 @@ type turn struct {
 
 type result struct {
 	isValid	   bool
-	reason	   string
+	msg	   	   string
 }
 
 func clear() {
@@ -84,7 +93,11 @@ func main() {
 		promptMode: Fuzzy,
 	}
 
-	p := player{curHealth: cfg.startingHealth}
+	p := player{
+		curHealth: cfg.startingHealth,
+		lettersUsed: []string {},
+		unusedLetters: strings.Split(Alphabet, ""),
+	}
 
 	reader := bufio.NewReader(os.Stdin)
 	clear()
@@ -93,9 +106,9 @@ func main() {
 		var t turn = generatePrompt(wordList, cfg)
 
 		for t.strikes < cfg.maxPromptStrikes {
-			fmt.Println()
 			fmt.Fprintf(os.Stdin, "[ Health: %d / %d ]\n", p.curHealth, cfg.maxHealth)
 			fmt.Fprintf(os.Stdin, "[ Strikes: %d / %d ]\n", t.strikes, cfg.maxPromptStrikes)
+			fmt.Println("Unused letters:", p.unusedLetters)
 			fmt.Println("Prompt:", strings.ToUpper(t.prompt))
 			fmt.Print("Answer: ")
 
@@ -110,7 +123,8 @@ func main() {
 				break
 			} else {
 				t.strikes += 1
-				fmt.Println(result.reason)
+				fmt.Println(result.msg)
+				fmt.Println()
 			}
 		}
 
@@ -165,14 +179,14 @@ func generatePrompt(wordList []string, cfg gameSettings) turn {
 	return turn{sourceWord: word, prompt: promptStr, strikes: 0}
 }
 
-func validateAnswer(t *turn, wordLists *wordLists, s gameSettings) result {
+func validateAnswer(t *turn, wordLists *wordLists, cfg gameSettings) result {
 	if wordLists.used[t.answer] {
-		return result{isValid: false, reason: "Word has already been used. Try again."}
+		return result{isValid: false, msg: "Word has already been used. Try again."}
 	} else if !wordLists.FULL_MAP[t.answer] {
-		return result{isValid: false, reason: "Invalid word. Try again."}
+		return result{isValid: false, msg: "Invalid word. Try again."}
 	}
 
-	switch s.promptMode {
+	switch cfg.promptMode {
 	case Fuzzy:
 		subIdx := 0
 		for i := 0; i < len(t.prompt); i++ {
@@ -180,14 +194,14 @@ func validateAnswer(t *turn, wordLists *wordLists, s gameSettings) result {
 			currentPromptChar := t.prompt[i]
 
 			if !strings.Contains(substr, string(currentPromptChar)) {
-				return result{isValid: false, reason: "Word does not satisfy the prompt. Try again."}
+				return result{isValid: false, msg: "Word does not satisfy the prompt. Try again."}
 			}
 
 			subIdx += strings.Index(substr, string(currentPromptChar)) + 1
 		}
 	case Classic:
 		if !strings.Contains(t.answer, string(t.prompt)) {
-			return result{isValid: false, reason: "Word does not satisfy the prompt. Try again."}
+			return result{isValid: false, msg: "Word does not satisfy the prompt. Try again."}
 		}
 	}
 
@@ -197,20 +211,28 @@ func validateAnswer(t *turn, wordLists *wordLists, s gameSettings) result {
 	return result{isValid: true}
 }
 
-func processLetters(t turn, p *player, s gameSettings) {
+func processLetters(t turn, p *player, cfg gameSettings) {
 	for i := 0; i < len(t.answer); i++ {
-		c := string(t.answer[i])
-		if !strings.Contains(p.lettersUsed, c) {
-			p.lettersUsed += c
+		c := strings.ToUpper(string(t.answer[i]))
+
+		if !slices.Contains(p.lettersUsed, c) {
+			p.lettersUsed = append(p.lettersUsed, c)
+		}
+
+		if slices.Contains(p.unusedLetters, c) {
+			p.unusedLetters = remove(p.unusedLetters, slices.Index(p.unusedLetters, c))
 		}
 	}
 
-	if len(p.lettersUsed) == 26 {
-		p.lettersUsed = ""
-		if p.curHealth < s.maxHealth {
+	if len(p.lettersUsed) == len(Alphabet) {
+		p.lettersUsed = []string { }
+		if p.curHealth < cfg.maxHealth {
 			p.curHealth += 1
 		}
+		p.unusedLetters = strings.Split(Alphabet, "")
 	}
+
+	slices.Sort(p.lettersUsed)
 }
 
 func binarySearch(list []string, target string) int {
