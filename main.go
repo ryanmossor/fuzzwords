@@ -41,6 +41,7 @@ type GameSettings struct {
 	prompt_mode				PromptMode
 	prompt_strikes_max		int
 	turn_duration_min		int
+	win_condition			WinCondition
 	// TODO: add cfg for hints after each strike?
 	// hints_enabled			bool
 	// hint_chars_per_turn		int
@@ -90,12 +91,13 @@ func main() {
 
 	cfg := GameSettings{
 		health_initial: 2,
-		health_max: 5,
+		health_max: 3,
 		prompt_len_max: 3,
 		prompt_len_min: 2,
 		prompt_mode: Fuzzy,
 		prompt_strikes_max: 3,
 		turn_duration_min: 10,
+		win_condition: Endless,
 	}
 
 	player := Player{
@@ -131,6 +133,11 @@ func main() {
 				fmt.Println(result.msg)
 				fmt.Println()
 			}
+		}
+
+		if cfg.win_condition == MaxLives && player.current_health == cfg.health_max {
+			fmt.Println("Max lives achieved -- you win!")
+			os.Exit(0)
 		}
 
 		if turn.strikes == cfg.prompt_strikes_max {
