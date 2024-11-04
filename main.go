@@ -12,8 +12,13 @@ import (
 	"time"
 )
 
-const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const EASIER_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWY" // X and Z removed
+type Alphabet string 
+const (
+	DebugAlphabet 	= "ABC"
+	EasyAlphabet 	= "ABCDEFGHILMNOPRSTUVW" // J, K, Q, X, Y, Z removed
+	MediumAlphabet 	= "ABCDEFGHIJKLMNOPQRSTUVWY" // X and Z removed
+	FullAlphabet 	= "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+)
 
 type PromptMode int
 const (
@@ -34,6 +39,7 @@ type WordLists struct {
 }
 
 type GameSettings struct {
+	alphabet				string
 	health_initial			int
 	health_max				int
 	prompt_len_min			int
@@ -48,7 +54,9 @@ type GameSettings struct {
 }
 
 type Player struct {
-	current_health 		int
+	health_current 		int
+	health_max			int
+	health_display		string
 	letters_used		[]string
 	letters_remaining 	[]string
 }
@@ -74,7 +82,7 @@ func clear() {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Run()
-} 
+}
 
 func main() {
 	word_list, err := readLines("./wordlist.txt")
@@ -90,6 +98,7 @@ func main() {
 	}
 
 	cfg := GameSettings{
+		alphabet: DebugAlphabet,
 		health_initial: 2,
 		health_max: 3,
 		prompt_len_max: 3,
@@ -100,22 +109,20 @@ func main() {
 		win_condition: Endless,
 	}
 
-	player := Player{
-		current_health: cfg.health_initial,
-		letters_used: []string {},
-		letters_remaining: strings.Split(ALPHABET, ""),
-	}
+	player := InitializePlayer(cfg)
 
 	reader := bufio.NewReader(os.Stdin)
 	clear()
 
-	for len(word_list) > 0 {
-		turn := generatePrompt(word_list, cfg)
+	for len(words.available) > 0 {
+		turn := generatePrompt(words.available, cfg)
+
+		fmt.Fprintf(os.Stdin, "[ Health: %s ]\n", player.health_display)
+		fmt.Println("Unused letters:", player.letters_remaining)
+		fmt.Println()
 
 		for turn.strikes < cfg.prompt_strikes_max {
-			fmt.Fprintf(os.Stdin, "[ Health: %d / %d ]\n", player.current_health, cfg.health_max)
 			fmt.Fprintf(os.Stdin, "[ Strikes: %d / %d ]\n", turn.strikes, cfg.prompt_strikes_max)
-			fmt.Println("Unused letters:", player.letters_remaining)
 			fmt.Println("Prompt:", strings.ToUpper(turn.prompt))
 			fmt.Print("Answer: ")
 
@@ -135,16 +142,16 @@ func main() {
 			}
 		}
 
-		if cfg.win_condition == MaxLives && player.current_health == cfg.health_max {
+		if cfg.win_condition == MaxLives && player.health_current == cfg.health_max {
 			fmt.Println("Max lives achieved -- you win!")
 			os.Exit(0)
 		}
 
 		if turn.strikes == cfg.prompt_strikes_max {
 			fmt.Println("Prompt failed. Possible answer:", turn.source_word)
-			player.current_health -= 1
+			player.DecrementHealth()
 
-			if player.current_health == 0 {
+			if player.health_current == 0 {
 				fmt.Println()
 				fmt.Println("===== GAME OVER =====")
 				fmt.Println()
@@ -182,9 +189,13 @@ func generatePrompt(word_list []string, cfg GameSettings) Turn {
 			prompt_str += string(c)
 		}
 	case Classic:
-		randomMax := len(word) - cfg.prompt_len_max
-		randomIdx := rand.Intn(randomMax)
-		prompt_str = word[randomIdx:cfg.prompt_len_max + randomIdx]
+		if len(word) <= cfg.prompt_len_max {
+			prompt_str = word
+		} else {
+			randomMax := len(word) - cfg.prompt_len_max
+			randomIdx := rand.Intn(randomMax)
+			prompt_str = word[randomIdx:cfg.prompt_len_max + randomIdx]
+		}
 	}
 
 	return Turn{ source_word: word, prompt: prompt_str, strikes: 0 }
@@ -216,7 +227,8 @@ func validateAnswer(turn *Turn, word_lists *WordLists, cfg GameSettings) Result 
 		}
 	}
 
-	word_lists.available = remove(word_lists.available, binarySearch(word_lists.available, turn.answer))
+	word_idx, _ := slices.BinarySearch(word_lists.available, turn.answer)
+	word_lists.available = remove(word_lists.available, word_idx)
 	word_lists.used[turn.answer] = true
 
 	return Result{ is_valid: true }
@@ -226,7 +238,7 @@ func processLetters(turn Turn, player *Player, cfg GameSettings) {
 	for i := 0; i < len(turn.answer); i++ {
 		c := strings.ToUpper(string(turn.answer[i]))
 
-		if !slices.Contains(player.letters_used, c) {
+		if strings.Contains(cfg.alphabet, c) && !slices.Contains(player.letters_used, c) {
 			player.letters_used = append(player.letters_used, c)
 		}
 
@@ -235,31 +247,11 @@ func processLetters(turn Turn, player *Player, cfg GameSettings) {
 		}
 	}
 
-	if len(player.letters_used) == len(ALPHABET) {
-		player.letters_used = []string { }
-		if player.current_health < cfg.health_max {
-			player.current_health += 1
-		}
-		player.letters_remaining = strings.Split(ALPHABET, "")
+	if len(player.letters_used) >= len(cfg.alphabet) {
+		player.IncrementHealth(cfg)
 	}
 
 	slices.Sort(player.letters_used)
-}
-
-func binarySearch(list []string, target string) int {
-	low, high := 0, len(list) - 1
-	for low <= high {
-		mid := (low + high) / 2
-		if list[mid] == target {
-			return mid
-		} else if list[mid] < target {
-			low = mid + 1
-		} else {
-			high = mid - 1
-		}
-	}
-
-	return -1
 }
 
 // Preserves order, which is necessary for binary search
@@ -290,3 +282,46 @@ func readLines(path string) ([]string, error) {
 
     return lines, scanner.Err()
 } 
+
+func (p *Player) IncrementHealth(cfg GameSettings) {
+	p.letters_used = nil
+	p.letters_remaining = strings.Split(cfg.alphabet, "")
+
+	if p.health_current < p.health_max {
+		p.health_current++
+		p.UpdateHealthDisplay()
+	}
+}
+
+func (p *Player) DecrementHealth() {
+	p.health_current--
+	p.UpdateHealthDisplay()
+}
+
+func (p *Player) UpdateHealthDisplay() {
+	health_display := ""
+
+	i := 0
+	for i < p.health_current {
+		// 🧡💛💚💙🩵💜🖤🤍🤎
+		health_display += "🩵"
+		i++
+	}
+	for i < p.health_max {
+		health_display += "🤍"
+		i++
+	}
+
+	p.health_display = health_display
+}
+
+func InitializePlayer(cfg GameSettings) Player {
+	player := Player{
+		health_current: cfg.health_initial,
+		health_max: cfg.health_max,
+		letters_used: nil,
+		letters_remaining: strings.Split(cfg.alphabet, ""),
+	}
+	player.UpdateHealthDisplay()
+	return player
+}
