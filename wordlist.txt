@@ -9329,6 +9329,7 @@ antidiarrheal
 antidiarrheals
 antidilution
 antidiscrimination
+antidisestablishmentarianism
 antidiuretic
 antidiuretics
 antidogmatic
@@ -224516,6 +224517,7 @@ sphenograms
 sphenoid
 sphenoidal
 sphenoids
+sphenopalatineganglioneuralgia
 sphenopsid
 sphenopsids
 spheral
