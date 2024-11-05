@@ -56,11 +56,7 @@ func NewTurn(word_list []string, cfg Settings) Turn {
 }
 
 func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
-	if word_lists.Used[t.Answer] {
-		t.IsValid = false
-		t.Msg = "Word has already been used. Try again."
-		return
-	} else if !word_lists.FULL_MAP[t.Answer] {
+	if !word_lists.FULL_MAP[t.Answer] {
 		t.IsValid = false
 		t.Msg = "Invalid word. Try again." 
 		return
@@ -87,6 +83,12 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 			t.Msg = "Word does not satisfy the prompt. Try again." 
 			return
 		}
+	}
+	
+	if word_lists.Used[t.Answer] {
+		t.IsValid = false
+		t.Msg = "Word has already been used. Try again."
+		return
 	}
 
 	word_idx, _ := slices.BinarySearch(word_lists.Available, t.Answer)
