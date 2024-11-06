@@ -8,28 +8,29 @@ import (
 
 type Player struct {
 	HealthCurrent 		int
-	HealthMax			int
 	HealthDisplay		string
 	LettersUsed			[]string
 	LettersRemaining 	[]string
+	gameSettings		*Settings
 }
 
-func InitializePlayer(cfg Settings) Player {
+func InitializePlayer(cfg *Settings) Player {
 	player := Player{
 		HealthCurrent: cfg.HealthInitial,
-		HealthMax: cfg.HealthMax,
 		LettersUsed: nil,
 		LettersRemaining: strings.Split(cfg.Alphabet, ""),
+		gameSettings: cfg,
 	}
 	player.UpdateHealthDisplay()
+
 	return player
 }
 
-func (p *Player) IncrementHealth(cfg Settings) {
+func (p *Player) IncrementHealth() {
 	p.LettersUsed = nil
-	p.LettersRemaining = strings.Split(cfg.Alphabet, "")
+	p.LettersRemaining = strings.Split(p.gameSettings.Alphabet, "")
 
-	if p.HealthCurrent < p.HealthMax {
+	if p.HealthCurrent < p.gameSettings.HealthMax {
 		p.HealthCurrent++
 		p.UpdateHealthDisplay()
 	}
@@ -49,7 +50,7 @@ func (p *Player) UpdateHealthDisplay() {
 		health_display += "🩵"
 		i++
 	}
-	for i < p.HealthMax {
+	for i < p.gameSettings.HealthMax {
 		health_display += "🤍"
 		i++
 	}
@@ -57,22 +58,22 @@ func (p *Player) UpdateHealthDisplay() {
 	p.HealthDisplay = health_display
 }
 
-func (p *Player) HandleCorrectAnswer(answer string, player *Player, cfg Settings) {
+func (p *Player) HandleCorrectAnswer(answer string) {
 	for i := 0; i < len(answer); i++ {
 		c := strings.ToUpper(string(answer[i]))
 
-		if strings.Contains(cfg.Alphabet, c) && !slices.Contains(player.LettersUsed, c) {
-			player.LettersUsed = append(player.LettersUsed, c)
+		if strings.Contains(p.gameSettings.Alphabet, c) && !slices.Contains(p.LettersUsed, c) {
+			p.LettersUsed = append(p.LettersUsed, c)
 		}
 
-		if slices.Contains(player.LettersRemaining, c) {
-			player.LettersRemaining = utils.Remove(player.LettersRemaining, slices.Index(player.LettersRemaining, c))
+		if slices.Contains(p.LettersRemaining, c) {
+			p.LettersRemaining = utils.Remove(p.LettersRemaining, slices.Index(p.LettersRemaining, c))
 		}
 	}
 
-	if len(player.LettersUsed) >= len(cfg.Alphabet) {
-		player.IncrementHealth(cfg)
+	if len(p.LettersUsed) >= len(p.gameSettings.Alphabet) {
+		p.IncrementHealth()
 	}
 
-	slices.Sort(player.LettersUsed)
+	slices.Sort(p.LettersUsed)
 }

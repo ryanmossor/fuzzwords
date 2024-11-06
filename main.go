@@ -13,7 +13,7 @@ import (
 
 func main() {
     cfg := game.InitializeSettings()
-    player := game.InitializePlayer(cfg)
+    player := game.InitializePlayer(&cfg)
 
     word_list, err := utils.ReadLines("./wordlist.txt")
     if err != nil {
@@ -71,7 +71,7 @@ func main() {
 			fmt.Println(turn.Msg)
 
 			if turn.IsValid {
-				player.HandleCorrectAnswer(turn.Answer, &player, cfg)
+				player.HandleCorrectAnswer(turn.Answer)
 				time.Sleep(750 * time.Millisecond)
 				break turn_loop
 			} else {
