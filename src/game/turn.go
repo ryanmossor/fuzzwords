@@ -65,7 +65,7 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 	switch cfg.PromptMode {
 	case enums.Fuzzy:
 		sub_idx := 0
-		for i := 0; i < len(t.Prompt); i++ {
+		for i := range len(t.Prompt) {
 			substr := t.Answer[sub_idx:]
 			current_prompt_char := t.Prompt[i]
 

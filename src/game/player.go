@@ -59,7 +59,7 @@ func (p *Player) UpdateHealthDisplay() {
 }
 
 func (p *Player) HandleCorrectAnswer(answer string) {
-	for i := 0; i < len(answer); i++ {
+	for i := range len(answer) {
 		c := strings.ToUpper(string(answer[i]))
 
 		if strings.Contains(p.gameSettings.Alphabet, c) && !slices.Contains(p.LettersUsed, c) {
