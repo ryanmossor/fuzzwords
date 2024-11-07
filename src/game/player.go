@@ -11,15 +11,16 @@ type Player struct {
 	HealthDisplay		string
 	LettersUsed			[]string
 	LettersRemaining 	[]string
-	gameSettings		*Settings
+	Stats				PlayerStats
+	_gameSettings		*Settings
 }
 
 func InitializePlayer(cfg *Settings) Player {
 	player := Player{
 		HealthCurrent: cfg.HealthInitial,
-		LettersUsed: nil,
 		LettersRemaining: strings.Split(cfg.Alphabet, ""),
-		gameSettings: cfg,
+		Stats: InitializePlayerStats(),
+		_gameSettings: cfg,
 	}
 	player.UpdateHealthDisplay()
 
@@ -28,9 +29,9 @@ func InitializePlayer(cfg *Settings) Player {
 
 func (p *Player) IncrementHealth() {
 	p.LettersUsed = nil
-	p.LettersRemaining = strings.Split(p.gameSettings.Alphabet, "")
+	p.LettersRemaining = strings.Split(p._gameSettings.Alphabet, "")
 
-	if p.HealthCurrent < p.gameSettings.HealthMax {
+	if p.HealthCurrent < p._gameSettings.HealthMax {
 		p.HealthCurrent++
 		p.UpdateHealthDisplay()
 	}
@@ -50,7 +51,7 @@ func (p *Player) UpdateHealthDisplay() {
 		health_display += "🩵"
 		i++
 	}
-	for i < p.gameSettings.HealthMax {
+	for i < p._gameSettings.HealthMax {
 		health_display += "🤍"
 		i++
 	}
@@ -62,7 +63,7 @@ func (p *Player) HandleCorrectAnswer(answer string) {
 	for i := range len(answer) {
 		c := strings.ToUpper(string(answer[i]))
 
-		if strings.Contains(p.gameSettings.Alphabet, c) && !slices.Contains(p.LettersUsed, c) {
+		if strings.Contains(p._gameSettings.Alphabet, c) && !slices.Contains(p.LettersUsed, c) {
 			p.LettersUsed = append(p.LettersUsed, c)
 		}
 
@@ -71,9 +72,10 @@ func (p *Player) HandleCorrectAnswer(answer string) {
 		}
 	}
 
-	if len(p.LettersUsed) >= len(p.gameSettings.Alphabet) {
+	if len(p.LettersUsed) >= len(p._gameSettings.Alphabet) {
 		p.IncrementHealth()
 	}
 
 	slices.Sort(p.LettersUsed)
+	p.Stats.UpdateSolvedStats(answer)
 }
