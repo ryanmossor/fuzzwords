@@ -2,10 +2,20 @@ package utils
 
 import (
 	"bufio"
+	"math"
 	"os"
 	"os/exec"
 	"runtime"
 )
+
+func Average(arr []int) float64 {
+	var total float64
+	for i := range arr {
+		total += float64(arr[i])
+	}
+	avg := total / float64(len(arr))
+	return math.Round((avg * 10)) / 10
+}
 
 // Preserves order, which is necessary for binary search
 func Remove(list []string, i int) []string {
