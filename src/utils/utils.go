@@ -9,6 +9,10 @@ import (
 )
 
 func Average(arr []int) float64 {
+	if len(arr) == 0 {
+		return 0
+	}
+
 	var total float64
 	for i := range arr {
 		total += float64(arr[i])
@@ -18,8 +22,18 @@ func Average(arr []int) float64 {
 }
 
 // Preserves order, which is necessary for binary search
-func Remove(list []string, i int) []string {
+func Remove[T any](list []T, i int) []T {
     return append(list[:i], list[i+1:]...)
+}
+
+func GetLongestStr(list []string) string {
+	var longest string
+	for _, str := range list {
+		if len(str) > len(longest) {
+			longest = str
+		}
+	}
+	return longest
 }
 
 func ArrToMap(lines []string) map[string]bool {
