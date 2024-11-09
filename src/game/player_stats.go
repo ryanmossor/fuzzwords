@@ -46,7 +46,7 @@ func (s *PlayerStats) UpdateFailedStats() {
 	s.PromptsFailed++
 }
 
-func (s *PlayerStats) AverageSolveLength() float64 {
+func (s PlayerStats) AverageSolveLength() float64 {
 	return utils.Average(s.SolveLengths)
 }
 

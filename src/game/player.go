@@ -7,12 +7,13 @@ import (
 )
 
 type Player struct {
-	HealthCurrent 		int
-	HealthDisplay		string
-	LettersUsed			[]string
-	LettersRemaining 	[]string
-	Stats				PlayerStats
-	_gameSettings		*Settings
+	HealthCurrent 			int
+	HealthDisplay			string
+	LettersUsed				[]string
+	LettersRemaining 		[]string
+	TurnsSinceLastExtraLife int
+	Stats					PlayerStats
+	_gameSettings			*Settings
 }
 
 func InitializePlayer(cfg *Settings) Player {
@@ -25,21 +26,6 @@ func InitializePlayer(cfg *Settings) Player {
 	player.UpdateHealthDisplay()
 
 	return player
-}
-
-func (p *Player) IncrementHealth() {
-	p.LettersUsed = nil
-	p.LettersRemaining = strings.Split(p._gameSettings.Alphabet, "")
-
-	if p.HealthCurrent < p._gameSettings.HealthMax {
-		p.HealthCurrent++
-		p.UpdateHealthDisplay()
-	}
-}
-
-func (p *Player) DecrementHealth() {
-	p.HealthCurrent--
-	p.UpdateHealthDisplay()
 }
 
 func (p *Player) UpdateHealthDisplay() {
@@ -60,6 +46,8 @@ func (p *Player) UpdateHealthDisplay() {
 }
 
 func (p *Player) HandleCorrectAnswer(answer string) {
+	p.TurnsSinceLastExtraLife++
+
 	for i := range len(answer) {
 		c := strings.ToUpper(string(answer[i]))
 
@@ -73,9 +61,29 @@ func (p *Player) HandleCorrectAnswer(answer string) {
 	}
 
 	if len(p.LettersUsed) >= len(p._gameSettings.Alphabet) {
-		p.IncrementHealth()
+		p.LettersUsed = nil
+		p.LettersRemaining = strings.Split(p._gameSettings.Alphabet, "")
+
+		p.Stats.ExtraLivesGained++
+		if p.Stats.FewestExtraLifeSolves == 0 || p.TurnsSinceLastExtraLife < p.Stats.FewestExtraLifeSolves {
+			p.Stats.FewestExtraLifeSolves = p.TurnsSinceLastExtraLife
+		}
+		p.TurnsSinceLastExtraLife = 0
+
+		if p.HealthCurrent < p._gameSettings.HealthMax {
+			p.HealthCurrent++
+			p.UpdateHealthDisplay()
+		}
 	}
 
 	slices.Sort(p.LettersUsed)
 	p.Stats.UpdateSolvedStats(answer)
+}
+
+func (p *Player) HandleFailedTurn() {
+	p.HealthCurrent--
+	p.UpdateHealthDisplay()
+
+	p.TurnsSinceLastExtraLife++
+	p.Stats.UpdateFailedStats()
 }
