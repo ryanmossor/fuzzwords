@@ -48,7 +48,7 @@ func main() {
     }()
 
     utils.ClearWindow()
-	
+
 	for len(words.Available) > 0 {
 		turn := game.NewTurn(words.Available, cfg)
 
@@ -87,12 +87,13 @@ func main() {
 
 			if turn.Strikes == cfg.PromptStrikesMax {
 				fmt.Println("Prompt failed. Possible answer:", turn.SourceWord)
-				player.DecrementHealth()
+				player.HandleFailedTurn()
 
 				if player.HealthCurrent == 0 {
 					fmt.Println()
 					fmt.Println("===== GAME OVER =====")
 					fmt.Println()
+					fmt.Println(player.Stats.GenerateFinalStats())
 					close(stop_input)
 					os.Exit(0)
 				} else {
