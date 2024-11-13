@@ -29,42 +29,25 @@ func (m model) MainMenuView() string {
 	base := m.theme.Base().Render
 	accent := m.theme.TextAccent().Render 
 
+	var title []string
+	switch m.size {
+	case large:
+		title = append(title, accent("███████╗███████╗██╗    ██╗██████╗ ███████╗"))
+		title = append(title, accent("██╔════╝╚══███╔╝██║    ██║██╔══██╗██╔════╝"))
+		title = append(title, accent("█████╗    ███╔╝ ██║ █╗ ██║██║  ██║███████╗"))
+		title = append(title, accent("██╔══╝   ███╔╝  ██║███╗██║██║  ██║╚════██║"))
+		title = append(title, accent("██║     ███████╗╚███╔███╔╝██████╔╝███████║"))
+		title = append(title, accent("╚═╝     ╚══════╝ ╚══╝╚══╝ ╚═════╝ ╚══════╝"))
+	default:
+		title = append(title, accent(" ___ __       __   __  "))
+		title = append(title, accent("|__   / |  | |  \\ /__` "))
+		title = append(title, accent("|    /_ |/\\| |__/ .__/ "))
+	}
+
+	title = append(title, "\n\nPress " + accent("ENTER") + base(" to play"))
+
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-
-		// accent("   ,d8888b                        d8b         "),
-		// accent("   88P'                           88P         "),
-		// accent("d888888P                         d88          "),
-		// accent("  ?88'd88888P ?88   d8P  d8P d888888   .d888b,"),
-		// accent("  88P    d8P' d88  d8P' d8P'd8P' ?88   ?8b,   "),
-		// accent(" d88   d8P'   ?8b ,88b ,88' 88b  ,88b    `?8b "),
-		// accent("d88'  d88888P'`?888P'888P'  `?88P'`88b`?888P' "),
-
-		// accent("   ___                         __            "),
-		// accent(" /'___\\                       /\\ \\           "),
-		// accent("/\\ \\__/  ____    __  __  __   \\_\\ \\    ____  "),
-		// accent("\\ \\ ,__\\/\\_ ,`\\ /\\ \\/\\ \\/\\ \\  /'_` \\  /',__\\ "),
-		// accent(" \\ \\ \\_/\\/_/  /_\\ \\ \\_/ \\_/ \\/\\ \\L\\ \\/\\__, `\\"),
-		// accent("  \\ \\_\\   /\\____\\\\ \\___x___/'\\ \\___,_\\/\\____/"),
-		// accent("   \\/_/   \\/____/ \\/__//__/   \\/__,_ /\\/___/ "),
-
-		// "",
-
-		// accent(" ___ __       __   __  "),
-		// accent("|__   / |  | |  \\ /__` "),
-		// accent("|    /_ |/\\| |__/ .__/ "),
-
-		// "",
-											
-		accent("███████╗███████╗██╗    ██╗██████╗ ███████╗"),
-		accent("██╔════╝╚══███╔╝██║    ██║██╔══██╗██╔════╝"),
-		accent("█████╗    ███╔╝ ██║ █╗ ██║██║  ██║███████╗"),
-		accent("██╔══╝   ███╔╝  ██║███╗██║██║  ██║╚════██║"),
-		accent("██║     ███████╗╚███╔███╔╝██████╔╝███████║"),
-		accent("╚═╝     ╚══════╝ ╚══╝╚══╝ ╚═════╝ ╚══════╝"),
-
-		"",
-
-		"\n\nPress " + accent("ENTER") + base(" to play"),
+		title...
 	)
 }

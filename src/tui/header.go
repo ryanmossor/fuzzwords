@@ -9,7 +9,7 @@ import (
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// if m.hasMenu {
+		if !m.game_active {
 			switch msg.String() {
 			case "s":
 				return m.SettingsSwitch()
@@ -21,7 +21,7 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 				// return m, tea.Quit
 				// fmt.Println("You pressed", msg.String())
 			}
-		// }
+		}
 	}
 
 	return m, nil

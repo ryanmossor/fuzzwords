@@ -4,6 +4,7 @@ import (
 	"fzw/src/game"
 	"math"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -29,6 +30,7 @@ const (
 )
 
 type model struct {
+	game_active			bool
 	switched			bool
 	page				page
 	viewport			viewport.Model
@@ -42,13 +44,41 @@ type model struct {
 	theme 				theme
 	size				size
 
+	text_input			textinput.Model
+	BorderColor 		lipgloss.Color
+	InputField 			lipgloss.Style
+
 	settings			game.Settings
+	player				game.Player
+	player_stats		game.PlayerStats
+	turn				game.Turn
+	word_lists			game.WordLists
+	// result				game.Result
 }
 
 func NewModel(renderer *lipgloss.Renderer) tea.Model {
+	cfg := game.InitializeSettings()
+
+	text := textinput.New()
+	text.Placeholder = "Answer"
+	text.Focus()
+	text.Prompt = " > "
+	text.CharLimit = 40
+	text.Width = 40
+
+	borderColor := lipgloss.Color("33")
+
 	return model{
+		game_active: false,
 		renderer: renderer,
 		theme: BasicTheme(renderer, nil),
+
+		text_input: text,
+		BorderColor: borderColor,
+		InputField: lipgloss.NewStyle().BorderForeground(borderColor).BorderStyle(lipgloss.DoubleBorder()).Width(50),
+
+		settings: cfg,
+		player: game.InitializePlayer(&cfg),
 	}
 }
 
@@ -139,7 +169,7 @@ func (m model) View() string {
 		height -= lipgloss.Height(header)
 
 		var v string
-		if m.page == splash_page {
+		if m.page == splash_page || m.page == game_page {
 			v = m.theme.Base().
 				// Width(m.widthContainer). // commenting out centers "Press p to play"
 				// Align(lipgloss.Center).
@@ -159,20 +189,39 @@ func (m model) View() string {
 				Render(view)
 		}
 
-		child := lipgloss.JoinVertical(
-			lipgloss.Center,
-			debug,
-			header,
-			v,
-			// m.theme.Base().
-			// 	Width(m.widthContainer). // commenting out centers "Press p to play"
-			// 	// Align(lipgloss.Center).
-			// 	AlignVertical(lipgloss.Center).
-			// 	AlignHorizontal(lipgloss.Center).
-			// 	Height(height).
-			// 	Padding(0, 1).
-			// 	Render(view),
-		) 
+		var child string
+		switch m.page {
+		case game_page:
+			child = lipgloss.JoinVertical(
+				lipgloss.Center,
+				// debug,
+				// header,
+				v,
+				// m.theme.Base().
+				// 	Width(m.widthContainer). // commenting out centers "Press p to play"
+				// 	// Align(lipgloss.Center).
+				// 	AlignVertical(lipgloss.Center).
+				// 	AlignHorizontal(lipgloss.Center).
+				// 	Height(height).
+				// 	Padding(0, 1).
+				// 	Render(view),
+			) 
+		default:
+			child = lipgloss.JoinVertical(
+				lipgloss.Center,
+				debug,
+				header,
+				v,
+				// m.theme.Base().
+				// 	Width(m.widthContainer). // commenting out centers "Press p to play"
+				// 	// Align(lipgloss.Center).
+				// 	AlignVertical(lipgloss.Center).
+				// 	AlignHorizontal(lipgloss.Center).
+				// 	Height(height).
+				// 	Padding(0, 1).
+				// 	Render(view),
+			) 
+		}
 
 		return m.renderer.Place(
 			m.viewport_width,
