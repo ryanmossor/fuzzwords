@@ -44,7 +44,7 @@ func ArrToMap(lines []string) map[string]bool {
 	return word_map
 }
 
-func ReadLines(path string) ([]string, error) {
+func ReadLines(path string, min_len int) ([]string, error) {
     file, err := os.Open(path)
     if err != nil {
         return nil, err
@@ -54,7 +54,10 @@ func ReadLines(path string) ([]string, error) {
     var lines []string
     scanner := bufio.NewScanner(file)
     for scanner.Scan() {
-        lines = append(lines, scanner.Text())
+		line := scanner.Text()
+		if len(line) >= min_len {
+			lines = append(lines, line)
+		}
     }
 
     return lines, scanner.Err()

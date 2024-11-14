@@ -15,7 +15,7 @@ func main() {
     cfg := game.InitializeSettings()
     player := game.InitializePlayer(&cfg)
 
-    word_list, err := utils.ReadLines("./wordlist.txt")
+    word_list, err := utils.ReadLines("./wordlist.txt", cfg.PromptLenMin)
     if err != nil {
         fmt.Fprintf(os.Stderr, "error: %v\n", err)
         os.Exit(1)
