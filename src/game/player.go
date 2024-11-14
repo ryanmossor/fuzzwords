@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fzw/src/utils"
 	"slices"
 	"strings"
 )
@@ -10,7 +9,7 @@ type Player struct {
 	HealthCurrent 			int
 	HealthDisplay			string
 	LettersUsed				[]string
-	LettersRemaining 		[]string
+	LettersRemaining 		map[string]bool
 	TurnsSinceLastExtraLife int
 	Stats					PlayerStats
 	_gameSettings			*Settings
@@ -19,7 +18,7 @@ type Player struct {
 func InitializePlayer(cfg *Settings) Player {
 	player := Player{
 		HealthCurrent: cfg.HealthInitial,
-		LettersRemaining: strings.Split(cfg.Alphabet, ""),
+		LettersRemaining: alphabetToMap(cfg.Alphabet),
 		Stats: InitializePlayerStats(),
 		_gameSettings: cfg,
 	}
@@ -55,14 +54,12 @@ func (p *Player) HandleCorrectAnswer(answer string) {
 			p.LettersUsed = append(p.LettersUsed, c)
 		}
 
-		if slices.Contains(p.LettersRemaining, c) {
-			p.LettersRemaining = utils.Remove(p.LettersRemaining, slices.Index(p.LettersRemaining, c))
-		}
+		p.LettersRemaining[c] = true
 	}
 
 	if len(p.LettersUsed) >= len(p._gameSettings.Alphabet) {
 		p.LettersUsed = nil
-		p.LettersRemaining = strings.Split(p._gameSettings.Alphabet, "")
+		p.LettersRemaining = alphabetToMap(p._gameSettings.Alphabet)
 
 		p.Stats.ExtraLivesGained++
 		if p.Stats.FewestExtraLifeSolves == 0 || p.TurnsSinceLastExtraLife < p.Stats.FewestExtraLifeSolves {
@@ -86,4 +83,12 @@ func (p *Player) HandleFailedTurn() {
 
 	p.TurnsSinceLastExtraLife++
 	p.Stats.UpdateFailedStats()
+}
+
+func alphabetToMap(alphabet string) map[string]bool {
+	letters_remaining := make(map[string]bool)
+	for _, c := range alphabet {
+		letters_remaining[string(c)] = false
+	}
+	return letters_remaining
 }

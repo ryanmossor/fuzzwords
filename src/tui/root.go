@@ -62,6 +62,7 @@ type model struct {
 
 func NewModel(renderer *lipgloss.Renderer) tea.Model {
 	cfg := game.InitializeSettings()
+	theme := BasicTheme(renderer, nil)
 
 	text := textinput.New()
 	text.Placeholder = "Answer"
@@ -70,18 +71,15 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 	text.CharLimit = 40
 	text.Width = 40
 
-	borderColor := lipgloss.Color("33")
-
 	return model{
 		debug: true,
 
 		game_active: false,
 		renderer: renderer,
-		theme: BasicTheme(renderer, nil),
+		theme: theme,
 
 		text_input: text,
-		BorderColor: borderColor,
-		InputField: lipgloss.NewStyle().BorderForeground(borderColor).BorderStyle(lipgloss.DoubleBorder()).Width(50),
+		InputField: lipgloss.NewStyle().BorderForeground(theme.border).BorderStyle(lipgloss.RoundedBorder()).Width(50),
 
 		settings: cfg,
 		player: game.InitializePlayer(&cfg),

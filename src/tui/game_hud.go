@@ -18,9 +18,10 @@ func (m model) GameHudView() string {
 	if !m.game_active {
 		return ""
 	}
+
 	// bold := m.theme.TextAccent().Bold(true).Render
-	// accent := m.theme.TextAccent().Render
-	// base := m.theme.Base().Render
+	accent := m.theme.TextAccent().Render
+	base := m.theme.Base().Render
 
 	var fields []string
 
@@ -37,9 +38,7 @@ func (m model) GameHudView() string {
 	header := table.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
-		// Row(fields...).
 		Row(fields...).
-		// Row(strings.Join(m.player.LettersRemaining, " ")).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			return m.theme.Base().
@@ -48,8 +47,18 @@ func (m model) GameHudView() string {
 		}).
 		Render()
 
+	letters_remaining := []string{}
+	for _, c := range m.settings.Alphabet {
+		letter := string(c)
+		if m.player.LettersRemaining[letter] {
+			letters_remaining = append(letters_remaining, base(letter))
+		} else {
+			letters_remaining = append(letters_remaining, accent(letter))
+		}
+	}
+
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		header,
-		strings.Join(m.player.LettersRemaining, " "))
+		strings.Join(letters_remaining, " "))
 }
