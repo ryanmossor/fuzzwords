@@ -37,7 +37,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.game_active = true
 
 	// TODO: initialize word lists in background on program load
-    word_list, err := utils.ReadLines("./wordlist.txt")
+    word_list, err := utils.ReadLines("./wordlist.txt", m.settings.PromptLenMin)
     if err != nil {
         fmt.Fprintf(os.Stderr, "error: %v\n", err)
         os.Exit(1)
