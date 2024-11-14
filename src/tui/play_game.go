@@ -5,12 +5,30 @@ import (
 	"fzw/src/game"
 	"fzw/src/utils"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
+
+func memStatsView() string {
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+
+	var sb strings.Builder
+
+	// Print total memory allocated and still in use (in bytes)
+	sb.WriteString(fmt.Sprintf("Total Alloc = %v MiB", memStats.TotalAlloc/1024/1024))
+	sb.WriteString(" | ")
+	sb.WriteString(fmt.Sprintf("Sys = %v MiB\n", memStats.Sys/1024/1024))
+	sb.WriteString(fmt.Sprintf("Heap Alloc = %v MiB", memStats.HeapAlloc/1024/1024))
+	sb.WriteString(" | ")
+	sb.WriteString(fmt.Sprintf("Heap Sys = %v MiB", memStats.HeapSys/1024/1024))
+
+	return sb.String()
+}
 
 func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
@@ -22,14 +40,13 @@ func (m model) GameSwitch() (model, tea.Cmd) {
         fmt.Fprintf(os.Stderr, "error: %v\n", err)
         os.Exit(1)
     }
-	fmt.Println(word_list[0])
 
     m.word_lists = game.WordLists{
         FULL_MAP: utils.ArrToMap(word_list),
         Available: word_list,
         Used: make(map[string]bool),
     }
-
+	
 	m.turn = game.NewTurn(m.word_lists.Available, m.settings)
 
 	return m, textinput.Blink
@@ -61,11 +78,15 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) GameView() string {
+	debug_info := ""
+	if m.debug {
+		debug_info = memStatsView()
+	}
+
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
+		debug_info,
 		m.player.HealthDisplay,
-		"",
-		"",
 		"",
 		"Prompt: " + strings.ToUpper(m.turn.Prompt),
 		"",

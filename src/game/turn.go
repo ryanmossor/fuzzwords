@@ -3,6 +3,7 @@ package game
 import (
 	"fzw/src/enums"
 	"fzw/src/utils"
+	"log/slog"
 	"math/rand"
 	"slices"
 	"strings"
@@ -48,6 +49,11 @@ func NewTurn(word_list []string, cfg Settings) Turn {
 		}
 	}
 
+	slog.Debug("New turn", 
+		"prompt", prompt_str,
+		"sourceWord", word,
+		"promptMode", cfg.PromptMode)
+
 	return Turn{ 
 		SourceWord: word,
 		Prompt: prompt_str,
@@ -56,6 +62,12 @@ func NewTurn(word_list []string, cfg Settings) Turn {
 }
 
 func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
+	slog.Debug("Validating answer", 
+		"promptStr", t.Prompt,
+		"answer", t.Answer,
+		"sourceWord", t.SourceWord,
+		"promptMode", cfg.PromptMode)
+
 	if !word_lists.FULL_MAP[t.Answer] {
 		t.IsValid = false
 		t.Msg = "Invalid word. Try again." 

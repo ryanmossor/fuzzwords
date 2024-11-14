@@ -30,6 +30,7 @@ const (
 )
 
 type model struct {
+	debug 				bool
 	game_active			bool
 	switched			bool
 	page				page
@@ -69,6 +70,8 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 	borderColor := lipgloss.Color("33")
 
 	return model{
+		debug: true,
+
 		game_active: false,
 		renderer: renderer,
 		theme: BasicTheme(renderer, nil),

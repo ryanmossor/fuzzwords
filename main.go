@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"fzw/src/tui"
+	"log/slog"
 	"os"
+	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -110,20 +112,31 @@ import (
 
 // TUI
 func main() {
-	f, err := tea.LogToFile("debug.log", "debug")
+	cache_dir, err := os.UserCacheDir()
 	if err != nil {
-		fmt.Println("fatal:", err)
-		os.Exit(1)
+        // panic("Cache dir not found" + err.Error())
+		cache_dir = os.TempDir()
 	}
-	defer f.Close() 
+	path := filepath.Join(cache_dir, "fuzzwords")
+	os.MkdirAll(path, os.ModePerm)
+
+	log_file, err := os.OpenFile(filepath.Join(path, "log.json"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err != nil {
+        panic("Failed to open log file: " + err.Error())
+    }
+	defer log_file.Close()
+
+    fileHandler := slog.NewJSONHandler(log_file, &slog.HandlerOptions{ Level: slog.LevelDebug })
+    slog.SetDefault(slog.New(fileHandler))
 
 	renderer := lipgloss.DefaultRenderer()
 	menu := tui.NewModel(renderer)
 	prog := tea.NewProgram(menu, tea.WithAltScreen())
-	prog.Run()
-	// if err := constants.P.Start(); err != nil {
-	// 	fmt.Println("Error running program:", err)
-	// 	os.Exit(1)
-	// }
+	_, err = prog.Run()
+	if err != nil {
+		fmt.Println("Error running program:", err)
+		slog.Error("Error running program", "errMsg", err)
+		os.Exit(1)
+	}
 }
  
