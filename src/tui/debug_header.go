@@ -45,6 +45,10 @@ func (m model) DebugUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) DebugView() string {
+	if !m.debug {
+		return ""
+	}
+
 	vw_vh := "VH: " + strconv.Itoa(m.viewport_height) + " | VW: " + strconv.Itoa(m.viewport_width)
 
 	tabs := []string{

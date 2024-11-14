@@ -2,11 +2,13 @@ package tui
 
 import (
 	"fmt"
+	"fzw/src/enums"
 	"fzw/src/game"
 	"fzw/src/utils"
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -48,6 +50,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
     }
 	
 	m.turn = game.NewTurn(m.word_lists.Available, m.settings)
+	m.prompt_display = m.theme.TextAccent().Render(m.turn.Prompt)
 
 	return m, textinput.Blink
 }
@@ -64,11 +67,66 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if m.turn.IsValid {
 				m.player.HandleCorrectAnswer(m.turn.Answer)
 				m.turn = game.NewTurn(m.word_lists.Available, m.settings)
-				m.text_input.Reset()
+				m.prompt_display = m.turn.Prompt
+				// time.Sleep(750 * time.Millisecond)
+				// m.text_input.Reset()
 			} else {
 				m.turn.Strikes++
 			}
+
+			if m.settings.WinCondition == enums.MaxLives && m.player.HealthCurrent == m.settings.HealthMax {
+				// TODO: replace with switch to game over/stats view
+				fmt.Println("Max lives achieved -- you win!")
+				os.Exit(0)
+			}
+
+			if m.turn.Strikes == m.settings.PromptStrikesMax {
+				m.player.HandleFailedTurn()
+
+				if m.player.HealthCurrent == 0 {
+					// fmt.Println()
+					// fmt.Println("===== GAME OVER =====")
+					// fmt.Println()
+					m.player.Stats.GenerateFinalStats()
+					
+					// TODO: replace with switch to game over/stats view
+					os.Exit(0)
+				} else {
+					m.turn = game.NewTurn(m.word_lists.Available, m.settings)
+					m.prompt_display = m.turn.Prompt
+					// m.text_input.Reset()
+					// TODO: debounce while sleeping -- bug causing increase of strikes if spamming enter
+					time.Sleep(2 * time.Second)
+				}
+			}
+
+			m.text_input.Reset()
 		}
+	}
+
+	// TODO: tolower answer & prompt
+	switch m.settings.PromptMode {
+	case enums.Fuzzy:
+		sub_idx := 0
+		colorized := strings.Split(m.turn.Prompt, "")
+		for i := range len(m.turn.Prompt) {
+			substr := m.text_input.Value()[sub_idx:]
+			current_prompt_char := string(m.turn.Prompt[i])
+
+			if !strings.Contains(substr, current_prompt_char) {
+				break
+			}
+
+			colorized[i] = m.theme.TextHighlight().Render(current_prompt_char)
+			sub_idx += strings.Index(substr, current_prompt_char) + 1
+		}
+		m.prompt_display = strings.Join(colorized, "")
+	// case enums.Classic:
+	// 	if !strings.Contains(t.Answer, string(t.Prompt)) {
+	// 		t.IsValid = false
+	// 		t.Msg = "Word does not satisfy the prompt. Try again." 
+	// 		return
+	// 	}
 	}
 
 	var cmd tea.Cmd
@@ -78,20 +136,30 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) GameView() string {
-	debug_info := ""
-	if m.debug {
-		debug_info = memStatsView()
+	// debug_info := ""
+	// if m.debug {
+	// 	// debug_info = memStatsView()
+	// 	debug_info = fmt.Sprintf("answer: %s | strikes: %d | isValid: %t | msg: %s", m.turn.Answer, m.turn.Strikes, m.turn.IsValid, m.turn.Msg)
+	// }
+
+	// TODO: show possible answer after striking out
+
+	var turn_msg string
+	if !m.turn.IsValid && m.turn.Strikes < m.settings.PromptStrikesMax {
+		turn_msg = m.theme.TextError().Render(m.turn.Msg)
+	} else if !m.turn.IsValid && m.turn.Strikes == m.settings.PromptStrikesMax {
+		turn_msg = fmt.Sprintf("Prompt failed. Possible answer: %s", m.turn.SourceWord)
 	}
+	// 	turn_msg = m.theme.TextHighlight().Render(m.turn.Msg)
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		debug_info,
-		m.player.HealthDisplay,
+		// debug_info,
+		// "Prompt: " + strings.ToUpper(m.turn.Prompt),
+		// "Prompt: " + strings.ToUpper(m.prompt_display),
+		m.theme.TextAccent().Render("Prompt: " + m.prompt_display),
 		"",
-		"Prompt: " + strings.ToUpper(m.turn.Prompt),
-		"",
-		strings.Join(m.player.LettersRemaining, " "),
-		"",
+		turn_msg,
 		m.InputField.Render(m.text_input.View()),
 	) 
 }

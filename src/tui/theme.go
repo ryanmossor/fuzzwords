@@ -30,7 +30,8 @@ func BasicTheme(renderer *lipgloss.Renderer, highlight *string) theme {
 	if highlight != nil {
 		base.highlight = lipgloss.Color(*highlight)
 	} else {
-		base.highlight = lipgloss.Color("#FF5C00")
+		// base.highlight = lipgloss.Color("#FF5C00")
+		base.highlight = lipgloss.Color("#74C7EC")
 	}
 	base.error = lipgloss.Color("203")
 

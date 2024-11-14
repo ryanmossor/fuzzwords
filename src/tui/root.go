@@ -55,6 +55,9 @@ type model struct {
 	turn				game.Turn
 	word_lists			game.WordLists
 	// result				game.Result
+
+	// prompt_display		[]string
+	prompt_display		string
 }
 
 func NewModel(renderer *lipgloss.Renderer) tea.Model {
@@ -164,11 +167,13 @@ func (m model) View() string {
 		// return ""
 	default:
 		header := m.HeaderView()
+		game_hud := m.GameHudView()
 		debug := m.DebugView()
 		view := m.getContent()
 
 		height := m.height_container
 		height -= lipgloss.Height(debug)
+		height -= lipgloss.Height(game_hud)
 		height -= lipgloss.Height(header)
 
 		var v string
@@ -199,6 +204,7 @@ func (m model) View() string {
 				lipgloss.Center,
 				// debug,
 				// header,
+				game_hud,
 				v,
 				// m.theme.Base().
 				// 	Width(m.widthContainer). // commenting out centers "Press p to play"
