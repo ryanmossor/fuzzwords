@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"fmt"
 	"math"
 	"os"
 	"os/exec"
@@ -72,4 +73,17 @@ func ClearWindow() {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Run()
+}
+
+func FormatTime(seconds int) string {
+	if seconds < 3600 {
+		minutes := seconds / 60
+		sec := seconds % 60
+		return fmt.Sprintf("%d:%02d", minutes, sec)
+	} else {
+		hours := seconds / 3600
+		remainingMinutes := (seconds % 3600) / 60
+		remainingSeconds := seconds % 60
+		return fmt.Sprintf("%d:%02d:%02d", hours, remainingMinutes, remainingSeconds)
+	}
 }

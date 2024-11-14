@@ -51,6 +51,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	
 	m.turn = game.NewTurn(m.word_lists.Available, m.settings)
 	m.prompt_display = m.theme.TextAccent().Render(m.turn.Prompt)
+	m.game_start_time = time.Now()
 
 	return m, textinput.Blink
 }

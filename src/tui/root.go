@@ -3,6 +3,7 @@ package tui
 import (
 	"fzw/src/game"
 	"math"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -56,8 +57,10 @@ type model struct {
 	word_lists			game.WordLists
 	// result				game.Result
 
+	// TODO: prompt as ASCII art?
 	// prompt_display		[]string
 	prompt_display		string
+	game_start_time		time.Time
 }
 
 func NewModel(renderer *lipgloss.Renderer) tea.Model {

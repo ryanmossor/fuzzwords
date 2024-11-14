@@ -2,7 +2,9 @@ package tui
 
 import (
 	"fmt"
+	"fzw/src/utils"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -27,12 +29,14 @@ func (m model) GameHudView() string {
 
 	health := m.player.HealthDisplay
 	strikes := fmt.Sprintf("Strikes: %d / %d", m.turn.Strikes, m.settings.PromptStrikesMax)
-	// TODO: total time elapsed in rightmost column
+
+	elapsed_sec := int(time.Since(m.game_start_time).Seconds())
+	elapsed_formatted := "⏱  " + utils.FormatTime(elapsed_sec)
 
 	fields = []string{
 		health,
 		strikes,
-		// timeElapsed,
+		elapsed_formatted,
 	}
 
 	header := table.New().
