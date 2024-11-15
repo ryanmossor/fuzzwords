@@ -53,7 +53,7 @@ func NewTurn(word_list []string, cfg Settings) Turn {
 	slog.Debug("New turn", 
 		"prompt", prompt_str,
 		"sourceWord", word,
-		"promptMode", cfg.PromptMode)
+		"promptMode", cfg.PromptMode.String())
 
 	return Turn{ 
 		SourceWord: word,
@@ -67,7 +67,7 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 		"promptStr", t.Prompt,
 		"answer", t.Answer,
 		"sourceWord", t.SourceWord,
-		"promptMode", cfg.PromptMode)
+		"promptMode", cfg.PromptMode.String())
 
 	if len(t.Answer) == 0 {
 		t.IsValid = false

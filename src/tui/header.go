@@ -28,6 +28,10 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) HeaderView() string {
+	if m.page == game_page || m.page == game_over_page {
+		return ""
+	}
+
 	bold := m.theme.TextAccent().Bold(true).Render
 	accent := m.theme.TextAccent().Render
 	base := m.theme.Base().Render
