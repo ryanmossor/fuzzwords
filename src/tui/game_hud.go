@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"fzw/src/utils"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,14 +22,21 @@ func (m model) GameHudView() string {
 		return ""
 	}
 
-	// bold := m.theme.TextAccent().Bold(true).Render
-	accent := m.theme.TextAccent().Render
 	base := m.theme.Base().Render
+	accent := m.theme.TextAccent().Render
+	yellow := m.theme.TextYellow().Bold(true).Render
+	error := m.theme.TextError().Render
 
 	var fields []string
 
 	health := m.player.HealthDisplay
-	strikes := fmt.Sprintf("Strikes: %d / %d", m.turn.Strikes, m.settings.PromptStrikesMax)
+
+	var strikes string
+	if m.turn.Strikes > 0 {
+		strikes = accent("Strikes: ") + error(strconv.Itoa(m.turn.Strikes)) + accent(" / " + strconv.Itoa(m.settings.PromptStrikesMax))
+	} else {
+		strikes = accent(fmt.Sprintf("Strikes: %d / %d", m.turn.Strikes, m.settings.PromptStrikesMax))
+	}
 
 	elapsed_sec := int(time.Since(m.game_start_time).Seconds())
 	elapsed_formatted := "⏱  " + utils.FormatTime(elapsed_sec)
@@ -55,7 +63,7 @@ func (m model) GameHudView() string {
 		if m.player.LettersRemaining[letter] {
 			letters_remaining = append(letters_remaining, base(letter))
 		} else {
-			letters_remaining = append(letters_remaining, accent(letter))
+			letters_remaining = append(letters_remaining, yellow(letter))
 		}
 	}
 

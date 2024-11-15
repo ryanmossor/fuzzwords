@@ -13,6 +13,7 @@ type theme struct {
 	error      lipgloss.TerminalColor
 	body       lipgloss.TerminalColor
 	accent     lipgloss.TerminalColor
+	yellow     lipgloss.TerminalColor
 
 	base lipgloss.Style
 	// form *huh.Theme
@@ -27,13 +28,15 @@ func BasicTheme(renderer *lipgloss.Renderer, highlight *string) theme {
 	base.border = lipgloss.AdaptiveColor{Dark: "#3A3F42", Light: "#D7DBDF"}
 	base.body = lipgloss.AdaptiveColor{Dark: "#889096", Light: "#889096"}
 	base.accent = lipgloss.AdaptiveColor{Dark: "#FFFFFF", Light: "#11181C"}
+	base.yellow = lipgloss.AdaptiveColor{Dark: "#F9E2AF", Light: "#DF8E1D"}
 	if highlight != nil {
 		base.highlight = lipgloss.Color(*highlight)
 	} else {
 		// base.highlight = lipgloss.Color("#FF5C00")
 		base.highlight = lipgloss.Color("#74C7EC")
 	}
-	base.error = lipgloss.Color("203")
+	// base.error = lipgloss.Color("203")
+	base.error = lipgloss.AdaptiveColor{Dark: "#F38BA8", Light: "#D20F39"}
 
 	base.base = renderer.NewStyle().Foreground(base.body)
 	// base.form = HuhTheme(base)
@@ -71,6 +74,10 @@ func (b theme) TextAccent() lipgloss.Style {
 
 func (b theme) TextHighlight() lipgloss.Style {
 	return b.Base().Foreground(b.highlight)
+}
+
+func (b theme) TextYellow() lipgloss.Style {
+	return b.Base().Foreground(b.yellow)
 }
 
 func (b theme) TextError() lipgloss.Style {
