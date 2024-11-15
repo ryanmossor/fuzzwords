@@ -105,31 +105,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 	}
 
-	// TODO: tolower answer & prompt
-	switch m.settings.PromptMode {
-	case enums.Fuzzy:
-		sub_idx := 0
-		colorized := strings.Split(m.turn.Prompt, "")
-		for i := range len(m.turn.Prompt) {
-			substr := m.text_input.Value()[sub_idx:]
-			current_prompt_char := string(m.turn.Prompt[i])
-
-			if !strings.Contains(substr, current_prompt_char) {
-				break
-			}
-
-			colorized[i] = m.theme.TextHighlight().Render(current_prompt_char)
-			sub_idx += strings.Index(substr, current_prompt_char) + 1
-		}
-		m.prompt_display = strings.Join(colorized, "")
-	// case enums.Classic:
-	// 	if !strings.Contains(t.Answer, string(t.Prompt)) {
-	// 		t.IsValid = false
-	// 		t.Msg = "Word does not satisfy the prompt. Try again." 
-	// 		return
-	// 	}
-	}
-
 	var cmd tea.Cmd
 	m.text_input, cmd = m.text_input.Update(msg)
 
@@ -145,22 +120,60 @@ func (m model) GameView() string {
 
 	// TODO: show possible answer after striking out
 
-	var turn_msg string
-	if !m.turn.IsValid && m.turn.Strikes < m.settings.PromptStrikesMax {
-		turn_msg = m.theme.TextError().Render(m.turn.Msg)
-	} else if !m.turn.IsValid && m.turn.Strikes == m.settings.PromptStrikesMax {
-		turn_msg = fmt.Sprintf("Prompt failed. Possible answer: %s", m.turn.SourceWord)
-	}
+	// var turn_msg string
+	// if !m.turn.IsValid && m.turn.Strikes < m.settings.PromptStrikesMax {
+	// 	turn_msg = m.theme.TextError().Render(m.turn.Msg)
+	// } else if !m.turn.IsValid && m.turn.Strikes == m.settings.PromptStrikesMax {
+	// 	turn_msg = fmt.Sprintf("Prompt failed. Possible answer: %s", m.turn.SourceWord)
+	// }
 	// 	turn_msg = m.theme.TextHighlight().Render(m.turn.Msg)
+
+	// Show WIP answer with prompt letters highlighted
+	// var colorized_answer []string
+	 
+	// switch m.settings.PromptMode {
+	// case enums.Fuzzy:
+	// 	prompt_caps := strings.ToUpper(m.turn.Prompt)
+	// 	prompt_idx := 0
+	// 	for _, c := range strings.ToUpper(m.text_input.Value()) {
+	// 		curr_char := string(c)
+
+	// 		if prompt_idx < len(m.turn.Prompt) && curr_char == string(prompt_caps[prompt_idx]) {
+	// 			colorized_answer = append(colorized_answer, m.theme.TextHighlight().Render(curr_char))
+	// 			prompt_idx++
+	// 		} else {
+	// 			colorized_answer = append(colorized_answer, m.theme.TextAccent().Render(curr_char))
+	// 		}
+	// 	}
+	// case enums.Classic:
+	// 	// TODO
+	// }
+
+	prompt_ascii := []string{"", "", "", "", "", ""}
+
+	for _, c := range strings.Split(m.turn.Prompt, "") {
+		for i, l := range utils.LargeFont[strings.ToUpper(c)] {
+			prompt_ascii[i] += m.theme.TextAccent().Render(l)
+			prompt_ascii[i] += " "
+		}
+	}
+	// fmt.Println(output)
+
+	// for _, l := range output {
+	// 	fmt.Println(l)
+	// }
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		// debug_info,
-		// "Prompt: " + strings.ToUpper(m.turn.Prompt),
-		// "Prompt: " + strings.ToUpper(m.prompt_display),
-		m.theme.TextAccent().Render("Prompt: " + m.prompt_display),
-		"",
-		turn_msg,
-		m.InputField.Render(m.text_input.View()),
+		// "",
+		// m.theme.TextAccent().Render("Prompt: " + strings.ToUpper(m.turn.Prompt)),
+		// m.theme.TextAccent().Render(output...),
+		prompt_ascii...
+		// "",
+		// strings.Join(colorized_answer, ""),
+		// "",
+		// turn_msg,
+		// m.InputField.Render(m.text_input.View()),
 	) 
 }

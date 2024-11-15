@@ -1,7 +1,7 @@
 package utils
 
 var LargeFont = map[string][]string{
-	"a": {
+	"A": {
 		" █████ ",
 		"██   ██",
 		"███████",
@@ -9,7 +9,7 @@ var LargeFont = map[string][]string{
 		"██   ██",
 		"       ",
 	},
-	"b": {
+	"B": {
 		"██████ ",
 		"██   ██",
 		"██████ ",
@@ -17,7 +17,7 @@ var LargeFont = map[string][]string{
 		"██████ ",
 		"       ",
 	},
-	"c": {
+	"C": {
 		" ██████",
 		"██     ",
 		"██     ",
@@ -25,7 +25,7 @@ var LargeFont = map[string][]string{
 		" ██████",
 		"       ",
 	},
-	"d": {
+	"D": {
 		"██████ ",
 		"██   ██",
 		"██   ██",
@@ -33,7 +33,7 @@ var LargeFont = map[string][]string{
 		"██████ ",
 		"       ",
 	},
-	"e": {
+	"E": {
 		"███████",
 		"██     ",
 		"█████  ",
@@ -41,7 +41,7 @@ var LargeFont = map[string][]string{
 		"███████",
 		"       ",
 	},
-	"f": {
+	"F": {
 		"███████",
 		"██     ",
 		"█████  ",
@@ -49,7 +49,7 @@ var LargeFont = map[string][]string{
 		"██     ",
 		"       ",
 	},
-	"g": {
+	"G": {
 		" ██████ ",
 		"██      ",
 		"██   ███",
@@ -57,7 +57,7 @@ var LargeFont = map[string][]string{
 		" ██████ ",
 		"        ",
 	},
-	"h": {
+	"H": {
 		"██   ██",
 		"██   ██",
 		"███████",
@@ -65,7 +65,7 @@ var LargeFont = map[string][]string{
 		"██   ██",
 		"       ",
 	},
-	"i": {
+	"I": {
 		"████",
 		" ██ ",
 		" ██ ",
@@ -73,7 +73,7 @@ var LargeFont = map[string][]string{
 		"████",
 		"    ",
 	},
-	"j": {
+	"J": {
 		"     ██",
 		"     ██",
 		"     ██",
@@ -81,7 +81,7 @@ var LargeFont = map[string][]string{
 		" █████ ",
 		"       ",
 	},
-	"k": {
+	"K": {
 		"██   ██",
 		"██  ██ ",
 		"█████  ",
@@ -89,7 +89,7 @@ var LargeFont = map[string][]string{
 		"██   ██",
 		"       ",
 	},
-	"l": {
+	"L": {
 		"██     ",
 		"██     ",
 		"██     ",
@@ -97,7 +97,7 @@ var LargeFont = map[string][]string{
 		"███████",
 		"       ",
 	},
-	"m": {
+	"M": {
 		"███    ███",
 		"████  ████",
 		"██ ████ ██",
@@ -105,7 +105,7 @@ var LargeFont = map[string][]string{
 		"██      ██",
 		"          ",
 	},
-	"n": {
+	"N": {
 		"███    ██",
 		"████   ██",
 		"██ ██  ██",
@@ -113,7 +113,7 @@ var LargeFont = map[string][]string{
 		"██   ████",
 		"         ",
 	},
-	"o": {
+	"O": {
 		" ██████ ",
 		"██    ██",
 		"██    ██",
@@ -121,7 +121,7 @@ var LargeFont = map[string][]string{
 		" ██████ ",
 		"        ",
 	},
-	"p": {
+	"P": {
 		"██████ ",
 		"██   ██",
 		"██████ ",
@@ -129,7 +129,7 @@ var LargeFont = map[string][]string{
 		"██     ",
 		"       ",
 	},
-	"q": {
+	"Q": {
 		" ██████ ",
 		"██    ██",
 		"██    ██",
@@ -137,7 +137,7 @@ var LargeFont = map[string][]string{
 		" ██████ ",
 		"    ▀▀ ",
 	},
-	"r": {
+	"R": {
 		"██████ ",
 		"██   ██",
 		"██████ ",
@@ -145,7 +145,7 @@ var LargeFont = map[string][]string{
 		"██   ██",
 		"       ",
 	},
-	"s": {
+	"S": {
 		"███████",
 		"██     ",
 		"███████",
@@ -153,7 +153,7 @@ var LargeFont = map[string][]string{
 		"███████",
 		"       ",
 	},
-	"t": {
+	"T": {
 		"████████",
 		"   ██   ",
 		"   ██   ",
@@ -161,7 +161,7 @@ var LargeFont = map[string][]string{
 		"   ██   ",
 		"        ",
 	},
-	"u": {
+	"U": {
 		"██    ██",
 		"██    ██",
 		"██    ██",
@@ -169,7 +169,7 @@ var LargeFont = map[string][]string{
 		" ██████ ",
 		"        ",
 	},
-	"v": {
+	"V": {
 		"██    ██",
 		"██    ██",
 		"██    ██",
@@ -177,7 +177,7 @@ var LargeFont = map[string][]string{
 		"  ████  ",
 		"        ",
 	},
-	"w": {
+	"W": {
 		"██     ██",
 		"██     ██",
 		"██  █  ██",
@@ -185,7 +185,7 @@ var LargeFont = map[string][]string{
 		" ███ ███ ",
 		"         ",
 	},
-	"x": {
+	"X": {
 		"██   ██",
 		" ██ ██ ",
 		"  ███  ",
@@ -193,7 +193,7 @@ var LargeFont = map[string][]string{
 		"██   ██",
 		"       ",
 	},
-	"y": {
+	"Y": {
 		"██    ██",
 		" ██  ██ ",
 		"  ████  ",
@@ -201,7 +201,7 @@ var LargeFont = map[string][]string{
 		"   ██   ",
 		"        ",
 	},
-	"z": {
+	"Z": {
 		"███████",
 		"   ███ ",
 		"  ███  ",

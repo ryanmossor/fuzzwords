@@ -169,12 +169,14 @@ func (m model) View() string {
 	default:
 		header := m.HeaderView()
 		game_hud := m.GameHudView()
+		game_input := m.GameInputView()
 		debug := m.DebugView()
 		view := m.getContent()
 
 		height := m.height_container
 		height -= lipgloss.Height(debug)
 		height -= lipgloss.Height(game_hud)
+		height -= lipgloss.Height(game_input)
 		height -= lipgloss.Height(header)
 
 		var v string
@@ -207,6 +209,7 @@ func (m model) View() string {
 				// header,
 				game_hud,
 				v,
+				game_input,
 				// m.theme.Base().
 				// 	Width(m.widthContainer). // commenting out centers "Press p to play"
 				// 	// Align(lipgloss.Center).
