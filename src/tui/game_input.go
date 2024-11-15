@@ -18,24 +18,36 @@ func (m model) GameInputView() string {
 		return ""
 	}
 
-	var colorized_answer []string
+	accent := m.theme.TextAccent().Render
+	highlight := m.theme.TextHighlight().Render
+
+	prompt_upper := strings.ToUpper(m.turn.Prompt)
+	answer_upper := strings.ToUpper(m.text_input.Value())
+	var sb strings.Builder
 	 
 	switch m.settings.PromptMode {
 	case enums.Fuzzy:
-		prompt_caps := strings.ToUpper(m.turn.Prompt)
 		prompt_idx := 0
-		for _, c := range strings.ToUpper(m.text_input.Value()) {
+		for _, c := range answer_upper {
 			curr_char := string(c)
 
-			if prompt_idx < len(m.turn.Prompt) && curr_char == string(prompt_caps[prompt_idx]) {
-				colorized_answer = append(colorized_answer, m.theme.TextHighlight().Render(curr_char))
+			if prompt_idx < len(prompt_upper) && curr_char == string(prompt_upper[prompt_idx]) {
+				sb.WriteString(highlight(curr_char))
 				prompt_idx++
 			} else {
-				colorized_answer = append(colorized_answer, m.theme.TextAccent().Render(curr_char))
+				sb.WriteString(accent(curr_char))
 			}
 		}
 	case enums.Classic:
-		// TODO
+		if !strings.Contains(answer_upper, prompt_upper) {
+			sb.WriteString(accent(answer_upper))
+			break
+		}
+		
+		sub_idx := strings.Index(answer_upper, prompt_upper)
+		sb.WriteString(accent(answer_upper[0:sub_idx]))
+		sb.WriteString(highlight(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
+		sb.WriteString(accent(answer_upper[sub_idx + len(prompt_upper):]))
 	}
 
 	// TODO: show possible answer after striking out
@@ -49,7 +61,7 @@ func (m model) GameInputView() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		strings.Join(colorized_answer, ""),
+		sb.String(),
 		"",
 		turn_msg,
 		m.InputField.Render(m.text_input.View()),
