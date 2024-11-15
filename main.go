@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -126,7 +127,19 @@ func main() {
     }
 	defer log_file.Close()
 
-    fileHandler := slog.NewJSONHandler(log_file, &slog.HandlerOptions{ Level: slog.LevelDebug })
+	opts := &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key != slog.TimeKey {
+				return a
+			}
+			t := a.Value.Time()
+			a.Value = slog.StringValue(t.Format(time.DateTime)) // format as YYYY-MM-DD HH:mm:ss
+			return a
+		},
+	}
+
+    fileHandler := slog.NewJSONHandler(log_file, opts)
     slog.SetDefault(slog.New(fileHandler))
 
 	renderer := lipgloss.DefaultRenderer()
