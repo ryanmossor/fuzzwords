@@ -30,6 +30,11 @@ const (
 	large
 )
 
+type footerCmd struct {
+	key		string
+	value	string
+}
+
 type model struct {
 	debug 				bool
 	game_active			bool
@@ -45,6 +50,7 @@ type model struct {
 	renderer        	*lipgloss.Renderer
 	theme 				theme
 	size				size
+	footerCmds			[]footerCmd
 
 	text_input			textinput.Model
 	BorderColor 		lipgloss.Color
@@ -80,6 +86,13 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 		game_active: false,
 		renderer: renderer,
 		theme: theme,
+
+
+		footerCmds: []footerCmd{
+			{key: "a", value: "about"},
+			{key: "s", value: "settings"},
+			{key: "q", value: "quit"},
+		},
 
 		text_input: text,
 		InputField: lipgloss.NewStyle().BorderForeground(theme.border).BorderStyle(lipgloss.RoundedBorder()).Width(50),
@@ -172,12 +185,14 @@ func (m model) View() string {
 		game_input := m.GameInputView()
 		debug := m.DebugView()
 		view := m.getContent()
+		footer := m.FooterView()
 
 		height := m.height_container
 		height -= lipgloss.Height(debug)
 		height -= lipgloss.Height(game_hud)
 		height -= lipgloss.Height(game_input)
 		height -= lipgloss.Height(header)
+		height -= lipgloss.Height(footer)
 
 		var v string
 		if m.page == splash_page || m.page == game_page {
@@ -210,6 +225,7 @@ func (m model) View() string {
 				game_hud,
 				v,
 				game_input,
+				footer,
 				// m.theme.Base().
 				// 	Width(m.widthContainer). // commenting out centers "Press p to play"
 				// 	// Align(lipgloss.Center).
@@ -225,6 +241,7 @@ func (m model) View() string {
 				debug,
 				header,
 				v,
+				footer,
 				// m.theme.Base().
 				// 	Width(m.widthContainer). // commenting out centers "Press p to play"
 				// 	// Align(lipgloss.Center).

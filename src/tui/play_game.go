@@ -53,6 +53,10 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.prompt_display = m.theme.TextAccent().Render(m.turn.Prompt)
 	m.game_start_time = time.Now()
 
+	m.footerCmds = []footerCmd{
+		{key: "esc", value: "clear input"},
+	}
+
 	return m, textinput.Blink
 }
 
@@ -60,6 +64,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "esc":
+			m.text_input.Reset()
 		case "enter":
 			m.turn.Answer = strings.ToLower(m.text_input.Value())
 			m.turn.ValidateAnswer(&m.word_lists, m.settings)

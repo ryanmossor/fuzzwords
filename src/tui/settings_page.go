@@ -7,6 +7,12 @@ import (
 
 func (m model) SettingsSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(settings_page)
+	m.footerCmds = []footerCmd{
+		{key: "esc", value: "back"},
+		{key: "↑/↓", value: "scroll"},
+		{key: "←/→", value: "change"},
+		{key: "ctrl+r", value: "restore defaults"},
+	}
 	return m, nil
 }
 
