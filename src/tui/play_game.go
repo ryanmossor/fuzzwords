@@ -155,19 +155,17 @@ func (m model) GameView() string {
 	// 	// TODO
 	// }
 
-	prompt_ascii := []string{"", "", "", "", "", ""}
+	// prompt_ascii := []string{"", "", "", "", "", ""}
+	var prompt_ascii []string
+	font := utils.MedFont
+	prompt_ascii = make([]string, len(font["A"]))
 
 	for _, c := range strings.Split(m.turn.Prompt, "") {
-		for i, l := range utils.MedFont[strings.ToUpper(c)] {
+		for i, l := range font[strings.ToUpper(c)] {
 			prompt_ascii[i] += m.theme.TextAccent().Render(l)
 			prompt_ascii[i] += " "
 		}
 	}
-	// fmt.Println(output)
-
-	// for _, l := range output {
-	// 	fmt.Println(l)
-	// }
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
