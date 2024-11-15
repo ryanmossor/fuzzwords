@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"fzw/src/enums"
 	"fzw/src/utils"
 	"log/slog"
@@ -68,9 +69,17 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 		"sourceWord", t.SourceWord,
 		"promptMode", cfg.PromptMode)
 
+	if len(t.Answer) == 0 {
+		t.IsValid = false
+		t.Msg = ""
+		return
+	}
+
+	answer_upper := strings.ToUpper(t.Answer)
+
 	if !word_lists.FULL_MAP[t.Answer] {
 		t.IsValid = false
-		t.Msg = "Invalid word. Try again." 
+		t.Msg = fmt.Sprintf("Invalid word %s – try again", answer_upper)
 		return
 	}
 
@@ -83,7 +92,7 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 
 			if !strings.Contains(substr, string(current_prompt_char)) {
 				t.IsValid = false
-				t.Msg = "Word does not satisfy the prompt. Try again." 
+				t.Msg = fmt.Sprintf("%s does not satisfy the prompt – try again", answer_upper)
 				return
 			}
 
@@ -92,14 +101,14 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 	case enums.Classic:
 		if !strings.Contains(t.Answer, string(t.Prompt)) {
 			t.IsValid = false
-			t.Msg = "Word does not satisfy the prompt. Try again." 
+			t.Msg = fmt.Sprintf("%s does not satisfy the prompt – try again", answer_upper)
 			return
 		}
 	}
 	
 	if word_lists.Used[t.Answer] {
 		t.IsValid = false
-		t.Msg = "Word has already been used. Try again."
+		t.Msg = fmt.Sprintf("🔒 %s already used – try again", answer_upper)
 		return
 	}
 

@@ -61,11 +61,7 @@ type model struct {
 	player_stats		game.PlayerStats
 	turn				game.Turn
 	word_lists			game.WordLists
-	// result				game.Result
 
-	// TODO: prompt as ASCII art?
-	// prompt_display		[]string
-	prompt_display		string
 	game_start_time		time.Time
 }
 

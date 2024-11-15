@@ -37,8 +37,8 @@ func (s *PlayerStats) UpdateSolvedStats(answer string) {
 		s.LongestSolve = answer
 	}
 
-	for _, c := range strings.ToUpper(answer) {
-		s.LetterCounts[string(c)] += 1
+	for _, ch := range strings.ToUpper(answer) {
+		s.LetterCounts[string(ch)] += 1
 	}
 }
 

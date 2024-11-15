@@ -28,7 +28,7 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) HeaderView() string {
-	// bold := m.theme.TextAccent().Bold(true).Render
+	bold := m.theme.TextAccent().Bold(true).Render
 	accent := m.theme.TextAccent().Render
 	base := m.theme.Base().Render
 
@@ -46,11 +46,11 @@ func (m model) HeaderView() string {
 	// don't think i need game, gameover pages for header? only play, config, about
 	switch m.page {
 	case splash_page:
-		menu = accent("[m]ain menu")
+		menu = bold("[m]ain menu")
 	case about_page:
-		about = accent("[a]bout")
+		about = bold("[a]bout")
 	case settings_page:
-		settings = accent("[s]ettings")
+		settings = bold("[s]ettings")
 	}
 
 	var tabs []string

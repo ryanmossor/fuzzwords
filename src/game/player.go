@@ -27,6 +27,7 @@ func InitializePlayer(cfg *Settings) Player {
 	return player
 }
 
+// TODO: move to somewhere in tui? may need to change from hearts to colorized vertical bars for terminal compatibility
 func (p *Player) UpdateHealthDisplay() {
 	health_display := ""
 
@@ -47,14 +48,14 @@ func (p *Player) UpdateHealthDisplay() {
 func (p *Player) HandleCorrectAnswer(answer string) {
 	p.TurnsSinceLastExtraLife++
 
-	for i := range len(answer) {
-		c := strings.ToUpper(string(answer[i]))
+	for _, c := range strings.ToUpper(answer) {
+		ch := string(c)
 
-		if strings.Contains(p._gameSettings.Alphabet, c) && !slices.Contains(p.LettersUsed, c) {
-			p.LettersUsed = append(p.LettersUsed, c)
+		if strings.Contains(p._gameSettings.Alphabet, ch) && !slices.Contains(p.LettersUsed, ch) {
+			p.LettersUsed = append(p.LettersUsed, ch)
 		}
 
-		p.LettersRemaining[c] = true
+		p.LettersRemaining[ch] = true
 	}
 
 	if len(p.LettersUsed) >= len(p._gameSettings.Alphabet) {

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"os/exec"
-	"runtime"
 )
 
 func Average(arr []int) float64 {
@@ -63,17 +61,6 @@ func ReadLines(path string, min_len int) ([]string, error) {
 
     return lines, scanner.Err()
 } 
-
-func ClearWindow() {
-	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/c", "cls")
-	} else {
-		cmd = exec.Command("clear")
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Run()
-}
 
 func FormatTime(seconds int) string {
 	if seconds < 3600 {
