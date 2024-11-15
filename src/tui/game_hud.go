@@ -45,9 +45,7 @@ func (m model) GameHudView() string {
 		Row(fields...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
-			return m.theme.Base().
-				Padding(0, 1).
-				AlignHorizontal(lipgloss.Center)
+			return m.theme.Base().AlignHorizontal(lipgloss.Center)
 		}).
 		Render()
 

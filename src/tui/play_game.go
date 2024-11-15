@@ -152,7 +152,7 @@ func (m model) GameView() string {
 	prompt_ascii := []string{"", "", "", "", "", ""}
 
 	for _, c := range strings.Split(m.turn.Prompt, "") {
-		for i, l := range utils.LargeFont[strings.ToUpper(c)] {
+		for i, l := range utils.MedFont[strings.ToUpper(c)] {
 			prompt_ascii[i] += m.theme.TextAccent().Render(l)
 			prompt_ascii[i] += " "
 		}
