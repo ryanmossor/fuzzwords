@@ -19,7 +19,6 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return m.MainMenuSwitch()
 			case "q":
 				return m, tea.Quit
-				// fmt.Println("You pressed", msg.String())
 			}
 		}
 	}
@@ -41,13 +40,6 @@ func (m model) HeaderView() string {
 	about := accent("[a]") + base("bout")
 	settings := accent("[s]") + base("ettings")
 
-	// cart :=
-	// 	accent("c") +
-	// 		base(" cart") +
-	// 		accent(fmt.Sprintf(" $%2v", total/100)) +
-	// 		base(fmt.Sprintf(" [%d]", count))
-
-	// don't think i need game, gameover pages for header? only play, config, about
 	switch m.page {
 	case splash_page:
 		menu = bold("[m]ain menu")
@@ -57,29 +49,12 @@ func (m model) HeaderView() string {
 		settings = bold("[s]ettings")
 	}
 
-	var tabs []string
-
-	switch m.size {
-	// case small:
-	// 	tabs = []string{
-	// 		menu,
-	// 		about,
-	// 		settings,
-	// 	}
-	// case medium:
-	// 	tabs = []string{
-	// 		menu,
-	// 		about,
-	// 		settings,
-	// 	}
-	default:
-		tabs = []string{
-			menu,
-			about,
-			settings,
-		}
+	tabs := []string{
+		menu,
+		about,
+		settings,
 	}
-
+		
 	header := table.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).

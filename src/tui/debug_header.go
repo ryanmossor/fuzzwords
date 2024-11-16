@@ -47,8 +47,9 @@ func (m model) DebugView() string {
 	}
 
 	tabs := []string{
-		"VH: " + strconv.Itoa(m.viewport_height),
-		"VW: " + strconv.Itoa(m.viewport_width),
+		"VH " + strconv.Itoa(m.viewport_height),
+		"VW " + strconv.Itoa(m.viewport_width),
+		"CW " + strconv.Itoa(m.width_container),
 		m.page.String(),
 		m.size.String(),
 	}

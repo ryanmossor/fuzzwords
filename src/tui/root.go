@@ -188,7 +188,6 @@ func (m model) View() string {
 		}
 
 		game_input := m.GameInputView()
-		view := m.getContent()
 		footer := m.FooterView()
 
 		height := m.height_container
@@ -196,45 +195,22 @@ func (m model) View() string {
 		height -= lipgloss.Height(game_input)
 		height -= lipgloss.Height(footer)
 
-		var v string
+		content_style := m.theme.Base().Height(height).Padding(0, 1)
 		if m.page == splash_page || m.page == game_page || m.page == game_over_page {
-			v = m.theme.Base().
-				// Width(m.widthContainer).
-				// Align(lipgloss.Center).
-				AlignVertical(lipgloss.Center).
-				AlignHorizontal(lipgloss.Center).
-				Height(height).
-				Padding(0, 1).
-				Render(view)
+			// center all content on screen
+			content_style = content_style.AlignVertical(lipgloss.Center)
 		} else {
-			v = m.theme.Base().
-				Width(m.width_container).
-				// Align(lipgloss.Center).
-				// AlignVertical(lipgloss.Center).
-				// AlignHorizontal(lipgloss.Center).
-				Height(height).
-				Padding(0, 1).
-				Render(view)
+			content_style = content_style.Width(m.width_container)
 		}
+		content := content_style.Render(m.getContent())
 
-		var child string
-		switch m.page {
-		case game_page:
-			child = lipgloss.JoinVertical(
-				lipgloss.Center,
-				header,
-				v,
-				game_input,
-				footer,
-			) 
-		default:
-			child = lipgloss.JoinVertical(
-				lipgloss.Center,
-				header,
-				v,
-				footer,
-			) 
-		}
+		child := lipgloss.JoinVertical(
+			lipgloss.Center,
+			header,
+			content,
+			game_input,
+			footer,
+		) 
 
 		return m.renderer.Place(
 			m.viewport_width,
