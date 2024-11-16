@@ -10,7 +10,6 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-// unused for now
 func (m model) GameHudUpdate(msg tea.Msg) (model, tea.Cmd) {
 	return m, nil
 }

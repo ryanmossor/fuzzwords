@@ -34,6 +34,7 @@ func (m model) MainMenuView() string {
 	// base := m.theme.Base().Width(m.widthContent).Render
 	base := m.theme.Base().Render
 	accent := m.theme.TextAccent().Render 
+	bold := m.theme.TextAccent().Bold(true).Render 
 
 	var title []string
 	switch m.size {
@@ -47,8 +48,8 @@ func (m model) MainMenuView() string {
 		                                                                                                                                                                                                                                                                                                                                                                                                                             
 		title = append(title, accent("    ██████                                █████        "))
 		title = append(title, accent("   ███░░███                              ░░███         "))
-		title = append(title, accent("  ░███ ░░░  █████████ █████ ███ █████  ███████   █████ "))
-		title = append(title, accent(" ███████   ░█░░░░███ ░░███ ░███░░███  ███░░███  ███░░  "))
+		title = append(title, accent("  ░███ ░░░  █████████ █████     █████  ███████   █████ "))
+		title = append(title, accent(" ███████   ░█░░░░███ ░░███  ███░░███  ███░░███  ███░░  "))
 		title = append(title, accent("░░░███░    ░   ███░   ░███ ░███ ░███ ░███ ░███ ░░█████ "))
 		title = append(title, accent("  ░███       ███░   █ ░░███████████  ░███ ░███  ░░░░███"))
 		title = append(title, accent("  █████     █████████  ░░████░████   ░░████████ ██████ "))
@@ -60,7 +61,7 @@ func (m model) MainMenuView() string {
 		title = append(title, accent("|    /_ |/\\| |__/ .__/ "))
 	}
 
-	title = append(title, "\n\n\nPress " + accent("ENTER") + base(" to play"))
+	title = append(title, "\n\n\nPress " + bold("ENTER") + base(" to play"))
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,

@@ -11,7 +11,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// type page = int
 type page int
 const (
 	splash_page page = iota
@@ -21,7 +20,6 @@ const (
 	game_over_page // stats, keymaps for play again, return to menu, exit game, etc
 )
 
-// type size = int
 type size int
 const (
 	undersized size = iota
@@ -54,7 +52,6 @@ type model struct {
 
 	text_input			textinput.Model
 	BorderColor 		lipgloss.Color
-	InputField 			lipgloss.Style
 
 	settings			game.Settings
 	player				game.Player
@@ -78,20 +75,17 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 
 	return model{
 		// debug: true,
-
 		game_active: false,
+
 		renderer: renderer,
 		theme: theme,
-
+		text_input: text,
 
 		footerCmds: []footerCmd{
 			{key: "a", value: "about"},
 			{key: "s", value: "settings"},
 			{key: "q", value: "quit"},
 		},
-
-		text_input: text,
-		InputField: lipgloss.NewStyle().BorderForeground(theme.border).BorderStyle(lipgloss.RoundedBorder()).Width(50),
 
 		settings: cfg,
 		player: game.InitializePlayer(&cfg),
@@ -193,7 +187,7 @@ func (m model) View() string {
 		var v string
 		if m.page == splash_page || m.page == game_page {
 			v = m.theme.Base().
-				// Width(m.widthContainer). // commenting out centers "Press p to play"
+				// Width(m.widthContainer).
 				// Align(lipgloss.Center).
 				AlignVertical(lipgloss.Center).
 				AlignHorizontal(lipgloss.Center).
@@ -202,7 +196,7 @@ func (m model) View() string {
 				Render(view)
 		} else {
 			v = m.theme.Base().
-				Width(m.width_container). // commenting out centers "Press p to play"
+				Width(m.width_container).
 				// Align(lipgloss.Center).
 				// AlignVertical(lipgloss.Center).
 				// AlignHorizontal(lipgloss.Center).
@@ -216,20 +210,12 @@ func (m model) View() string {
 		case game_page:
 			child = lipgloss.JoinVertical(
 				lipgloss.Center,
-				// debug,
+				debug,
 				// header,
 				game_hud,
 				v,
 				game_input,
 				footer,
-				// m.theme.Base().
-				// 	Width(m.widthContainer). // commenting out centers "Press p to play"
-				// 	// Align(lipgloss.Center).
-				// 	AlignVertical(lipgloss.Center).
-				// 	AlignHorizontal(lipgloss.Center).
-				// 	Height(height).
-				// 	Padding(0, 1).
-				// 	Render(view),
 			) 
 		default:
 			child = lipgloss.JoinVertical(
@@ -238,14 +224,6 @@ func (m model) View() string {
 				header,
 				v,
 				footer,
-				// m.theme.Base().
-				// 	Width(m.widthContainer). // commenting out centers "Press p to play"
-				// 	// Align(lipgloss.Center).
-				// 	AlignVertical(lipgloss.Center).
-				// 	AlignHorizontal(lipgloss.Center).
-				// 	Height(height).
-				// 	Padding(0, 1).
-				// 	Render(view),
 			) 
 		}
 
@@ -279,7 +257,8 @@ func (m model) getContent() string {
 	case settings_page:
 		page = m.SettingsView()
 	case game_page:
-		page = m.GameView()
+		// TODO: possible to return game hud, prompt, and input as single page?
+		page = m.GamePromptView()
 	}
 
 	return page

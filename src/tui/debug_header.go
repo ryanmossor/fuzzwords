@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"fmt"
+	"runtime"
 	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -60,6 +62,7 @@ func (m model) DebugView() string {
 	return table.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
+		Headers(memStatsView()...).
 		Row(tabs...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
@@ -68,4 +71,19 @@ func (m model) DebugView() string {
 				AlignHorizontal(lipgloss.Center)
 		}).
 		Render()
+}
+
+func memStatsView() []string {
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+
+	var stats []string
+
+	// Print total memory allocated and still in use (in bytes)
+	stats = append(stats, fmt.Sprintf("Total Alloc %v MiB", memStats.TotalAlloc/1024/1024))
+	stats = append(stats, fmt.Sprintf("Sys %v MiB", memStats.Sys/1024/1024))
+	stats = append(stats, fmt.Sprintf("Heap Alloc %v MiB", memStats.HeapAlloc/1024/1024))
+	stats = append(stats, fmt.Sprintf("Heap Sys %v MiB", memStats.HeapSys/1024/1024))
+
+	return stats
 }
