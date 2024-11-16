@@ -3,7 +3,7 @@ package tui
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-) 
+)
 
 func (m model) MainMenuSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(splash_page)
@@ -31,10 +31,7 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) MainMenuView() string {
-	// base := m.theme.Base().Width(m.widthContent).Render
-	base := m.theme.Base().Render
 	accent := m.theme.TextAccent().Render 
-	bold := m.theme.TextAccent().Bold(true).Render 
 
 	var title []string
 	switch m.size {
@@ -61,7 +58,8 @@ func (m model) MainMenuView() string {
 		title = append(title, accent("|    /_ |/\\| |__/ .__/ "))
 	}
 
-	title = append(title, "\n\n\nPress " + bold("ENTER") + base(" to play"))
+	title = append(title, "\n\n\n")
+	title = append(title, m.PressPlayView())
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,

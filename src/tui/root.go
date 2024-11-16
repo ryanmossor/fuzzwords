@@ -33,6 +33,10 @@ type footerCmd struct {
 	value	string
 }
 
+type state struct {
+	press_play			pressPlayState
+}
+
 type model struct {
 	debug 				bool
 	game_active			bool
@@ -52,6 +56,8 @@ type model struct {
 
 	text_input			textinput.Model
 	BorderColor 		lipgloss.Color
+
+	state				state
 
 	settings			game.Settings
 	player				game.Player
@@ -93,7 +99,7 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return m.PressPlayInit()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -123,6 +129,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.width_content = m.width_container - 4
 		// m = m.updateViewport() 
+	case PressPlayTickMsg:
+		m, cmd := m.PressPlayUpdate(msg)
+		return m, cmd
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -156,6 +165,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.viewport.SetContent(m.getContent()) 
 	m.viewport, cmd = m.viewport.Update(msg)
 	if m.switched {
+		// TODO: updateViewport handles scrollbars, viewport width/height, etc
 		// m = m.updateViewport()
 		m.switched = false
 	}

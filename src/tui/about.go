@@ -52,5 +52,6 @@ func (m model) AboutView() string {
 			accent("VTM") +
 			base(". However, MOTIVE does not, as the letters are not in the correct order."),
 		// TODO: rules on extra lives, game modes (endless/LMS), etc
+		// TODO: scrollbar and/or rule pages
 	)
 }
