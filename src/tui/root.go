@@ -52,16 +52,14 @@ type model struct {
 	renderer        	*lipgloss.Renderer
 	theme 				theme
 	size				size
-	footerCmds			[]footerCmd
+	footer_cmds			[]footerCmd
 
 	text_input			textinput.Model
-	BorderColor 		lipgloss.Color
 
 	state				state
 
 	settings			game.Settings
 	player				game.Player
-	player_stats		game.PlayerStats
 	turn				game.Turn
 	word_lists			game.WordLists
 
@@ -87,7 +85,7 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 		theme: theme,
 		text_input: text,
 
-		footerCmds: []footerCmd{
+		footer_cmds: []footerCmd{
 			{key: "a", value: "about"},
 			{key: "s", value: "settings"},
 			{key: "q", value: "quit"},

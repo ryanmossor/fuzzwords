@@ -7,7 +7,7 @@ import (
 
 func (m model) AboutSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(about_page)
-	m.footerCmds = []footerCmd{
+	m.footer_cmds = []footerCmd{
 		{key: "esc", value: "main menu"},
 		{key: "s", value: "settings"},
 		{key: "q", value: "quit"},

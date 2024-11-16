@@ -34,7 +34,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.turn = game.NewTurn(m.word_lists.Available, m.settings)
 	m.game_start_time = time.Now()
 
-	m.footerCmds = []footerCmd{
+	m.footer_cmds = []footerCmd{
 		{key: "esc", value: "clear input"},
 	}
 

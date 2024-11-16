@@ -19,7 +19,7 @@ func (m model) FooterView() string {
 	// }
 
 	commands := []string{}
-	for _, cmd := range m.footerCmds {
+	for _, cmd := range m.footer_cmds {
 		commands = append(commands, bold(" " + cmd.key + " ") + base(cmd.value + "  "))
 	}
 
