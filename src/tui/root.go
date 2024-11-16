@@ -43,6 +43,8 @@ type model struct {
 	game_over			bool
 	switched			bool
 
+	game_over_msg		string
+
 	page				page
 	viewport			viewport.Model
 	viewport_width   	int

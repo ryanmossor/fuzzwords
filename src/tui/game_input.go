@@ -57,18 +57,28 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			// may need to move out of switch/case?
 			if m.turn.IsValid {
 				m.player.HandleCorrectAnswer(m.turn.Answer)
+
+				if len(m.word_lists.Available) == 0 {
+					m.game_over = true
+					m.game_active = false
+					win_msg := m.theme.TextGreen().Bold(true).Render("YOU WIN!")
+					return m.GameOverSwitch(win_msg)
+				}
+
 				m.turn = game.NewTurn(m.word_lists.Available, m.settings)
+
 				// time.Sleep(750 * time.Millisecond)
 				// m.text_input.Reset()
 			} else {
 				m.turn.Strikes++
 			}
 
-			if m.settings.WinCondition == enums.MaxLives && m.player.HealthCurrent == m.settings.HealthMax {
+			if (m.settings.WinCondition == enums.MaxLives && m.player.HealthCurrent == m.settings.HealthMax) {
 				// TODO: are both of these flags needed?
-				m.game_active = false
 				m.game_over = true
-				return m.GameOverSwitch()
+				m.game_active = false
+				win_msg := m.theme.TextGreen().Bold(true).Render("YOU WIN!")
+				return m.GameOverSwitch(win_msg)
 			}
 
 			if m.turn.Strikes == m.settings.PromptStrikesMax {
@@ -78,7 +88,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 					// TODO: are both of these flags needed?
 					m.game_active = false
 					m.game_over = true
-					return m.GameOverSwitch()
+					game_over_msg := m.theme.TextRed().Bold(true).Render("=== GAME OVER ===")
+					return m.GameOverSwitch(game_over_msg)
 				} else {
 					m.turn = game.NewTurn(m.word_lists.Available, m.settings)
 					// m.text_input.Reset()

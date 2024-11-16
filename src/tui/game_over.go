@@ -9,7 +9,8 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (m model) GameOverSwitch() (model, tea.Cmd) {
+func (m model) GameOverSwitch(game_over_msg string) (model, tea.Cmd) {
+	m.game_over_msg = game_over_msg
 	m = m.SwitchPage(game_over_page)
 	m.footer_cmds = []footerCmd{
 		{key: "m", value: "main menu"},
@@ -62,7 +63,8 @@ func (m model) GameOverView() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		m.theme.TextRed().Bold(true).Render("GAME OVER\n"),
+		m.game_over_msg,
+		"",
 		stats_table,
 	)
 }
