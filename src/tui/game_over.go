@@ -12,6 +12,7 @@ import (
 func (m model) GameOverSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_over_page)
 	m.footer_cmds = []footerCmd{
+		{key: "m", value: "main menu"},
 		{key: "enter", value: "play again"},
 		{key: "q", value: "quit"},
 	}
@@ -20,6 +21,18 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 }
 
 func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "m":
+			return m.MainMenuSwitch()
+		case "enter":
+			return m.GameSwitch()
+		case "q":
+			return m, tea.Quit
+		}
+	}
+
 	return m, nil
 }
 
@@ -28,6 +41,7 @@ func (m model) GameOverView() string {
 	if longest_solve == "" {
 		longest_solve = "-"
 	}
+
 	stats := [][]string{
 		{"Prompts solved", strconv.Itoa(m.player.Stats.PromptsSolved)},
 		{"Prompts failed", strconv.Itoa(m.player.Stats.PromptsFailed)},

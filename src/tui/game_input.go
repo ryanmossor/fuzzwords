@@ -18,6 +18,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
 	m.game_active = true
 	m.game_over = false
+	m.player = game.InitializePlayer(&m.settings)
 
 	// TODO: initialize word lists in background on program load
     word_list, err := utils.ReadLines("./wordlist.txt", m.settings.PromptLenMin)

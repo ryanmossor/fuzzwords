@@ -94,7 +94,6 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 		},
 
 		settings: cfg,
-		player: game.InitializePlayer(&cfg),
 	}
 }
 
