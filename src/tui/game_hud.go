@@ -67,6 +67,7 @@ func (m model) GameHudView() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
+		m.DebugView(),
 		header,
 		strings.Join(letters_remaining, " "))
 }

@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"strconv"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 )
@@ -42,19 +41,14 @@ func (s size) String() string {
 	}
 }
 
-func (m model) DebugUpdate(msg tea.Msg) (model, tea.Cmd) {
-	return m, nil
-}
-
 func (m model) DebugView() string {
 	if !m.debug {
 		return ""
 	}
 
-	vw_vh := "VH: " + strconv.Itoa(m.viewport_height) + " | VW: " + strconv.Itoa(m.viewport_width)
-
 	tabs := []string{
-		vw_vh,
+		"VH: " + strconv.Itoa(m.viewport_height),
+		"VW: " + strconv.Itoa(m.viewport_width),
 		m.page.String(),
 		m.size.String(),
 	}

@@ -17,8 +17,8 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return m.AboutSwitch()
 			case "m":
 				return m.MainMenuSwitch()
-			// case "q":
-				// return m, tea.Quit
+			case "q":
+				return m, tea.Quit
 				// fmt.Println("You pressed", msg.String())
 			}
 		}
@@ -80,7 +80,7 @@ func (m model) HeaderView() string {
 		}
 	}
 
-	return table.New().
+	header := table.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
 		Row(tabs...).
@@ -91,4 +91,10 @@ func (m model) HeaderView() string {
 				AlignHorizontal(lipgloss.Center)
 		}).
 		Render()
+
+	return lipgloss.JoinVertical(
+		lipgloss.Center,
+		m.DebugView(),
+		header,
+	)
 }

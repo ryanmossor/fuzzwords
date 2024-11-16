@@ -40,7 +40,9 @@ type state struct {
 type model struct {
 	debug 				bool
 	game_active			bool
+	game_over			bool
 	switched			bool
+
 	page				page
 	viewport			viewport.Model
 	viewport_width   	int
@@ -148,8 +150,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m, cmd = m.SettingsUpdate(msg)
 	case game_page:
 		m, cmd = m.GameUpdate(msg)
-	// case gameOverPage:
-		// fmt.Println("updating game over page")
+	case game_over_page:
+		m, cmd = m.GameOverUpdate(msg)
 	}
 
 	var header_cmd tea.Cmd
@@ -178,22 +180,24 @@ func (m model) View() string {
 		// return m.MenuView()
 		// return ""
 	default:
-		header := m.HeaderView()
-		game_hud := m.GameHudView()
+		var header string
+		if m.page == game_page {
+			header = m.GameHudView()
+		} else {
+			header = m.HeaderView()
+		}
+
 		game_input := m.GameInputView()
-		debug := m.DebugView()
 		view := m.getContent()
 		footer := m.FooterView()
 
 		height := m.height_container
-		height -= lipgloss.Height(debug)
-		height -= lipgloss.Height(game_hud)
-		height -= lipgloss.Height(game_input)
 		height -= lipgloss.Height(header)
+		height -= lipgloss.Height(game_input)
 		height -= lipgloss.Height(footer)
 
 		var v string
-		if m.page == splash_page || m.page == game_page {
+		if m.page == splash_page || m.page == game_page || m.page == game_over_page {
 			v = m.theme.Base().
 				// Width(m.widthContainer).
 				// Align(lipgloss.Center).
@@ -218,9 +222,7 @@ func (m model) View() string {
 		case game_page:
 			child = lipgloss.JoinVertical(
 				lipgloss.Center,
-				debug,
-				// header,
-				game_hud,
+				header,
 				v,
 				game_input,
 				footer,
@@ -228,7 +230,6 @@ func (m model) View() string {
 		default:
 			child = lipgloss.JoinVertical(
 				lipgloss.Center,
-				debug,
 				header,
 				v,
 				footer,
@@ -267,6 +268,8 @@ func (m model) getContent() string {
 	case game_page:
 		// TODO: possible to return game hud, prompt, and input as single page?
 		page = m.GamePromptView()
+	case game_over_page:
+		page = m.GameOverView()
 	}
 
 	return page
