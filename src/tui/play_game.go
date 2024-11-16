@@ -83,7 +83,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if m.settings.WinCondition == enums.MaxLives && m.player.HealthCurrent == m.settings.HealthMax {
 				// TODO: replace with switch to game over/stats view
 				fmt.Println("Max lives achieved -- you win!")
-				os.Exit(0)
+				return m, tea.Quit
 			}
 
 			if m.turn.Strikes == m.settings.PromptStrikesMax {
@@ -96,7 +96,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 					m.player.Stats.GenerateFinalStats()
 					
 					// TODO: replace with switch to game over/stats view
-					os.Exit(0)
+					return m, tea.Quit
 				} else {
 					m.turn = game.NewTurn(m.word_lists.Available, m.settings)
 					// m.text_input.Reset()
