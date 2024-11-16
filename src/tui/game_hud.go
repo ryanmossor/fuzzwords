@@ -40,9 +40,9 @@ func (m model) GameHudView() string {
 
 	fields := []string{
 		health,
+		game_mode,
 		strikes,
 		// elapsed_formatted,
-		game_mode,
 	}
 
 	header := table.New().
