@@ -21,19 +21,17 @@ func (m model) GameHudView() string {
 	}
 
 	base := m.theme.Base().Render
-	accent := m.theme.TextAccent().Render
+	dim := m.theme.TextExtraDim().Render
 	yellow := m.theme.TextYellow().Bold(true).Render
-	error := m.theme.TextError().Render
+	red := m.theme.TextRed().Render
 
-	var fields []string
-
-	health := m.player.HealthDisplay
+	health := m.RenderHealthDisplay()
 
 	var strikes string
 	if m.turn.Strikes > 0 {
-		strikes = accent("Strikes: ") + error(strconv.Itoa(m.turn.Strikes)) + accent(" / " + strconv.Itoa(m.settings.PromptStrikesMax))
+		strikes = base("Strikes: ") + red(strconv.Itoa(m.turn.Strikes)) + base(" / " + strconv.Itoa(m.settings.PromptStrikesMax))
 	} else {
-		strikes = accent(fmt.Sprintf("Strikes: %d / %d", m.turn.Strikes, m.settings.PromptStrikesMax))
+		strikes = fmt.Sprintf("Strikes: %d / %d", m.turn.Strikes, m.settings.PromptStrikesMax)
 	}
 
 	// elapsed_sec := int(time.Since(m.game_start_time).Seconds())
@@ -41,7 +39,7 @@ func (m model) GameHudView() string {
 
 	game_mode := fmt.Sprintf("Mode: %s", m.settings.PromptMode.String())
 
-	fields = []string{
+	fields := []string{
 		health,
 		strikes,
 		// elapsed_formatted,
@@ -62,7 +60,7 @@ func (m model) GameHudView() string {
 	for _, c := range m.settings.Alphabet {
 		letter := string(c)
 		if m.player.LettersRemaining[letter] {
-			letters_remaining = append(letters_remaining, base(letter))
+			letters_remaining = append(letters_remaining, dim(letter))
 		} else {
 			letters_remaining = append(letters_remaining, yellow(letter))
 		}
@@ -72,4 +70,27 @@ func (m model) GameHudView() string {
 		lipgloss.Center,
 		header,
 		strings.Join(letters_remaining, " "))
+}
+
+func (m model) RenderHealthDisplay() string {
+	base := m.theme.Base().Render
+	green := m.theme.TextGreen().Render
+
+	var health_display strings.Builder
+	i := 0
+
+	for i < m.player.HealthCurrent {
+		health_display.WriteString(green("█ "))
+		i++
+	}
+
+	for i < m.settings.HealthMax {
+		health_display.WriteString(base("▒"))
+		if i < m.settings.HealthMax - 1 {
+			health_display.WriteString(" ")
+		}
+		i++
+	}
+
+	return health_display.String()
 }

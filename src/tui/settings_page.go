@@ -56,12 +56,13 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 func (m model) SettingsView() string {
 	// base := m.theme.Base().Width(m.widthContent).Render
 	base := m.theme.Base().Render
+	dim := m.theme.TextDim().Render
 	accent := m.theme.TextAccent().Render 
 
 	var lines []string
 	lines = append(lines, base("Change your ") + accent("game settings") + base(" here.\n"))
 	lines = append(lines, accent("Alphabet: "))
-	lines = append(lines, base("Easy / ") + accent("Medium") + base(" / Full"))
+	lines = append(lines, dim("Easy / ") + accent("Medium") + dim(" / Full"))
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,

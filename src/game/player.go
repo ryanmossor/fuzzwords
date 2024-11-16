@@ -22,27 +22,8 @@ func InitializePlayer(cfg *Settings) Player {
 		Stats: InitializePlayerStats(),
 		_gameSettings: cfg,
 	}
-	player.UpdateHealthDisplay()
 
 	return player
-}
-
-// TODO: move to somewhere in tui? may need to change from hearts to colorized vertical bars for terminal compatibility
-func (p *Player) UpdateHealthDisplay() {
-	health_display := ""
-
-	i := 0
-	for i < p.HealthCurrent {
-		// 🧡💛💚💙🩵💜🖤🤍🤎
-		health_display += "🩵"
-		i++
-	}
-	for i < p._gameSettings.HealthMax {
-		health_display += "🤍"
-		i++
-	}
-
-	p.HealthDisplay = health_display
 }
 
 func (p *Player) HandleCorrectAnswer(answer string) {
@@ -70,7 +51,6 @@ func (p *Player) HandleCorrectAnswer(answer string) {
 
 		if p.HealthCurrent < p._gameSettings.HealthMax {
 			p.HealthCurrent++
-			p.UpdateHealthDisplay()
 		}
 	}
 
@@ -80,8 +60,6 @@ func (p *Player) HandleCorrectAnswer(answer string) {
 
 func (p *Player) HandleFailedTurn() {
 	p.HealthCurrent--
-	p.UpdateHealthDisplay()
-
 	p.TurnsSinceLastExtraLife++
 	p.Stats.UpdateFailedStats()
 }

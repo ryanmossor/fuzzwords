@@ -67,7 +67,7 @@ type model struct {
 
 func NewModel(renderer *lipgloss.Renderer) tea.Model {
 	cfg := game.InitializeSettings()
-	theme := BasicTheme(renderer, nil)
+	theme := BasicTheme(renderer)
 
 	text := textinput.New()
 	text.Placeholder = "Answer"
@@ -77,7 +77,7 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 	text.Width = 40
 
 	return model{
-		debug: true,
+		// debug: true,
 
 		game_active: false,
 		renderer: renderer,

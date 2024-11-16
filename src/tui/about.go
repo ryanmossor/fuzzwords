@@ -25,8 +25,7 @@ func (m model) AboutView() string {
 	// bold := m.theme.TextAccent().Bold(true).Render
 
 	base := m.theme.Base().Render
-	// accent := m.theme.TextAccent().Bold(true).Render 
-	accent := m.theme.TextAccent().Render 
+	accent := m.theme.TextAccent().Bold(true).Render 
 
 	// first_line_accent := m.theme.TextAccent().Render 
 	// accent := m.theme.TextAccent().Width(m.widthContent).Render
