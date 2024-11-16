@@ -7,6 +7,7 @@ type Settings struct {
 	Alphabet				string
 	HealthInitial			int
 	HealthMax				int
+	HighlightInput			bool
 	PromptLenMin			int
 	PromptLenMax			int
 	PromptMode				enums.PromptMode
@@ -23,6 +24,7 @@ func InitializeSettings() Settings {
 		Alphabet: enums.FullAlphabet,
 		HealthInitial: 2,
 		HealthMax: 3,
+		HighlightInput: true,
 		PromptLenMax: 3,
 		PromptLenMin: 2,
 		PromptMode: enums.Fuzzy,

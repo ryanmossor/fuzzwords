@@ -74,3 +74,17 @@ func FormatTime(seconds int) string {
 		return fmt.Sprintf("%d:%02d:%02d", hours, remainingMinutes, remainingSeconds)
 	}
 }
+
+func IsFuzzyMatch(answer string, prompt string) bool {
+    sub_idx := 0
+	for i := range answer {
+        if answer[i] == prompt[sub_idx] {
+            sub_idx++
+            if sub_idx == len(prompt) {
+                return true
+            }
+        }
+    }
+
+    return false
+}

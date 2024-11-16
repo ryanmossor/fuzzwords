@@ -41,7 +41,8 @@ func BasicTheme(renderer *lipgloss.Renderer) theme {
 	base.blue = lipgloss.AdaptiveColor{Dark: "#74C7EC", Light: "#209FB5"}
 	base.orange = lipgloss.AdaptiveColor{Dark: "#FAB387", Light: "#FE640B"}
 	base.dim = lipgloss.AdaptiveColor{Dark: "#878787", Light: "#ACB0BE"} // not part of catppuccin palette
-	base.extra_dim = lipgloss.AdaptiveColor{Dark: "#585B70", Light: "#ACB0BE"} // Surface 2
+	// base.extra_dim = lipgloss.AdaptiveColor{Dark: "#585B70", Light: "#ACB0BE"} // Surface 2
+	base.extra_dim = lipgloss.AdaptiveColor{Dark: "#6C7086", Light: "#ACB0BE"} // Overlay 0
 
 	base.highlight = lipgloss.Color("#74C7EC")
 

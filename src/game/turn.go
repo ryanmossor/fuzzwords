@@ -83,28 +83,12 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 		return
 	}
 
-	switch cfg.PromptMode {
-	case enums.Fuzzy:
-		sub_idx := 0
-		for i := range len(t.Prompt) {
-			substr := t.Answer[sub_idx:]
-			current_prompt_char := t.Prompt[i]
-
-			if !strings.Contains(substr, string(current_prompt_char)) {
-				t.IsValid = false
-				t.Msg = fmt.Sprintf("%s does not satisfy the prompt – try again", answer_upper)
-				return
-			}
-
-			sub_idx += strings.Index(substr, string(current_prompt_char)) + 1
-		}
-	case enums.Classic:
-		if !strings.Contains(t.Answer, string(t.Prompt)) {
+	if (cfg.PromptMode == enums.Fuzzy && !utils.IsFuzzyMatch(t.Answer, t.Prompt)) ||
+		(cfg.PromptMode == enums.Classic && !strings.Contains(t.Answer, t.Prompt)) {
 			t.IsValid = false
 			t.Msg = fmt.Sprintf("%s does not satisfy the prompt – try again", answer_upper)
 			return
 		}
-	}
 	
 	if word_lists.Used[t.Answer] {
 		t.IsValid = false
