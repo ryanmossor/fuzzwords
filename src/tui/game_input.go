@@ -17,6 +17,7 @@ import (
 func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
 	m.game_active = true
+	m.game_over = false
 
 	// TODO: initialize word lists in background on program load
     word_list, err := utils.ReadLines("./wordlist.txt", m.settings.PromptLenMin)
@@ -63,22 +64,20 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			if m.settings.WinCondition == enums.MaxLives && m.player.HealthCurrent == m.settings.HealthMax {
-				// TODO: replace with switch to game over/stats view
-				fmt.Println("Max lives achieved -- you win!")
-				return m, tea.Quit
+				// TODO: are both of these flags needed?
+				m.game_active = false
+				m.game_over = true
+				return m.GameOverSwitch()
 			}
 
 			if m.turn.Strikes == m.settings.PromptStrikesMax {
 				m.player.HandleFailedTurn()
 
 				if m.player.HealthCurrent == 0 {
-					// fmt.Println()
-					// fmt.Println("===== GAME OVER =====")
-					// fmt.Println()
-					m.player.Stats.GenerateFinalStats()
-					
-					// TODO: replace with switch to game over/stats view
-					return m, tea.Quit
+					// TODO: are both of these flags needed?
+					m.game_active = false
+					m.game_over = true
+					return m.GameOverSwitch()
 				} else {
 					m.turn = game.NewTurn(m.word_lists.Available, m.settings)
 					// m.text_input.Reset()
