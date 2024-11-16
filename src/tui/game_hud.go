@@ -79,7 +79,10 @@ func (m model) RenderHealthDisplay() string {
 	i := 0
 
 	for i < m.player.HealthCurrent {
-		health_display.WriteString(green("█ "))
+		health_display.WriteString(green("█"))
+		if i < m.settings.HealthMax - 1 {
+			health_display.WriteString(" ")
+		}
 		i++
 	}
 

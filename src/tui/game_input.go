@@ -102,6 +102,7 @@ func (m model) GameInputView() string {
 		return ""
 	}
 
+	border_color := m.theme.Border()
 	accent := m.theme.TextAccent().Render
 	blue := m.theme.TextBlue().Render
 
@@ -122,6 +123,10 @@ func (m model) GameInputView() string {
 				sb.WriteString(accent(curr_char))
 			}
 		}
+
+		if m.settings.HighlightInput && utils.IsFuzzyMatch(answer_upper, prompt_upper) {
+			border_color = m.setInputBorderColor(answer_upper)
+		}
 	case enums.Classic:
 		if !strings.Contains(answer_upper, prompt_upper) {
 			sb.WriteString(accent(answer_upper))
@@ -132,6 +137,10 @@ func (m model) GameInputView() string {
 		sb.WriteString(accent(answer_upper[0:sub_idx]))
 		sb.WriteString(blue(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
 		sb.WriteString(accent(answer_upper[sub_idx + len(prompt_upper):]))
+
+		if m.settings.HighlightInput {
+			border_color = m.setInputBorderColor(answer_upper)
+		}
 	}
 
 	// TODO: show possible answer after striking out
@@ -149,9 +158,16 @@ func (m model) GameInputView() string {
 		"",
 		turn_msg,
 		lipgloss.NewStyle().
-			BorderForeground(m.theme.border).
+			BorderForeground(border_color).
 			BorderStyle(lipgloss.RoundedBorder()).
 			Width(50).
 			Render(m.text_input.View()),
 	) 
+}
+
+func (m model) setInputBorderColor(answer string) lipgloss.TerminalColor {
+	if m.word_lists.FULL_MAP[strings.ToLower(answer)] {
+		return m.theme.green
+	}
+	return m.theme.red
 }
