@@ -59,6 +59,7 @@ type model struct {
 	footer_cmds			[]footerCmd
 
 	text_input			textinput.Model
+	default_prompt_style	lipgloss.Style
 
 	state				state
 
@@ -87,7 +88,9 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 
 		renderer: renderer,
 		theme: theme,
+
 		text_input: text,
+		default_prompt_style: text.PromptStyle,
 
 		footer_cmds: []footerCmd{
 			{key: "a", value: "about"},
@@ -96,6 +99,10 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 		},
 
 		settings: cfg,
+
+		state: state{
+			press_play: pressPlayState{ visible: true },
+		},
 	}
 }
 

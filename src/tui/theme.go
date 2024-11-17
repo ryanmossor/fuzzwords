@@ -19,6 +19,7 @@ type theme struct {
 	orange		lipgloss.TerminalColor
 	dim			lipgloss.TerminalColor
 	extra_dim	lipgloss.TerminalColor
+	lavender	lipgloss.TerminalColor
 
 	base lipgloss.Style
 	// form *huh.Theme
@@ -43,6 +44,7 @@ func BasicTheme(renderer *lipgloss.Renderer) theme {
 	base.dim = lipgloss.AdaptiveColor{Dark: "#878787", Light: "#ACB0BE"} // not part of catppuccin palette
 	// base.extra_dim = lipgloss.AdaptiveColor{Dark: "#585B70", Light: "#ACB0BE"} // Surface 2
 	base.extra_dim = lipgloss.AdaptiveColor{Dark: "#6C7086", Light: "#ACB0BE"} // Overlay 0
+	base.lavender = lipgloss.AdaptiveColor{Dark: "#B4BEFE", Light: "#7287FD"}
 
 	base.highlight = lipgloss.Color("#74C7EC")
 
@@ -105,6 +107,10 @@ func (b theme) TextBlue() lipgloss.Style {
 
 func (b theme) TextRed() lipgloss.Style {
 	return b.Base().Foreground(b.red)
+}
+
+func (b theme) TextLavender() lipgloss.Style {
+	return b.Base().Foreground(b.lavender)
 }
 
 func (b theme) TextDim() lipgloss.Style {

@@ -12,9 +12,10 @@ import (
 func (m model) GameOverSwitch(game_over_msg string) (model, tea.Cmd) {
 	m.game_over_msg = game_over_msg
 	m = m.SwitchPage(game_over_page)
+
 	m.footer_cmds = []footerCmd{
 		{key: "m", value: "main menu"},
-		{key: "enter", value: "play again"},
+		{key: "enter", value: "new game"},
 		{key: "q", value: "quit"},
 	}
 
@@ -43,21 +44,38 @@ func (m model) GameOverView() string {
 		longest_solve = "-"
 	}
 
+	fastest_extra_life := fmt.Sprintf("%d turns", m.player.Stats.FewestExtraLifeSolves)
+	if m.player.Stats.FewestExtraLifeSolves == 0 {
+		fastest_extra_life = "-"
+	}
+
 	stats := [][]string{
 		{"Prompts solved", strconv.Itoa(m.player.Stats.PromptsSolved)},
 		{"Prompts failed", strconv.Itoa(m.player.Stats.PromptsFailed)},
+		{"Average solve length", fmt.Sprintf("%.1f letters", m.player.Stats.AverageSolveLength())},
+		{"Longest word used", fmt.Sprintf("%s (%d)", longest_solve, len(m.player.Stats.LongestSolve))},
 		{"Extra lives gained", strconv.Itoa(m.player.Stats.ExtraLivesGained)},
-		{"Fewest turns for extra life", strconv.Itoa(m.player.Stats.FewestExtraLifeSolves)},
-		{"Longest solve", fmt.Sprintf("%s (%d)", longest_solve, len(m.player.Stats.LongestSolve))},
-		{"Average solve length", fmt.Sprintf("%.1f", m.player.Stats.AverageSolveLength())},
+		{"Fastest extra life", fastest_extra_life},
 	}
 		
 	stats_table := table.New().
-		Border(lipgloss.NormalBorder()).
+		Border(lipgloss.HiddenBorder()).
+		BorderColumn(false).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
 		Rows(stats...).
 		StyleFunc(func(row, col int) lipgloss.Style {
-			return m.theme.Base().Padding(0, 1)
+			var style lipgloss.Style
+
+			if row % 2 == 0 {
+				style = m.theme.TextAccent().Padding(0, 1)
+			} else {
+				style = m.theme.Base().Padding(0, 1)
+			}
+
+			if col == 1 {
+				style = style.Align(lipgloss.Right).Padding(0, 1, 0, 2)
+			}
+			return style
 		}).
 		Render()
 

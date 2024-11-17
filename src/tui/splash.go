@@ -31,9 +31,11 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) MainMenuView() string {
-	accent := m.theme.TextAccent().Render 
+	accent := m.theme.TextLavender().Render 
 
 	var title []string
+	title = append(title, "\n\n")
+
 	switch m.size {
 	case large:
 		// title = append(title, accent("███████╗███████╗██╗    ██╗██████╗ ███████╗"))

@@ -46,6 +46,9 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		m.text_input.Prompt = " > "
+		m.text_input.PromptStyle = m.default_prompt_style
+
 		switch msg.String() {
 		case "esc":
 			m.text_input.Reset()
@@ -65,12 +68,16 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 					return m.GameOverSwitch(win_msg)
 				}
 
+				m.text_input.Prompt = " ✓ "
+				m.text_input.PromptStyle = m.theme.TextGreen().Bold(true)
 				m.turn = game.NewTurn(m.word_lists.Available, m.settings)
 
 				// time.Sleep(750 * time.Millisecond)
 				// m.text_input.Reset()
 			} else {
 				m.turn.Strikes++
+				m.text_input.Prompt = " ✗ "
+				m.text_input.PromptStyle = m.theme.TextRed().Bold(true)
 			}
 
 			if (m.settings.WinCondition == enums.MaxLives && m.player.HealthCurrent == m.settings.HealthMax) {

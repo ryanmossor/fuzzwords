@@ -7,19 +7,22 @@ import (
 )
 
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
+	// TODO: has_header flag
+	if m.game_active || m.game_over {
+		return m, nil
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if !m.game_active {
-			switch msg.String() {
-			case "s":
-				return m.SettingsSwitch()
-			case "a":
-				return m.AboutSwitch()
-			case "m":
-				return m.MainMenuSwitch()
-			case "q":
-				return m, tea.Quit
-			}
+		switch msg.String() {
+		case "s":
+			return m.SettingsSwitch()
+		case "a":
+			return m.AboutSwitch()
+		case "m":
+			return m.MainMenuSwitch()
+		case "q":
+			return m, tea.Quit
 		}
 	}
 
@@ -27,15 +30,18 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) HeaderView() string {
-	if m.page == game_page || m.page == game_over_page {
+	if m.page == game_page {
 		return ""
+	}
+	if m.page == game_over_page {
+		// No content, but used for top margin
+		return "\n\n\n"
 	}
 
 	bold := m.theme.TextAccent().Bold(true).Render
 	accent := m.theme.TextAccent().Render
 	base := m.theme.Base().Render
 
-	// back := base("← ") + bold("esc") + base(" back")
 	menu := accent("[m]") + base("ain menu")
 	about := accent("[a]") + base("bout")
 	settings := accent("[s]") + base("ettings")
