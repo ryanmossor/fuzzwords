@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	"fzwds/src/enums"
 	"fzwds/src/game"
 	"fzwds/src/utils"
@@ -17,18 +16,14 @@ type EnableInputMsg time.Time
 
 func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
+
+	// TODO: move these to game state?
 	m.game_active = true
 	m.game_over = false
-	m.player = game.InitializePlayer(&m.settings)
 
-	word_list := fzwds.EnglishDictionary
-    m.word_lists = game.WordLists{
-        FULL_MAP: utils.ArrToMap(word_list),
-        Available: utils.FilterWordList(word_list, m.settings.PromptLenMin),
-        Used: make(map[string]bool),
-    }
-	
-	m.turn = game.NewTurn(m.word_lists.Available, m.settings)
+	m.game_state = game.InitializeGame()
+	m.game_state.NewTurn()
+
 	m.game_start_time = time.Now()
 
 	m.footer_cmds = []footerCmd{
@@ -44,8 +39,10 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		m.text_input.Prompt = " > "
-		m.text_input.PromptStyle = m.default_prompt_style
+		// clear validation msg while debouncing enter presses (yes this is kinda scuffed)
+		if msg.String() != "enter" {
+			m.game_state.CurrentTurn.Msg = ""
+		}
 
 		switch msg.String() {
 		case "esc":
@@ -58,50 +55,42 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.state.game.restrict_input = true
 
 			// TODO: trim answer & take only first word before any spaces/symbols
-			m.turn.Answer = strings.ToLower(m.text_input.Value())
-			m.turn.ValidateAnswer(&m.word_lists, m.settings)
+			m.game_state.CurrentTurn.Answer = strings.ToLower(m.text_input.Value())
+			m.game_state.CurrentTurn.ValidateAnswer(&m.game_state.WordLists, m.game_state.Settings)
 
-			// may need to move out of switch/case?
-			if m.turn.IsValid {
-				m.player.HandleCorrectAnswer(m.turn.Answer)
+			if m.game_state.CurrentTurn.IsValid {
+				m.game_state.HandleCorrectAnswer()
 
-				if len(m.word_lists.Available) == 0 {
+				if len(m.game_state.WordLists.Available) == 0 {
 					m.game_active = false
 					win_msg := m.theme.TextGreen().Bold(true).Render("YOU WIN!")
 					return m.GameOverSwitch(win_msg)
 				}
 
-				m.text_input.Prompt = " ✓ "
-				m.text_input.PromptStyle = m.theme.TextGreen().Bold(true)
-				m.turn = game.NewTurn(m.word_lists.Available, m.settings)
+				m.game_state.NewTurn()
 
 				// time.Sleep(750 * time.Millisecond)
 				// m.text_input.Reset()
-			} else {
-				m.turn.Strikes++
-				m.text_input.Prompt = " ✗ "
-				m.text_input.PromptStyle = m.theme.TextRed().Bold(true)
 			}
 
-			if (m.settings.WinCondition == enums.MaxLives && m.player.HealthCurrent == m.settings.HealthMax) {
+			if (m.game_state.Settings.WinCondition == enums.MaxLives && m.game_state.Player.HealthCurrent == m.game_state.Settings.HealthMax) {
 				// TODO: are both of these flags needed?
 				m.game_active = false
 				win_msg := m.theme.TextGreen().Bold(true).Render("YOU WIN!")
 				return m.GameOverSwitch(win_msg)
 			}
 
-			if m.turn.Strikes == m.settings.PromptStrikesMax {
-				m.player.HandleFailedTurn()
+			if m.game_state.CurrentTurn.Strikes == m.game_state.Settings.PromptStrikesMax {
+				m.game_state.HandleFailedTurn()
 
-				if m.player.HealthCurrent == 0 {
+				if m.game_state.Player.HealthCurrent == 0 {
 					// TODO: are both of these flags needed?
 					m.game_active = false
-					game_over_msg := m.theme.TextRed().Bold(true).Render("=== GAME OVER ===")
+					game_over_msg := m.theme.TextRed().Bold(true).Render("===== GAME OVER =====")
 					return m.GameOverSwitch(game_over_msg)
 				} else {
-					m.turn = game.NewTurn(m.word_lists.Available, m.settings)
+					m.game_state.NewTurn()
 					// m.text_input.Reset()
-					// TODO: debounce while sleeping -- bug causing increase of strikes if spamming enter
 					// time.Sleep(2 * time.Second)
 				}
 			}
@@ -126,61 +115,19 @@ func (m model) GameInputView() string {
 		return ""
 	}
 
+	var colorized_text string
 	border_color := m.theme.Border()
-	accent := m.theme.TextAccent().Render
-	blue := m.theme.TextBlue().Render
 
-	prompt_upper := strings.ToUpper(m.turn.Prompt)
-	answer_upper := strings.ToUpper(m.text_input.Value())
-	var sb strings.Builder
-	 
-	switch m.settings.PromptMode {
-	case enums.Fuzzy:
-		prompt_idx := 0
-		for _, c := range answer_upper {
-			curr_char := string(c)
-
-			if prompt_idx < len(prompt_upper) && curr_char == string(prompt_upper[prompt_idx]) {
-				sb.WriteString(blue(curr_char))
-				prompt_idx++
-			} else {
-				sb.WriteString(accent(curr_char))
-			}
-		}
-
-		if m.settings.HighlightInput && utils.IsFuzzyMatch(answer_upper, prompt_upper) {
-			border_color = m.setInputBorderColor(answer_upper)
-		}
-	case enums.Classic:
-		if !strings.Contains(answer_upper, prompt_upper) {
-			sb.WriteString(accent(answer_upper))
-			break
-		}
-		
-		sub_idx := strings.Index(answer_upper, prompt_upper)
-		sb.WriteString(accent(answer_upper[0:sub_idx]))
-		sb.WriteString(blue(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
-		sb.WriteString(accent(answer_upper[sub_idx + len(prompt_upper):]))
-
-		if m.settings.HighlightInput {
-			border_color = m.setInputBorderColor(answer_upper)
-		}
+	if m.game_state.CurrentTurn.Msg != "" {
+		colorized_text = m.renderValidationMsg()
+	} else {
+		colorized_text, border_color = m.renderColorizedInput()
 	}
-
-	// TODO: show possible answer after striking out
-	var turn_msg string
-	if !m.turn.IsValid && m.turn.Strikes < m.settings.PromptStrikesMax {
-		turn_msg = m.theme.TextRed().Render(m.turn.Msg)
-	} else if !m.turn.IsValid && m.turn.Strikes == m.settings.PromptStrikesMax {
-		turn_msg = fmt.Sprintf("Prompt failed. Possible answer: %s", m.turn.SourceWord)
-	}
-	// 	turn_msg = m.theme.TextHighlight().Render(m.turn.Msg)
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		sb.String(),
-		"",
-		turn_msg,
+		colorized_text,
+		"\n",
 		lipgloss.NewStyle().
 			BorderForeground(border_color).
 			BorderStyle(lipgloss.RoundedBorder()).
@@ -190,8 +137,60 @@ func (m model) GameInputView() string {
 }
 
 func (m model) setInputBorderColor(answer string) lipgloss.TerminalColor {
-	if m.word_lists.FULL_MAP[strings.ToLower(answer)] {
+	if m.game_state.WordLists.FULL_MAP[strings.ToLower(answer)] {
 		return m.theme.green
 	}
 	return m.theme.red
+}
+
+func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
+	border_color := m.theme.Border()
+	accent := m.theme.TextAccent().Render
+	blue := m.theme.TextBlue().Render
+
+	prompt_upper := strings.ToUpper(m.game_state.CurrentTurn.Prompt)
+	answer_upper := strings.ToUpper(m.text_input.Value())
+	var colorized_input strings.Builder
+	 
+	switch m.game_state.Settings.PromptMode {
+	case enums.Fuzzy:
+		prompt_idx := 0
+		for _, c := range answer_upper {
+			curr_char := string(c)
+
+			if prompt_idx < len(prompt_upper) && curr_char == string(prompt_upper[prompt_idx]) {
+				colorized_input.WriteString(blue(curr_char))
+				prompt_idx++
+			} else {
+				colorized_input.WriteString(accent(curr_char))
+			}
+		}
+
+		if m.game_state.Settings.HighlightInput && utils.IsFuzzyMatch(answer_upper, prompt_upper) {
+			border_color = m.setInputBorderColor(answer_upper)
+		}
+	case enums.Classic:
+		if !strings.Contains(answer_upper, prompt_upper) {
+			colorized_input.WriteString(accent(answer_upper))
+			break
+		}
+		
+		sub_idx := strings.Index(answer_upper, prompt_upper)
+		colorized_input.WriteString(accent(answer_upper[0:sub_idx]))
+		colorized_input.WriteString(blue(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
+		colorized_input.WriteString(accent(answer_upper[sub_idx + len(prompt_upper):]))
+
+		if m.game_state.Settings.HighlightInput {
+			border_color = m.setInputBorderColor(answer_upper)
+		}
+	}
+
+	return colorized_input.String(), border_color
+}
+
+func (m model) renderValidationMsg() string {
+	if strings.Contains(m.game_state.CurrentTurn.Msg, "Correct") {
+		return m.theme.TextGreen().Bold(true).Render(m.game_state.CurrentTurn.Msg)  
+	}
+	return m.theme.TextRed().Render(m.game_state.CurrentTurn.Msg)  
 }

@@ -20,15 +20,15 @@ type Turn struct {
 	Msg			string
 }
 
-func NewTurn(word_list []string, cfg Settings) Turn {
-	word_idx := rand.Intn(len(word_list))
-	word := word_list[word_idx]
+func (g *GameState) NewTurn() {
+	word_idx := rand.Intn(len(g.WordLists.Available))
+	word := g.WordLists.Available[word_idx]
 	prompt_str := ""
 
-	switch cfg.PromptMode {
+	switch g.Settings.PromptMode {
 	case enums.Fuzzy:
 		min_idx := 0
-		loop_len := min(len(word), cfg.PromptLenMax)
+		loop_len := min(len(word), g.Settings.PromptLenMax)
 		for i := loop_len; i > 0; i-- {
 			substr := word[min_idx:]
 			rand_max := len(substr) - i
@@ -41,27 +41,33 @@ func NewTurn(word_list []string, cfg Settings) Turn {
 			prompt_str += string(c)
 		}
 	case enums.Classic:
-		if len(word) <= cfg.PromptLenMax {
+		if len(word) <= g.Settings.PromptLenMax {
 			prompt_str = word
 		} else {
-			rand_max := len(word) - cfg.PromptLenMax
+			rand_max := len(word) - g.Settings.PromptLenMax
 			rand_idx := rand.Intn(rand_max)
-			prompt_str = word[rand_idx:cfg.PromptLenMax + rand_idx]
+			prompt_str = word[rand_idx:g.Settings.PromptLenMax + rand_idx]
 		}
 	}
 
 	slog.Debug("New turn", 
 		"prompt", prompt_str,
 		"sourceWord", word,
-		"promptMode", cfg.PromptMode.String())
+		"promptMode", g.Settings.PromptMode.String())
 
-	return Turn{ 
+	next_turn := Turn{ 
 		SourceWord: word,
 		Prompt: prompt_str,
+		IsValid: true,
 		Strikes: 0,
+		Msg: g.CurrentTurn.Msg,
 	}
+
+	g.PreviousTurn = g.CurrentTurn
+	g.CurrentTurn = next_turn
 }
 
+// TODO: maybe return validation msg rather than storing on turn object? store in tui state instead
 func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 	slog.Debug("Validating answer", 
 		"promptStr", t.Prompt,
@@ -69,37 +75,46 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 		"sourceWord", t.SourceWord,
 		"promptMode", cfg.PromptMode.String())
 
+	is_valid := true
+	msg := "✓ Correct!"
+
 	if len(t.Answer) == 0 {
-		t.IsValid = false
-		t.Msg = ""
-		return
+		is_valid = false
+		msg = "No answer given"
 	}
 
 	answer_upper := strings.ToUpper(t.Answer)
 
-	if !word_lists.FULL_MAP[t.Answer] {
-		t.IsValid = false
-		t.Msg = fmt.Sprintf("Invalid word: %s", answer_upper)
-		return
+	if is_valid && !word_lists.FULL_MAP[t.Answer] {
+		is_valid = false
+		msg = fmt.Sprintf("Invalid word: %s", answer_upper)
 	}
 
-	if (cfg.PromptMode == enums.Fuzzy && !utils.IsFuzzyMatch(t.Answer, t.Prompt)) ||
-		(cfg.PromptMode == enums.Classic && !strings.Contains(t.Answer, t.Prompt)) {
-			t.IsValid = false
-			t.Msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
-			return
+	if is_valid && ((cfg.PromptMode == enums.Fuzzy && !utils.IsFuzzyMatch(t.Answer, t.Prompt)) ||
+		(cfg.PromptMode == enums.Classic && !strings.Contains(t.Answer, t.Prompt))) {
+			is_valid = false
+			msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
 		}
 	
-	if word_lists.Used[t.Answer] {
-		t.IsValid = false
-		t.Msg = fmt.Sprintf("🔒 %s already used", answer_upper)
-		return
+	if is_valid && word_lists.Used[t.Answer] {
+		is_valid = false
+		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
 	}
 
-	word_idx, _ := slices.BinarySearch(word_lists.Available, t.Answer)
-	word_lists.Available = utils.Remove(word_lists.Available, word_idx)
-	word_lists.Used[t.Answer] = true
+	if !is_valid {
+		t.Strikes++
+	}
 
-	t.IsValid = true
-	t.Msg = "Correct!"
+	if !is_valid && t.Strikes == cfg.PromptStrikesMax {
+		msg = fmt.Sprintf("Prompt %s failed. Possible answer: %s", strings.ToUpper(t.Prompt), strings.ToUpper(t.SourceWord))
+	}
+
+	t.IsValid = is_valid
+	t.Msg = msg
+
+	if is_valid {
+		word_idx, _ := slices.BinarySearch(word_lists.Available, t.Answer)
+		word_lists.Available = utils.Remove(word_lists.Available, word_idx)
+		word_lists.Used[t.Answer] = true
+	}
 }

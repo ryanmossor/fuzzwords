@@ -50,22 +50,22 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) GameOverView() string {
-	longest_solve := m.player.Stats.LongestSolve
+	longest_solve := m.game_state.Player.Stats.LongestSolve
 	if longest_solve == "" {
 		longest_solve = "-"
 	}
 
-	fastest_extra_life := fmt.Sprintf("%d turns", m.player.Stats.FewestExtraLifeSolves)
-	if m.player.Stats.FewestExtraLifeSolves == 0 {
+	fastest_extra_life := fmt.Sprintf("%d turns", m.game_state.Player.Stats.FewestExtraLifeSolves)
+	if m.game_state.Player.Stats.FewestExtraLifeSolves == 0 {
 		fastest_extra_life = "-"
 	}
 
 	stats := [][]string{
-		{"Prompts solved", strconv.Itoa(m.player.Stats.PromptsSolved)},
-		{"Prompts failed", strconv.Itoa(m.player.Stats.PromptsFailed)},
-		{"Average solve length", fmt.Sprintf("%.1f letters", m.player.Stats.AverageSolveLength())},
-		{"Longest word used", fmt.Sprintf("%s (%d)", longest_solve, len(m.player.Stats.LongestSolve))},
-		{"Extra lives gained", strconv.Itoa(m.player.Stats.ExtraLivesGained)},
+		{"Prompts solved", strconv.Itoa(m.game_state.Player.Stats.PromptsSolved)},
+		{"Prompts failed", strconv.Itoa(m.game_state.Player.Stats.PromptsFailed)},
+		{"Average solve length", fmt.Sprintf("%.1f letters", m.game_state.Player.Stats.AverageSolveLength())},
+		{"Longest word used", fmt.Sprintf("%s (%d)", longest_solve, len(m.game_state.Player.Stats.LongestSolve))},
+		{"Extra lives gained", strconv.Itoa(m.game_state.Player.Stats.ExtraLivesGained)},
 		{"Fastest extra life", fastest_extra_life},
 	}
 		

@@ -39,6 +39,7 @@ type gameState struct {
 
 type state struct {
 	press_play			pressPlayState
+	// TODO: change to game_input state and move GameState here?
 	game				gameState
 }
 
@@ -67,17 +68,12 @@ type model struct {
 	default_prompt_style	lipgloss.Style
 
 	state				state
-
-	settings			game.Settings
-	player				game.Player
-	turn				game.Turn
-	word_lists			game.WordLists
+	game_state			game.GameState
 
 	game_start_time		time.Time
 }
 
 func NewModel(renderer *lipgloss.Renderer) tea.Model {
-	cfg := game.InitializeSettings()
 	theme := BasicTheme(renderer)
 
 	text := textinput.New()
@@ -102,8 +98,6 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 			{key: "s", value: "settings"},
 			{key: "q", value: "quit"},
 		},
-
-		settings: cfg,
 
 		state: state{
 			press_play: pressPlayState{ visible: true },

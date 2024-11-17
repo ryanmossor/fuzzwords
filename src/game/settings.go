@@ -24,7 +24,7 @@ func InitializeSettings() Settings {
 		Alphabet: enums.FullAlphabet,
 		HealthInitial: 2,
 		HealthMax: 3,
-		HighlightInput: true,
+		HighlightInput: false,
 		PromptLenMax: 3,
 		PromptLenMin: 2,
 		PromptMode: enums.Fuzzy,

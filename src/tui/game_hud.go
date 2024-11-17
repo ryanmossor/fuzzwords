@@ -27,16 +27,16 @@ func (m model) GameHudView() string {
 	health := m.RenderHealthDisplay()
 
 	var strikes string
-	if m.turn.Strikes > 0 {
-		strikes = base("Strikes: ") + red(strconv.Itoa(m.turn.Strikes)) + base(" / " + strconv.Itoa(m.settings.PromptStrikesMax))
+	if m.game_state.CurrentTurn.Strikes > 0 {
+		strikes = base("Strikes: ") + red(strconv.Itoa(m.game_state.CurrentTurn.Strikes)) + base(" / " + strconv.Itoa(m.game_state.Settings.PromptStrikesMax))
 	} else {
-		strikes = fmt.Sprintf("Strikes: %d / %d", m.turn.Strikes, m.settings.PromptStrikesMax)
+		strikes = fmt.Sprintf("Strikes: %d / %d", m.game_state.CurrentTurn.Strikes, m.game_state.Settings.PromptStrikesMax)
 	}
 
 	// elapsed_sec := int(time.Since(m.game_start_time).Seconds())
 	// elapsed_formatted := "⏱  " + utils.FormatTime(elapsed_sec)
 
-	game_mode := fmt.Sprintf("Mode: %s", m.settings.PromptMode.String())
+	game_mode := fmt.Sprintf("Mode: %s", m.game_state.Settings.PromptMode.String())
 
 	fields := []string{
 		health,
@@ -56,9 +56,9 @@ func (m model) GameHudView() string {
 		Render()
 
 	letters_remaining := []string{}
-	for _, c := range m.settings.Alphabet {
+	for _, c := range m.game_state.Settings.Alphabet {
 		letter := string(c)
-		if m.player.LettersRemaining[letter] {
+		if m.game_state.Player.LettersRemaining[letter] {
 			letters_remaining = append(letters_remaining, dim(letter))
 		} else {
 			letters_remaining = append(letters_remaining, yellow(letter))
@@ -79,17 +79,17 @@ func (m model) RenderHealthDisplay() string {
 	var health_display strings.Builder
 	i := 0
 
-	for i < m.player.HealthCurrent {
+	for i < m.game_state.Player.HealthCurrent {
 		health_display.WriteString(green("█"))
-		if i < m.settings.HealthMax - 1 {
+		if i < m.game_state.Settings.HealthMax - 1 {
 			health_display.WriteString(" ")
 		}
 		i++
 	}
 
-	for i < m.settings.HealthMax {
+	for i < m.game_state.Settings.HealthMax {
 		health_display.WriteString(base("▒"))
-		if i < m.settings.HealthMax - 1 {
+		if i < m.game_state.Settings.HealthMax - 1 {
 			health_display.WriteString(" ")
 		}
 		i++

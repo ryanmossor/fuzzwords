@@ -12,7 +12,6 @@ type Player struct {
 	LettersRemaining 		map[string]bool
 	TurnsSinceLastExtraLife int
 	Stats					PlayerStats
-	_gameSettings			*Settings
 }
 
 func InitializePlayer(cfg *Settings) Player {
@@ -20,48 +19,47 @@ func InitializePlayer(cfg *Settings) Player {
 		HealthCurrent: cfg.HealthInitial,
 		LettersRemaining: alphabetToMap(cfg.Alphabet),
 		Stats: InitializePlayerStats(),
-		_gameSettings: cfg,
 	}
 
 	return player
 }
 
-func (p *Player) HandleCorrectAnswer(answer string) {
-	p.TurnsSinceLastExtraLife++
+func (g *GameState) HandleCorrectAnswer() {
+	g.Player.TurnsSinceLastExtraLife++
 
-	for _, c := range strings.ToUpper(answer) {
+	for _, c := range strings.ToUpper(g.CurrentTurn.Answer) {
 		ch := string(c)
 
-		if strings.Contains(p._gameSettings.Alphabet, ch) && !slices.Contains(p.LettersUsed, ch) {
-			p.LettersUsed = append(p.LettersUsed, ch)
+		if strings.Contains(g.Settings.Alphabet, ch) && !slices.Contains(g.Player.LettersUsed, ch) {
+			g.Player.LettersUsed = append(g.Player.LettersUsed, ch)
 		}
 
-		p.LettersRemaining[ch] = true
+		g.Player.LettersRemaining[ch] = true
 	}
 
-	if len(p.LettersUsed) >= len(p._gameSettings.Alphabet) {
-		p.LettersUsed = nil
-		p.LettersRemaining = alphabetToMap(p._gameSettings.Alphabet)
+	if len(g.Player.LettersUsed) >= len(g.Settings.Alphabet) {
+		g.Player.LettersUsed = nil
+		g.Player.LettersRemaining = alphabetToMap(g.Settings.Alphabet)
 
-		p.Stats.ExtraLivesGained++
-		if p.Stats.FewestExtraLifeSolves == 0 || p.TurnsSinceLastExtraLife < p.Stats.FewestExtraLifeSolves {
-			p.Stats.FewestExtraLifeSolves = p.TurnsSinceLastExtraLife
+		g.Player.Stats.ExtraLivesGained++
+		if g.Player.Stats.FewestExtraLifeSolves == 0 || g.Player.TurnsSinceLastExtraLife < g.Player.Stats.FewestExtraLifeSolves {
+			g.Player.Stats.FewestExtraLifeSolves = g.Player.TurnsSinceLastExtraLife
 		}
-		p.TurnsSinceLastExtraLife = 0
+		g.Player.TurnsSinceLastExtraLife = 0
 
-		if p.HealthCurrent < p._gameSettings.HealthMax {
-			p.HealthCurrent++
+		if g.Player.HealthCurrent < g.Settings.HealthMax {
+			g.Player.HealthCurrent++
 		}
 	}
 
-	slices.Sort(p.LettersUsed)
-	p.Stats.UpdateSolvedStats(answer)
+	slices.Sort(g.Player.LettersUsed)
+	g.Player.Stats.UpdateSolvedStats(g.CurrentTurn.Answer)
 }
 
-func (p *Player) HandleFailedTurn() {
-	p.HealthCurrent--
-	p.TurnsSinceLastExtraLife++
-	p.Stats.UpdateFailedStats()
+func (g *GameState) HandleFailedTurn() {
+	g.Player.HealthCurrent--
+	g.Player.TurnsSinceLastExtraLife++
+	g.Player.Stats.UpdateFailedStats()
 }
 
 func alphabetToMap(alphabet string) map[string]bool {
