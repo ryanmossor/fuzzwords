@@ -17,7 +17,7 @@ type Turn struct {
 
 	Answer     	string
 	IsValid		bool
-	Msg			string
+	ValidationMsg			string
 }
 
 func (g *GameState) NewTurn() {
@@ -58,9 +58,9 @@ func (g *GameState) NewTurn() {
 	next_turn := Turn{ 
 		SourceWord: word,
 		Prompt: prompt_str,
-		IsValid: true,
 		Strikes: 0,
-		Msg: g.CurrentTurn.Msg,
+		IsValid: true,
+		ValidationMsg: g.CurrentTurn.ValidationMsg,
 	}
 
 	g.PreviousTurn = g.CurrentTurn
@@ -110,7 +110,7 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 	}
 
 	t.IsValid = is_valid
-	t.Msg = msg
+	t.ValidationMsg = msg
 
 	if is_valid {
 		word_idx, _ := slices.BinarySearch(word_lists.Available, t.Answer)

@@ -41,7 +41,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		// clear validation msg while debouncing enter presses (yes this is kinda scuffed)
 		if msg.String() != "enter" {
-			m.game_state.CurrentTurn.Msg = ""
+			m.game_state.CurrentTurn.ValidationMsg = ""
 		}
 
 		switch msg.String() {
@@ -118,7 +118,7 @@ func (m model) GameInputView() string {
 	var colorized_text string
 	border_color := m.theme.Border()
 
-	if m.game_state.CurrentTurn.Msg != "" {
+	if m.game_state.CurrentTurn.ValidationMsg != "" {
 		colorized_text = m.renderValidationMsg()
 	} else {
 		colorized_text, border_color = m.renderColorizedInput()
@@ -189,8 +189,8 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 }
 
 func (m model) renderValidationMsg() string {
-	if strings.Contains(m.game_state.CurrentTurn.Msg, "Correct") {
-		return m.theme.TextGreen().Bold(true).Render(m.game_state.CurrentTurn.Msg)  
+	if strings.Contains(m.game_state.CurrentTurn.ValidationMsg, "Correct") {
+		return m.theme.TextGreen().Bold(true).Render(m.game_state.CurrentTurn.ValidationMsg)  
 	}
-	return m.theme.TextRed().Render(m.game_state.CurrentTurn.Msg)  
+	return m.theme.TextRed().Render(m.game_state.CurrentTurn.ValidationMsg)  
 }
