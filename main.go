@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"fzw/src/tui"
+	"fzwds/src/tui"
 	"log/slog"
 	"os"
 	"path/filepath"

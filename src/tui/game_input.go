@@ -2,10 +2,9 @@ package tui
 
 import (
 	"fmt"
-	"fzw/src/enums"
-	"fzw/src/game"
-	"fzw/src/utils"
-	"os"
+	"fzwds/src/enums"
+	"fzwds/src/game"
+	"fzwds/src/utils"
 	"strings"
 	"time"
 

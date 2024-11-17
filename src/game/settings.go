@@ -1,6 +1,6 @@
 package game
 
-import "fzw/src/enums"
+import "fzwds/src/enums"
 
 // TODO: individual setting struct w/ name, default value, optional help text?
 type Settings struct {

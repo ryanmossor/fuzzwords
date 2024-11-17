@@ -2,8 +2,8 @@ package game
 
 import (
 	"fmt"
-	"fzw/src/enums"
-	"fzw/src/utils"
+	"fzwds/src/enums"
+	"fzwds/src/utils"
 	"log/slog"
 	"math/rand"
 	"slices"

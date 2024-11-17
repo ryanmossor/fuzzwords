@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"fzw/src/game"
+	"fzwds/src/game"
 	"math"
 	"time"
 

@@ -1,8 +1,8 @@
 package game
 
 import (
-	"fzw/src/enums"
-	"fzw/src/utils"
+	"fzwds/src/enums"
+	"fzwds/src/utils"
 	"strings"
 )
 

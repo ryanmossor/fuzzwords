@@ -1,4 +1,4 @@
-module fzw
+module fzwds
 
 go 1.22.4
 
