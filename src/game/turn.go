@@ -79,20 +79,20 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 
 	if !word_lists.FULL_MAP[t.Answer] {
 		t.IsValid = false
-		t.Msg = fmt.Sprintf("Invalid word %s – try again", answer_upper)
+		t.Msg = fmt.Sprintf("Invalid word: %s", answer_upper)
 		return
 	}
 
 	if (cfg.PromptMode == enums.Fuzzy && !utils.IsFuzzyMatch(t.Answer, t.Prompt)) ||
 		(cfg.PromptMode == enums.Classic && !strings.Contains(t.Answer, t.Prompt)) {
 			t.IsValid = false
-			t.Msg = fmt.Sprintf("%s does not satisfy the prompt – try again", answer_upper)
+			t.Msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
 			return
 		}
 	
 	if word_lists.Used[t.Answer] {
 		t.IsValid = false
-		t.Msg = fmt.Sprintf("🔒 %s already used – try again", answer_upper)
+		t.Msg = fmt.Sprintf("🔒 %s already used", answer_upper)
 		return
 	}
 
