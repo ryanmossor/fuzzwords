@@ -33,8 +33,13 @@ type footerCmd struct {
 	value	string
 }
 
+type gameState struct {
+	restrict_input		bool
+}
+
 type state struct {
 	press_play			pressPlayState
+	game				gameState
 }
 
 type model struct {
@@ -140,6 +145,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case PressPlayTickMsg:
 		m, cmd := m.PressPlayUpdate(msg)
 		return m, cmd
+	case EnableInputMsg:
+		m.state.game.restrict_input = false
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":

@@ -14,6 +14,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type EnableInputMsg time.Time
+
 func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
 	m.game_active = true
@@ -40,6 +42,9 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 		{key: "esc", value: "clear input"},
 	}
 
+	m.state.game.restrict_input = false
+	m.text_input.Reset()
+
 	return m, textinput.Blink
 }
 
@@ -53,6 +58,12 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "esc":
 			m.text_input.Reset()
 		case "enter":
+			if m.state.game.restrict_input {
+				return m, nil
+			}
+
+			m.state.game.restrict_input = true
+
 			// TODO: trim answer & take only first word before any spaces/symbols
 			m.turn.Answer = strings.ToLower(m.text_input.Value())
 			m.turn.ValidateAnswer(&m.word_lists, m.settings)
@@ -62,7 +73,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.player.HandleCorrectAnswer(m.turn.Answer)
 
 				if len(m.word_lists.Available) == 0 {
-					m.game_over = true
 					m.game_active = false
 					win_msg := m.theme.TextGreen().Bold(true).Render("YOU WIN!")
 					return m.GameOverSwitch(win_msg)
@@ -82,7 +92,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			if (m.settings.WinCondition == enums.MaxLives && m.player.HealthCurrent == m.settings.HealthMax) {
 				// TODO: are both of these flags needed?
-				m.game_over = true
 				m.game_active = false
 				win_msg := m.theme.TextGreen().Bold(true).Render("YOU WIN!")
 				return m.GameOverSwitch(win_msg)
@@ -94,18 +103,22 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				if m.player.HealthCurrent == 0 {
 					// TODO: are both of these flags needed?
 					m.game_active = false
-					m.game_over = true
 					game_over_msg := m.theme.TextRed().Bold(true).Render("=== GAME OVER ===")
 					return m.GameOverSwitch(game_over_msg)
 				} else {
 					m.turn = game.NewTurn(m.word_lists.Available, m.settings)
 					// m.text_input.Reset()
 					// TODO: debounce while sleeping -- bug causing increase of strikes if spamming enter
-					time.Sleep(2 * time.Second)
+					// time.Sleep(2 * time.Second)
 				}
 			}
 
 			m.text_input.Reset()
+
+			// Debounce addtional enter presses
+			return m, tea.Tick(time.Millisecond * 300, func(t time.Time) tea.Msg {
+				return EnableInputMsg(t)
+			})
 		}
 	}
 

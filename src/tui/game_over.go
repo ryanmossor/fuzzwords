@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -10,6 +11,7 @@ import (
 )
 
 func (m model) GameOverSwitch(game_over_msg string) (model, tea.Cmd) {
+	m.game_over = true
 	m.game_over_msg = game_over_msg
 	m = m.SwitchPage(game_over_page)
 
@@ -19,16 +21,25 @@ func (m model) GameOverSwitch(game_over_msg string) (model, tea.Cmd) {
 		{key: "q", value: "quit"},
 	}
 
-	return m, nil
+	// Briefly prevent key presses on game over screen
+	return m, tea.Tick(time.Millisecond * 1000, func(t time.Time) tea.Msg {
+		return EnableInputMsg(t)
+	})
 }
 
 func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.state.game.restrict_input {
+			return m, nil
+		}
+
 		switch msg.String() {
 		case "m":
+			m.game_over = false
 			return m.MainMenuSwitch()
 		case "enter":
+			m.game_over = false
 			return m.GameSwitch()
 		case "q":
 			return m, tea.Quit
