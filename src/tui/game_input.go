@@ -21,16 +21,10 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.game_over = false
 	m.player = game.InitializePlayer(&m.settings)
 
-	// TODO: initialize word lists in background on program load
-    word_list, err := utils.ReadLines("./wordlist.txt", m.settings.PromptLenMin)
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "error: %v\n", err)
-        os.Exit(1)
-    }
-
+	word_list := fzwds.EnglishDictionary
     m.word_lists = game.WordLists{
         FULL_MAP: utils.ArrToMap(word_list),
-        Available: word_list,
+        Available: utils.FilterWordList(word_list, m.settings.PromptLenMin),
         Used: make(map[string]bool),
     }
 	

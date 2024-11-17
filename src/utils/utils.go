@@ -1,10 +1,8 @@
 package utils
 
 import (
-	"bufio"
 	"fmt"
 	"math"
-	"os"
 )
 
 func Average(arr []int) float64 {
@@ -43,24 +41,15 @@ func ArrToMap(lines []string) map[string]bool {
 	return word_map
 }
 
-func ReadLines(path string, min_len int) ([]string, error) {
-    file, err := os.Open(path)
-    if err != nil {
-        return nil, err
-    }
-    defer file.Close()
-
-    var lines []string
-    scanner := bufio.NewScanner(file)
-    for scanner.Scan() {
-		line := scanner.Text()
-		if len(line) >= min_len {
-			lines = append(lines, line)
+func FilterWordList(words []string, min_len int) []string {
+	var filtered []string
+	for _, word := range words {
+		if len(word) > min_len {
+			filtered = append(filtered, word)
 		}
-    }
-
-    return lines, scanner.Err()
-} 
+	}
+	return filtered
+}
 
 func FormatTime(seconds int) string {
 	if seconds < 3600 {
