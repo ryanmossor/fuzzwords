@@ -49,11 +49,6 @@ func (g *GameState) NewTurn() {
 		}
 	}
 
-	slog.Debug("New turn", 
-		"prompt", prompt_str,
-		"sourceWord", word,
-		"promptMode", g.Settings.PromptMode.String())
-
 	next_turn := Turn{ 
 		SourceWord: word,
 		Prompt: prompt_str,
@@ -65,56 +60,60 @@ func (g *GameState) NewTurn() {
 	g.CurrentTurn = next_turn
 }
 
-func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) string {
+func (g *GameState) ValidateAnswer() string {
 	is_valid := true
 	msg := "✓ Correct!"
 
-	if len(t.Answer) == 0 {
+	if len(g.CurrentTurn.Answer) == 0 {
 		is_valid = false
 		msg = "No answer given"
 	}
 
-	answer_upper := strings.ToUpper(t.Answer)
+	answer_upper := strings.ToUpper(g.CurrentTurn.Answer)
 
-	if is_valid && !word_lists.FULL_MAP[t.Answer] {
+	if is_valid && !g.WordLists.FULL_MAP[g.CurrentTurn.Answer] {
 		is_valid = false
 		msg = fmt.Sprintf("Invalid word: %s", answer_upper)
 	}
 
-	if is_valid && ((cfg.PromptMode == enums.Fuzzy && !utils.IsFuzzyMatch(t.Answer, t.Prompt)) ||
-		(cfg.PromptMode == enums.Classic && !strings.Contains(t.Answer, t.Prompt))) {
-			is_valid = false
-			msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
-		}
+	fuzzy_match := g.Settings.PromptMode == enums.Fuzzy && utils.IsFuzzyMatch(g.CurrentTurn.Answer, g.CurrentTurn.Prompt)
+	classic_match := g.Settings.PromptMode == enums.Classic && strings.Contains(g.CurrentTurn.Answer, g.CurrentTurn.Prompt)
+	if is_valid && !(fuzzy_match || classic_match) {
+		is_valid = false
+		msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
+	}
 	
-	if is_valid && word_lists.Used[t.Answer] {
+	if is_valid && g.WordLists.Used[g.CurrentTurn.Answer] {
 		is_valid = false
 		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
 	}
 
 	if !is_valid {
-		t.Strikes++
-	}
-
-	if !is_valid && t.Strikes == cfg.PromptStrikesMax {
-		msg = fmt.Sprintf("Prompt %s failed. Possible answer: %s", strings.ToUpper(t.Prompt), strings.ToUpper(t.SourceWord))
-	}
-
-	t.IsValid = is_valid
-
-	if is_valid {
-		word_idx, _ := slices.BinarySearch(word_lists.Available, t.Answer)
-		word_lists.Available = utils.Remove(word_lists.Available, word_idx)
-		word_lists.Used[t.Answer] = true
+		g.CurrentTurn.Strikes++
 	}
 
 	slog.Debug("Answer validated", 
-		"promptStr", t.Prompt,
-		"sourceWord", t.SourceWord,
-		"answer", t.Answer,
+		"promptStr", g.CurrentTurn.Prompt,
+		"sourceWord", g.CurrentTurn.SourceWord,
+		"answer", g.CurrentTurn.Answer,
 		"isValid", is_valid,
 		"validationMsg", msg,
-		"promptMode", cfg.PromptMode.String())
+		"promptMode", g.Settings.PromptMode.String())
+
+	if !is_valid && g.CurrentTurn.Strikes == g.Settings.PromptStrikesMax {
+		msg = fmt.Sprintf(
+			"Prompt %s failed. Possible answer: %s",
+			strings.ToUpper(g.CurrentTurn.Prompt),
+			strings.ToUpper(g.CurrentTurn.SourceWord))
+	}
+
+	g.CurrentTurn.IsValid = is_valid
+
+	if is_valid {
+		word_idx, _ := slices.BinarySearch(g.WordLists.Available, g.CurrentTurn.Answer)
+		g.WordLists.Available = utils.Remove(g.WordLists.Available, word_idx)
+		g.WordLists.Used[g.CurrentTurn.Answer] = true
+	}
 
 	return msg
 }

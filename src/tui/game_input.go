@@ -57,7 +57,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			// TODO: trim answer & take only first word before any spaces/symbols
 			m.game_state.CurrentTurn.Answer = strings.ToLower(m.text_input.Value())
-			m.state.game.validation_msg = m.game_state.CurrentTurn.ValidateAnswer(&m.game_state.WordLists, m.game_state.Settings)
+			m.state.game.validation_msg = m.game_state.ValidateAnswer()
 
 			if m.game_state.CurrentTurn.IsValid {
 				m.game_state.HandleCorrectAnswer()
