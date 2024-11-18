@@ -16,6 +16,7 @@ type PlayerStats struct {
 	LetterCounts			map[string]int
 	SolveLengths			[]int
 	// TODO: most unique letters in a solve
+	ElapsedSeconds			int
 }
 
 func InitializePlayerStats() PlayerStats {

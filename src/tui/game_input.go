@@ -63,7 +63,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.game_state.HandleCorrectAnswer()
 
 				if len(m.game_state.WordLists.Available) == 0 {
-					m.game_active = false
 					win_msg := m.theme.TextGreen().Bold(true).Render("YOU WIN!")
 					return m.GameOverSwitch(win_msg)
 				}
@@ -72,8 +71,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			if (m.game_state.Settings.WinCondition == enums.MaxLives && m.game_state.Player.HealthCurrent == m.game_state.Settings.HealthMax) {
-				// TODO: are both of these flags needed?
-				m.game_active = false
 				win_msg := m.theme.TextGreen().Bold(true).Render("YOU WIN!")
 				return m.GameOverSwitch(win_msg)
 			}
@@ -82,8 +79,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.game_state.HandleFailedTurn()
 
 				if m.game_state.Player.HealthCurrent == 0 {
-					// TODO: are both of these flags needed?
-					m.game_active = false
 					game_over_msg := m.theme.TextRed().Bold(true).Render("===== GAME OVER =====")
 					return m.GameOverSwitch(game_over_msg)
 				} else {

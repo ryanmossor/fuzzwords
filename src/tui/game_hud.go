@@ -33,16 +33,12 @@ func (m model) GameHudView() string {
 		strikes = fmt.Sprintf("Strikes: %d / %d", m.game_state.CurrentTurn.Strikes, m.game_state.Settings.PromptStrikesMax)
 	}
 
-	// elapsed_sec := int(time.Since(m.game_start_time).Seconds())
-	// elapsed_formatted := "⏱  " + utils.FormatTime(elapsed_sec)
-
 	game_mode := fmt.Sprintf("Mode: %s", m.game_state.Settings.PromptMode.String())
 
 	fields := []string{
 		health,
 		game_mode,
 		strikes,
-		// elapsed_formatted,
 	}
 
 	header := table.New().

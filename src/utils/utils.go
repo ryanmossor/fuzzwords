@@ -55,12 +55,12 @@ func FormatTime(seconds int) string {
 	if seconds < 3600 {
 		minutes := seconds / 60
 		sec := seconds % 60
-		return fmt.Sprintf("%d:%02d", minutes, sec)
+		return fmt.Sprintf("%dm%02ds", minutes, sec)
 	} else {
 		hours := seconds / 3600
 		remainingMinutes := (seconds % 3600) / 60
 		remainingSeconds := seconds % 60
-		return fmt.Sprintf("%d:%02d:%02d", hours, remainingMinutes, remainingSeconds)
+		return fmt.Sprintf("%dh%02dm%02ds", hours, remainingMinutes, remainingSeconds)
 	}
 }
 

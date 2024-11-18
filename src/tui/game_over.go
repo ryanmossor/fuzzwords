@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"fzwds/src/utils"
 	"strconv"
 	"time"
 
@@ -11,7 +12,12 @@ import (
 )
 
 func (m model) GameOverSwitch(game_over_msg string) (model, tea.Cmd) {
+	// TODO: are both of these flags needed?
+	m.game_active = false
 	m.game_over = true
+
+	m.game_state.Player.Stats.ElapsedSeconds = int(time.Since(m.game_start_time).Seconds())
+
 	m.game_over_msg = game_over_msg
 	m = m.SwitchPage(game_over_page)
 
@@ -61,6 +67,7 @@ func (m model) GameOverView() string {
 	}
 
 	stats := [][]string{
+		{"Time survived", utils.FormatTime(m.game_state.Player.Stats.ElapsedSeconds)},
 		{"Prompts solved", strconv.Itoa(m.game_state.Player.Stats.PromptsSolved)},
 		{"Prompts failed", strconv.Itoa(m.game_state.Player.Stats.PromptsFailed)},
 		{"Average solve length", fmt.Sprintf("%.1f letters", m.game_state.Player.Stats.AverageSolveLength())},
