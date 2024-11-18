@@ -20,6 +20,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	// TODO: move these to game state?
 	m.game_active = true
 	m.game_over = false
+	m.state.game.validation_msg = ""
 
 	m.game_state = game.InitializeGame()
 	m.game_state.NewTurn()
@@ -41,7 +42,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		// clear validation msg while debouncing enter presses (yes this is kinda scuffed)
 		if msg.String() != "enter" {
-			m.game_state.CurrentTurn.ValidationMsg = ""
+			m.state.game.validation_msg = ""
 		}
 
 		switch msg.String() {
@@ -56,7 +57,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			// TODO: trim answer & take only first word before any spaces/symbols
 			m.game_state.CurrentTurn.Answer = strings.ToLower(m.text_input.Value())
-			m.game_state.CurrentTurn.ValidateAnswer(&m.game_state.WordLists, m.game_state.Settings)
+			m.state.game.validation_msg = m.game_state.CurrentTurn.ValidateAnswer(&m.game_state.WordLists, m.game_state.Settings)
 
 			if m.game_state.CurrentTurn.IsValid {
 				m.game_state.HandleCorrectAnswer()
@@ -114,7 +115,7 @@ func (m model) GameInputView() string {
 	var colorized_text string
 	var border_color lipgloss.TerminalColor
 
-	if m.game_state.CurrentTurn.ValidationMsg != "" {
+	if m.state.game.validation_msg != "" {
 		colorized_text, border_color = m.renderValidationMsg()
 	} else {
 		colorized_text, border_color = m.renderColorizedInput()
@@ -187,8 +188,8 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
 	border_color := m.theme.Border()
 
-	if strings.Contains(m.game_state.CurrentTurn.ValidationMsg, "Correct") {
-		return m.theme.TextGreen().Bold(true).Render(m.game_state.CurrentTurn.ValidationMsg), border_color
+	if strings.Contains(m.state.game.validation_msg, "Correct") {
+		return m.theme.TextGreen().Bold(true).Render(m.state.game.validation_msg), border_color
 	}
 
 	if m.game_state.CurrentTurn.Strikes > 0 {
@@ -196,5 +197,5 @@ func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
 		border_color = m.theme.red
 	}
 
-	return m.theme.TextRed().Render(m.game_state.CurrentTurn.ValidationMsg), border_color
+	return m.theme.TextRed().Render(m.state.game.validation_msg), border_color
 }

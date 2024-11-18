@@ -35,6 +35,7 @@ type footerCmd struct {
 
 type gameState struct {
 	restrict_input		bool
+	validation_msg		string
 }
 
 type state struct {

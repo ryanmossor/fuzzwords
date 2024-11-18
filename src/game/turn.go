@@ -17,7 +17,6 @@ type Turn struct {
 
 	Answer     	string
 	IsValid		bool
-	ValidationMsg			string
 }
 
 func (g *GameState) NewTurn() {
@@ -60,21 +59,13 @@ func (g *GameState) NewTurn() {
 		Prompt: prompt_str,
 		Strikes: 0,
 		IsValid: true,
-		ValidationMsg: g.CurrentTurn.ValidationMsg,
 	}
 
 	g.PreviousTurn = g.CurrentTurn
 	g.CurrentTurn = next_turn
 }
 
-// TODO: maybe return validation msg rather than storing on turn object? store in tui state instead
-func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
-	slog.Debug("Validating answer", 
-		"promptStr", t.Prompt,
-		"answer", t.Answer,
-		"sourceWord", t.SourceWord,
-		"promptMode", cfg.PromptMode.String())
-
+func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) string {
 	is_valid := true
 	msg := "✓ Correct!"
 
@@ -110,11 +101,20 @@ func (t *Turn) ValidateAnswer(word_lists *WordLists, cfg Settings) {
 	}
 
 	t.IsValid = is_valid
-	t.ValidationMsg = msg
 
 	if is_valid {
 		word_idx, _ := slices.BinarySearch(word_lists.Available, t.Answer)
 		word_lists.Available = utils.Remove(word_lists.Available, word_idx)
 		word_lists.Used[t.Answer] = true
 	}
+
+	slog.Debug("Answer validated", 
+		"promptStr", t.Prompt,
+		"sourceWord", t.SourceWord,
+		"answer", t.Answer,
+		"isValid", is_valid,
+		"validationMsg", msg,
+		"promptMode", cfg.PromptMode.String())
+
+	return msg
 }
