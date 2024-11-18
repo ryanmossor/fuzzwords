@@ -68,9 +68,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				}
 
 				m.game_state.NewTurn()
-
-				// time.Sleep(750 * time.Millisecond)
-				// m.text_input.Reset()
 			}
 
 			if (m.game_state.Settings.WinCondition == enums.MaxLives && m.game_state.Player.HealthCurrent == m.game_state.Settings.HealthMax) {
@@ -90,7 +87,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 					return m.GameOverSwitch(game_over_msg)
 				} else {
 					m.game_state.NewTurn()
-					// m.text_input.Reset()
 					// time.Sleep(2 * time.Second)
 				}
 			}
@@ -116,10 +112,10 @@ func (m model) GameInputView() string {
 	}
 
 	var colorized_text string
-	border_color := m.theme.Border()
+	var border_color lipgloss.TerminalColor
 
 	if m.game_state.CurrentTurn.ValidationMsg != "" {
-		colorized_text = m.renderValidationMsg()
+		colorized_text, border_color = m.renderValidationMsg()
 	} else {
 		colorized_text, border_color = m.renderColorizedInput()
 	}
@@ -150,7 +146,7 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 
 	prompt_upper := strings.ToUpper(m.game_state.CurrentTurn.Prompt)
 	answer_upper := strings.ToUpper(m.text_input.Value())
-	var colorized_input strings.Builder
+	var sb strings.Builder
 	 
 	switch m.game_state.Settings.PromptMode {
 	case enums.Fuzzy:
@@ -159,10 +155,10 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 			curr_char := string(c)
 
 			if prompt_idx < len(prompt_upper) && curr_char == string(prompt_upper[prompt_idx]) {
-				colorized_input.WriteString(blue(curr_char))
+				sb.WriteString(blue(curr_char))
 				prompt_idx++
 			} else {
-				colorized_input.WriteString(accent(curr_char))
+				sb.WriteString(accent(curr_char))
 			}
 		}
 
@@ -171,26 +167,34 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 		}
 	case enums.Classic:
 		if !strings.Contains(answer_upper, prompt_upper) {
-			colorized_input.WriteString(accent(answer_upper))
-			break
+			sb.WriteString(accent(answer_upper))
+			return sb.String(), border_color
 		}
 		
 		sub_idx := strings.Index(answer_upper, prompt_upper)
-		colorized_input.WriteString(accent(answer_upper[0:sub_idx]))
-		colorized_input.WriteString(blue(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
-		colorized_input.WriteString(accent(answer_upper[sub_idx + len(prompt_upper):]))
+		sb.WriteString(accent(answer_upper[0:sub_idx]))
+		sb.WriteString(blue(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
+		sb.WriteString(accent(answer_upper[sub_idx + len(prompt_upper):]))
 
 		if m.game_state.Settings.HighlightInput {
 			border_color = m.setInputBorderColor(answer_upper)
 		}
 	}
 
-	return colorized_input.String(), border_color
+	return sb.String(), border_color
 }
 
-func (m model) renderValidationMsg() string {
+func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
+	border_color := m.theme.Border()
+
 	if strings.Contains(m.game_state.CurrentTurn.ValidationMsg, "Correct") {
-		return m.theme.TextGreen().Bold(true).Render(m.game_state.CurrentTurn.ValidationMsg)  
+		return m.theme.TextGreen().Bold(true).Render(m.game_state.CurrentTurn.ValidationMsg), border_color
 	}
-	return m.theme.TextRed().Render(m.game_state.CurrentTurn.ValidationMsg)  
+
+	if m.game_state.CurrentTurn.Strikes > 0 {
+		m.text_input.PromptStyle = m.theme.TextRed()
+		border_color = m.theme.red
+	}
+
+	return m.theme.TextRed().Render(m.game_state.CurrentTurn.ValidationMsg), border_color
 }
