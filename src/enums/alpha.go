@@ -3,7 +3,7 @@ package enums
 type Alphabet string 
 const (
 	DebugAlphabet 	= "ABC"
-	EasyAlphabet 	= "ABCDEFGHILMNOPRSTUVW" // J, K, Q, X, Y, Z removed
+	EasyAlphabet 	= "ABCDEFGHILMNOPRSTUWY" // J, K, Q, V, X, Z removed
 	MediumAlphabet 	= "ABCDEFGHIJKLMNOPQRSTUVWY" // X and Z removed
 	FullAlphabet 	= "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
