@@ -95,8 +95,6 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 		default_prompt_style: text.PromptStyle,
 
 		footer_cmds: []footerCmd{
-			{key: "a", value: "about"},
-			{key: "s", value: "settings"},
 			{key: "q", value: "quit"},
 		},
 

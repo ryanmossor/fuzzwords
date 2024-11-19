@@ -56,8 +56,11 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) GameOverView() string {
-	longest_solve := m.game_state.Player.Stats.LongestSolve
-	if longest_solve == "" {
+	longest_solve := fmt.Sprintf("%s (%d)",
+		m.game_state.Player.Stats.LongestSolve,
+		len(m.game_state.Player.Stats.LongestSolve))
+
+	if m.game_state.Player.Stats.LongestSolve == "" {
 		longest_solve = "-"
 	}
 
@@ -71,7 +74,7 @@ func (m model) GameOverView() string {
 		{"Prompts solved", strconv.Itoa(m.game_state.Player.Stats.PromptsSolved)},
 		{"Prompts failed", strconv.Itoa(m.game_state.Player.Stats.PromptsFailed)},
 		{"Average solve length", fmt.Sprintf("%.1f letters", m.game_state.Player.Stats.AverageSolveLength())},
-		{"Longest word used", fmt.Sprintf("%s (%d)", longest_solve, len(m.game_state.Player.Stats.LongestSolve))},
+		{"Longest word used", longest_solve},
 		{"Extra lives gained", strconv.Itoa(m.game_state.Player.Stats.ExtraLivesGained)},
 		{"Fastest extra life", fastest_extra_life},
 	}

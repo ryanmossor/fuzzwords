@@ -14,6 +14,9 @@ import (
 
 type EnableInputMsg time.Time
 
+var win_msg string = "===== YOU WIN! ====="
+var game_over_msg string = "===== GAME OVER ====="
+
 func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
 
@@ -29,6 +32,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 
 	m.footer_cmds = []footerCmd{
 		{key: "esc", value: "clear input"},
+		{key: "ctrl+q", value: "quit"},
 	}
 
 	m.state.game.restrict_input = false
@@ -38,6 +42,9 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 }
 
 func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
+	red := m.theme.TextRed().Bold(true).Render
+	green := m.theme.TextGreen().Bold(true).Render
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		// clear validation msg while debouncing enter presses (yes this is kinda scuffed)
@@ -48,6 +55,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			m.text_input.Reset()
+		case "ctrl+q":
+			return m.GameOverSwitch(red(game_over_msg))
 		case "enter":
 			if m.state.game.restrict_input {
 				return m, nil
@@ -63,24 +72,21 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.game_state.HandleCorrectAnswer()
 
 				if len(m.game_state.WordLists.Available) == 0 {
-					win_msg := m.theme.TextGreen().Bold(true).Render("YOU WIN!")
-					return m.GameOverSwitch(win_msg)
+					return m.GameOverSwitch(green(win_msg))
 				}
 
 				m.game_state.NewTurn()
 			}
 
 			if (m.game_state.Settings.WinCondition == enums.MaxLives && m.game_state.Player.HealthCurrent == m.game_state.Settings.HealthMax) {
-				win_msg := m.theme.TextGreen().Bold(true).Render("YOU WIN!")
-				return m.GameOverSwitch(win_msg)
+				return m.GameOverSwitch(green(win_msg))
 			}
 
 			if m.game_state.CurrentTurn.Strikes == m.game_state.Settings.PromptStrikesMax {
 				m.game_state.HandleFailedTurn()
 
 				if m.game_state.Player.HealthCurrent == 0 {
-					game_over_msg := m.theme.TextRed().Bold(true).Render("===== GAME OVER =====")
-					return m.GameOverSwitch(game_over_msg)
+					return m.GameOverSwitch(red(game_over_msg))
 				} else {
 					m.game_state.NewTurn()
 					// time.Sleep(2 * time.Second)

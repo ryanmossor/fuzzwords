@@ -42,17 +42,17 @@ func (m model) HeaderView() string {
 	accent := m.theme.TextAccent().Render
 	base := m.theme.Base().Render
 
-	menu := accent("[m]") + base("ain menu")
-	about := accent("[a]") + base("bout")
-	settings := accent("[s]") + base("ettings")
+	menu := accent("m") + base(" main menu")
+	about := accent("a") + base(" about")
+	settings := accent("s") + base(" settings")
 
 	switch m.page {
 	case splash_page:
-		menu = bold("[m]ain menu")
+		menu = bold("m main menu")
 	case about_page:
-		about = bold("[a]bout")
+		about = bold("a about")
 	case settings_page:
-		settings = bold("[s]ettings")
+		settings = bold("s settings")
 	}
 
 	tabs := []string{

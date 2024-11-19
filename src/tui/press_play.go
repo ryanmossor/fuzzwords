@@ -34,7 +34,7 @@ func (m model) PressPlayView() string {
 		return ""
 	}
 
-	accent := m.theme.TextAccent().Render
-	green := m.theme.TextBlue().Bold(true).Render 
-	return accent("Press ") + green("ENTER") + accent(" to play")
+	base := m.theme.Base().Render
+	accent := m.theme.TextAccent().Bold(true).Render 
+	return base("Press ") + accent("ENTER") + base(" to play")
 }
