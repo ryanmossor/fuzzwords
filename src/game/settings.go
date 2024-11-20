@@ -30,7 +30,7 @@ func InitializeSettings() Settings {
 		PromptMode: enums.Fuzzy,
 		PromptStrikesMax: 2,
 		TurnDurationMin: 10,
-		WinCondition: enums.Endless,
+		WinCondition: enums.Debug,
 	}
 }
 

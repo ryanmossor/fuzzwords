@@ -78,6 +78,10 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.game_state.NewTurn()
 			}
 
+			if (m.game_state.Settings.WinCondition == enums.Debug && m.game_state.Player.Stats.PromptsSolved == 10) {
+				return m.GameOverSwitch(green("stop stalling and do some work"))
+			}
+
 			if (m.game_state.Settings.WinCondition == enums.MaxLives && m.game_state.Player.HealthCurrent == m.game_state.Settings.HealthMax) {
 				return m.GameOverSwitch(green(win_msg))
 			}
