@@ -3,7 +3,6 @@ package tui
 import (
 	"fmt"
 	"runtime"
-	"strconv"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
@@ -46,18 +45,18 @@ func (m model) DebugView() string {
 		return ""
 	}
 
-	tabs := []string{
-		"VH " + strconv.Itoa(m.viewport_height),
-		"VW " + strconv.Itoa(m.viewport_width),
-		"CW " + strconv.Itoa(m.width_container),
-		m.size.String(),
-	}
+	// tabs := []string{
+	// 	"VH " + strconv.Itoa(m.viewport_height),
+	// 	"VW " + strconv.Itoa(m.viewport_width),
+	// 	"CW " + strconv.Itoa(m.width_container),
+	// 	m.size.String(),
+	// }
 
 	return table.New().
-		Border(lipgloss.NormalBorder()).
+		Border(lipgloss.HiddenBorder()).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
-		Headers(memStatsView()...).
-		Row(tabs...).
+		Row(memStatsView()...).
+		// Row(tabs...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			return m.theme.Base().
@@ -74,7 +73,7 @@ func memStatsView() []string {
 	var stats []string
 
 	// Print total memory allocated and still in use (in bytes)
-	stats = append(stats, fmt.Sprintf("Total Alloc %v MiB", memStats.TotalAlloc/1024/1024))
+	// stats = append(stats, fmt.Sprintf("Total Alloc %v MiB", memStats.TotalAlloc/1024/1024))
 	stats = append(stats, fmt.Sprintf("Sys %v MiB", memStats.Sys/1024/1024))
 	stats = append(stats, fmt.Sprintf("Heap Alloc %v MiB", memStats.HeapAlloc/1024/1024))
 	stats = append(stats, fmt.Sprintf("Heap Sys %v MiB", memStats.HeapSys/1024/1024))
