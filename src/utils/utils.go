@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"math"
+	"math/rand"
 )
 
 func Average(arr []int) float64 {
@@ -53,15 +54,38 @@ func FilterWordList(words []string, min_len int) []string {
 
 func FormatTime(seconds int) string {
 	if seconds < 3600 {
-		minutes := seconds / 60
-		sec := seconds % 60
-		return fmt.Sprintf("%dm%02ds", minutes, sec)
+		m := seconds / 60
+		s := seconds % 60
+		return fmt.Sprintf("%dm%02ds", m, s)
 	} else {
-		hours := seconds / 3600
-		remainingMinutes := (seconds % 3600) / 60
-		remainingSeconds := seconds % 60
-		return fmt.Sprintf("%dh%02dm%02ds", hours, remainingMinutes, remainingSeconds)
+		h := seconds / 3600
+		m := (seconds % 3600) / 60
+		s := seconds % 60
+		return fmt.Sprintf("%dh%02dm%02ds", h, m, s)
 	}
+}
+
+func CreateFuzzyPrompt(word string, prompt_len int) string {
+	if len(word) == prompt_len {
+		return word
+	}
+
+	var prompt string
+	rand_min := 0
+
+	for i := prompt_len; i > 0; i-- {
+		rand_max := len(word) - i
+		rand_idx := rand.Intn(rand_max - rand_min + 1) + rand_min
+
+		if i == prompt_len && rand_idx == rand_max {
+			return prompt + word[rand_idx:]
+		}
+
+		prompt += string(word[rand_idx])
+		rand_min = rand_idx + 1
+	}
+
+	return prompt
 }
 
 func IsFuzzyMatch(answer string, prompt string) bool {

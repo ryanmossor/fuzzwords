@@ -19,39 +19,30 @@ type Turn struct {
 	IsValid		bool
 }
 
+// TODO: ensure next prompt is different from previous if previous prompt was failed
 func (g *GameState) NewTurn() {
 	word_idx := rand.Intn(len(g.WordLists.Available))
 	word := g.WordLists.Available[word_idx]
-	prompt_str := ""
+
+	var prompt string
+	prompt_len := rand.Intn(g.Settings.PromptLenMax - g.Settings.PromptLenMin + 1) + g.Settings.PromptLenMin 
 
 	switch g.Settings.PromptMode {
 	case enums.Fuzzy:
-		min_idx := 0
-		loop_len := min(len(word), g.Settings.PromptLenMax)
-		for i := loop_len; i > 0; i-- {
-			substr := word[min_idx:]
-			rand_max := len(substr) - i
-			rand_idx := 0
-			if rand_max > 0 {
-				rand_idx = rand.Intn(rand_max)
-			}
-			min_idx += rand_idx + 1
-			c := substr[rand_idx]
-			prompt_str += string(c)
-		}
+		prompt = utils.CreateFuzzyPrompt(word, prompt_len)
 	case enums.Classic:
 		if len(word) <= g.Settings.PromptLenMax {
-			prompt_str = word
+			prompt = word
 		} else {
 			rand_max := len(word) - g.Settings.PromptLenMax
 			rand_idx := rand.Intn(rand_max)
-			prompt_str = word[rand_idx:g.Settings.PromptLenMax + rand_idx]
+			prompt = word[rand_idx:g.Settings.PromptLenMax + rand_idx]
 		}
 	}
 
 	next_turn := Turn{ 
 		SourceWord: word,
-		Prompt: prompt_str,
+		Prompt: prompt,
 		Strikes: 0,
 		IsValid: true,
 	}
