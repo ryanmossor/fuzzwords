@@ -66,7 +66,7 @@ func FormatTime(seconds int) string {
 }
 
 func CreateFuzzyPrompt(word string, prompt_len int) string {
-	if len(word) == prompt_len {
+	if len(word) <= prompt_len {
 		return word
 	}
 
