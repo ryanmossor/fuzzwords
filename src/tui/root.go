@@ -1,8 +1,13 @@
 package tui
 
 import (
+	_ "embed"
+	"encoding/json"
 	"fzwds/src/game"
+	"log/slog"
 	"math"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -17,7 +22,7 @@ const (
 	about_page
 	settings_page
 	game_page
-	game_over_page // stats, keymaps for play again, return to menu, exit game, etc
+	game_over_page
 )
 
 type size int
@@ -42,6 +47,7 @@ type state struct {
 	press_play			pressPlayState
 	// TODO: change to game_input state and move GameState here?
 	game				gameState
+	settings			settingsState
 }
 
 type model struct {
@@ -70,12 +76,43 @@ type model struct {
 
 	state				state
 	game_state			game.GameState
+	game_settings		*game.Settings
+	game_settings_copy	game.Settings
 
 	game_start_time		time.Time
 }
 
-func NewModel(renderer *lipgloss.Renderer) tea.Model {
-	theme := BasicTheme(renderer)
+func NewModel() tea.Model {
+	cfg_dir, err := os.UserConfigDir()
+	if err != nil {
+		slog.Error("Config dir not found, using tmp dir to save settings instead", "error", err)
+		cfg_dir = os.TempDir()
+	}
+	fzwds_cfg_path := filepath.Join(cfg_dir, "fuzzwords")
+	os.MkdirAll(fzwds_cfg_path, os.ModePerm)
+
+	var game_settings game.Settings
+	settings_file_path := filepath.Join(fzwds_cfg_path, "settings.json")
+	contents, err := os.ReadFile(settings_file_path)
+    if err != nil {
+		game_settings = game.InitializeSettings()
+	}
+
+    if err := json.Unmarshal(contents, &game_settings); err != nil {
+		slog.Error("Error parsing settings.json - restoring default settings", "error", err)
+		game_settings = game.InitializeSettings()
+	} else {
+		game_settings.ValidateSettings()
+	}
+
+	marshaled_settings, err := json.MarshalIndent(game_settings, "", "    ")
+	if err != nil {
+		slog.Error("Error marshaling validated settings JSON", "error", err)
+	}
+
+	if err := os.WriteFile(settings_file_path, marshaled_settings, 0644); err != nil {
+		slog.Error("Error writing settings.json", "error", err)
+	}
 
 	text := textinput.New()
 	text.Placeholder = "Answer"
@@ -100,8 +137,10 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 			{key: "q", value: "quit"},
 		},
 
+		game_settings: &game_settings,
 		state: state{
 			press_play: pressPlayState{ visible: true },
+			settings: settingsState{ selected: 0 },
 		},
 	}
 }

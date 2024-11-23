@@ -1,6 +1,10 @@
 package game
 
-import "fzwds/src/enums"
+import (
+	"fzwds/src/enums"
+	"slices"
+	"strings"
+)
 
 // TODO: individual setting struct w/ name, default value, optional help text?
 type Settings struct {
@@ -30,7 +34,7 @@ func InitializeSettings() Settings {
 		PromptMode: enums.Fuzzy,
 		PromptStrikesMax: 2,
 		TurnDurationMin: 10,
-		WinCondition: enums.Debug,
+		WinCondition: enums.Endless,
 	}
 }
 
@@ -66,4 +70,151 @@ func ExpertSettings() Settings {
 	cfg.PromptLenMax = 5
 	cfg.PromptStrikesMax = 1
 	return cfg
+}
+
+var HEALTH_MIN = 1
+var HEALTH_MAX = 10
+
+func (s *Settings) SetHealthInitial(health int) *Settings {
+	// health := s.HealthInitial + count
+
+	if health < HEALTH_MIN {
+		s.HealthInitial = HEALTH_MIN
+	} else if health > HEALTH_MAX {
+		s.HealthInitial = HEALTH_MAX
+	} else {
+		s.HealthInitial = health
+	}
+
+	if s.HealthInitial > s.HealthMax {
+		s.HealthMax = s.HealthInitial
+	}
+
+	return s
+}
+
+func (s *Settings) SetHealthMax(health int) *Settings {
+	// health := s.HealthMax + count
+
+	if health < HEALTH_MIN {
+		s.HealthMax = HEALTH_MIN
+	} else if health > HEALTH_MAX {
+		s.HealthMax = HEALTH_MAX
+	} else {
+		s.HealthMax = health
+	}
+
+	if s.HealthMax < s.HealthInitial {
+		s.HealthInitial = s.HealthMax
+	}
+
+	return s
+}
+
+var PROMPT_LEN_MIN = 2
+var PROMPT_LEN_MAX = 5
+
+func (s *Settings) SetPromptLenMin(len int) *Settings {
+	// len := s.PromptLenMin + count
+
+	if len < PROMPT_LEN_MIN {
+		s.PromptLenMin = PROMPT_LEN_MIN
+	} else if len > PROMPT_LEN_MAX {
+		s.PromptLenMin = PROMPT_LEN_MAX 
+	} else {
+		s.PromptLenMin = len
+	}
+
+	if s.PromptLenMin > s.PromptLenMax {
+		s.PromptLenMax = s.PromptLenMin
+	}
+
+	return s
+}
+
+func (s *Settings) SetPromptLenMax(len int) *Settings {
+	// len := s.PromptLenMax + count
+
+	if len < PROMPT_LEN_MIN {
+		s.PromptLenMax = PROMPT_LEN_MIN
+	} else if len > PROMPT_LEN_MAX {
+		s.PromptLenMax = PROMPT_LEN_MAX 
+	} else {
+		s.PromptLenMax = len
+	}
+
+	if s.PromptLenMax < s.PromptLenMin {
+		s.PromptLenMin = s.PromptLenMax
+	}
+
+	return s
+}
+
+func (s *Settings) SetPromptMode(mode string) *Settings {
+	switch strings.ToLower(mode) {
+	case "classic":
+		s.PromptMode = enums.Classic
+	case "fuzzy":
+	default:
+		s.PromptMode = enums.Fuzzy
+	}
+
+	return s
+}
+
+func (s *Settings) SetWinCondition(cond string) *Settings {
+	switch strings.ToLower(cond) {
+	case "max lives":
+		s.WinCondition = enums.MaxLives
+	case "endless":
+	default:
+		s.WinCondition = enums.Endless
+	}
+
+	return s
+}
+
+var STRIKES_MIN = 1
+var STRIKES_MAX = 3
+
+func (s *Settings) SetPromptStrikesMax(strikes int) *Settings {
+	if strikes < STRIKES_MIN {
+		s.PromptStrikesMax = STRIKES_MIN
+	} else if strikes > STRIKES_MAX {
+		s.PromptStrikesMax = STRIKES_MAX
+	} else {
+		s.PromptStrikesMax = strikes
+	}
+	
+	return s
+}
+
+var TURN_DURATION_MIN = 5
+var TURN_DURATION_MAX = 60
+var TURN_DURATION_INTERVALS = []int{ 5, 10, 15, 20, 25, 30, 45, 60 }
+
+func (s *Settings) SetTurnDurationMin(duration int) *Settings {
+	if !slices.Contains(TURN_DURATION_INTERVALS, duration) {
+		s.TurnDurationMin = 5
+	} else {
+		s.TurnDurationMin = duration
+	}
+
+	return s
+}
+
+func (s *Settings) ValidateSettings() *Settings {
+	if s.Alphabet != enums.EasyAlphabet && s.Alphabet != enums.MediumAlphabet && s.Alphabet != enums.FullAlphabet && s.Alphabet != enums.DebugAlphabet {
+		s.Alphabet = enums.MediumAlphabet
+	}
+
+	return s.
+		SetHealthInitial(s.HealthInitial).
+		SetHealthMax(s.HealthMax).
+		SetPromptLenMin(s.PromptLenMin).
+		SetPromptLenMax(s.PromptLenMax).
+		SetPromptMode(s.PromptMode.String()).
+		SetPromptStrikesMax(s.PromptStrikesMax).
+		SetTurnDurationMin(s.TurnDurationMin).
+		SetWinCondition(s.WinCondition.String())
 }

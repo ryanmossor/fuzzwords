@@ -14,9 +14,7 @@ type GameState struct {
 	// TODO: cache next turn?
 }
 
-func InitializeGame() GameState {
-	settings := InitializeSettings()
-
+func InitializeGame(settings *Settings) GameState {
 	word_list := fzwds.EnglishDictionary
     word_lists := WordLists{
         FULL_MAP: utils.ArrToMap(word_list),
@@ -25,8 +23,8 @@ func InitializeGame() GameState {
     }
 
 	return GameState{
-		Settings: settings,
+		Settings: *settings,
 		WordLists: word_lists,
-		Player: InitializePlayer(&settings),
+		Player: InitializePlayer(settings),
 	}
 }

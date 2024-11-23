@@ -25,7 +25,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.game_over = false
 	m.state.game.validation_msg = ""
 
-	m.game_state = game.InitializeGame()
+	m.game_state = game.InitializeGame(m.game_settings)
 	m.game_state.NewTurn()
 
 	m.game_start_time = time.Now()

@@ -5,6 +5,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type settingsState struct {
+	selected		int
+}
+
 func (m model) SettingsSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(settings_page)
 	m.footer_cmds = []footerCmd{
