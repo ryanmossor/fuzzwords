@@ -84,12 +84,14 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 	text.CharLimit = 40
 	text.Width = 40
 
+	renderer := lipgloss.DefaultRenderer()
+
 	return model{
 		// debug: true,
 		game_active: false,
 
 		renderer: renderer,
-		theme: theme,
+		theme: BasicTheme(renderer),
 
 		text_input: text,
 		default_prompt_style: text.PromptStyle,
@@ -105,6 +107,7 @@ func NewModel(renderer *lipgloss.Renderer) tea.Model {
 }
 
 func (m model) Init() tea.Cmd {
+	// TODO: batch async cmds - I/O, db loading, settings json etc
 	return m.PressPlayInit()
 }
 

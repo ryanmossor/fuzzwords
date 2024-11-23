@@ -9,7 +9,6 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func main() {
@@ -42,8 +41,7 @@ func main() {
     fileHandler := slog.NewJSONHandler(log_file, opts)
     slog.SetDefault(slog.New(fileHandler))
 
-	renderer := lipgloss.DefaultRenderer()
-	menu := tui.NewModel(renderer)
+	menu := tui.NewModel()
 	prog := tea.NewProgram(menu, tea.WithAltScreen())
 	_, err = prog.Run()
 	if err != nil {
