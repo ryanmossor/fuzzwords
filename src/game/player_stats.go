@@ -9,7 +9,6 @@ import (
 type PlayerStats struct {
 	PromptsSolved 			int
 	PromptsFailed			int // TODO: store list of failed?
-	TimeSurvived			int // TODO: TimeStarted/TimeDied unix timestamps on either player or stats struct; format as 1h23m45s or 1:23:45
 	ExtraLivesGained		int
 	FewestExtraLifeSolves	int
 	LongestSolve			string
@@ -21,7 +20,7 @@ type PlayerStats struct {
 
 func InitializePlayerStats() PlayerStats {
 	letter_counts := make(map[string]int)
-	for _, c := range enums.FullAlphabet {
+	for _, c := range enums.Alphabets[enums.FullAlphabet] {
 		letter_counts[string(c)] = 0
 	}
 

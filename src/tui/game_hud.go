@@ -52,7 +52,7 @@ func (m model) GameHudView() string {
 		Render()
 
 	letters_remaining := []string{}
-	for _, c := range m.game_state.Settings.Alphabet {
+	for _, c := range m.game_state.Alphabet {
 		letter := string(c)
 		if m.game_state.Player.LettersRemaining[letter] {
 			letters_remaining = append(letters_remaining, dim(letter))

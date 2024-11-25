@@ -2,10 +2,12 @@ package game
 
 import (
 	fzwds "fzwds/src"
+	"fzwds/src/enums"
 	"fzwds/src/utils"
 )
 
 type GameState struct {
+	Alphabet			string
 	Settings			Settings
 	WordLists			WordLists
 	Player				Player
@@ -21,10 +23,12 @@ func InitializeGame(settings *Settings) GameState {
         Available: utils.FilterWordList(word_list, settings.PromptLenMin),
         Used: make(map[string]bool),
     }
+	alphabet := enums.Alphabets[settings.Alphabet]
 
 	return GameState{
+		Alphabet: alphabet,
 		Settings: *settings,
 		WordLists: word_lists,
-		Player: InitializePlayer(settings),
+		Player: InitializePlayer(settings, alphabet),
 	}
 }

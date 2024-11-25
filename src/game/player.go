@@ -14,10 +14,10 @@ type Player struct {
 	Stats					PlayerStats
 }
 
-func InitializePlayer(cfg *Settings) Player {
+func InitializePlayer(cfg *Settings, alphabet string) Player {
 	player := Player{
 		HealthCurrent: cfg.HealthInitial,
-		LettersRemaining: alphabetToMap(cfg.Alphabet),
+		LettersRemaining: alphabetToMap(alphabet),
 		Stats: InitializePlayerStats(),
 	}
 
@@ -30,16 +30,16 @@ func (g *GameState) HandleCorrectAnswer() {
 	for _, c := range strings.ToUpper(g.CurrentTurn.Answer) {
 		ch := string(c)
 
-		if strings.Contains(g.Settings.Alphabet, ch) && !slices.Contains(g.Player.LettersUsed, ch) {
+		if strings.Contains(g.Alphabet, ch) && !slices.Contains(g.Player.LettersUsed, ch) {
 			g.Player.LettersUsed = append(g.Player.LettersUsed, ch)
 		}
 
 		g.Player.LettersRemaining[ch] = true
 	}
 
-	if len(g.Player.LettersUsed) >= len(g.Settings.Alphabet) {
+	if len(g.Player.LettersUsed) >= len(g.Alphabet) {
 		g.Player.LettersUsed = nil
-		g.Player.LettersRemaining = alphabetToMap(g.Settings.Alphabet)
+		g.Player.LettersRemaining = alphabetToMap(g.Alphabet)
 
 		g.Player.Stats.ExtraLivesGained++
 		if g.Player.Stats.FewestExtraLifeSolves == 0 || g.Player.TurnsSinceLastExtraLife < g.Player.Stats.FewestExtraLifeSolves {

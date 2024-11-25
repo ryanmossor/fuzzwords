@@ -8,7 +8,7 @@ import (
 
 // TODO: individual setting struct w/ name, default value, optional help text?
 type Settings struct {
-	Alphabet				string
+	Alphabet				enums.Alphabet
 	HealthInitial			int
 	HealthMax				int
 	HighlightInput			bool
@@ -205,7 +205,7 @@ func (s *Settings) SetTurnDurationMin(duration int) *Settings {
 
 func (s *Settings) ValidateSettings() *Settings {
 	if s.Alphabet != enums.EasyAlphabet && s.Alphabet != enums.MediumAlphabet && s.Alphabet != enums.FullAlphabet && s.Alphabet != enums.DebugAlphabet {
-		s.Alphabet = enums.MediumAlphabet
+		s.Alphabet = enums.EasyAlphabet
 	}
 
 	return s.
