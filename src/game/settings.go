@@ -8,16 +8,16 @@ import (
 
 // TODO: individual setting struct w/ name, default value, optional help text?
 type Settings struct {
-	Alphabet				enums.Alphabet
-	HealthInitial			int
-	HealthMax				int
-	HighlightInput			bool
-	PromptLenMin			int
-	PromptLenMax			int
-	PromptMode				enums.PromptMode
-	PromptStrikesMax		int
-	TurnDurationMin			int
-	WinCondition			enums.WinCondition
+	Alphabet				enums.Alphabet		`json:"alphabet"`
+	HealthInitial			int					`json:"healthInital"`
+	HealthMax				int					`json:"healthMax"`
+	HighlightInput			bool				`json:"highlightInput"`
+	PromptLenMin			int					`json:"promptLenMin"`
+	PromptLenMax			int					`json:"promptLenMax"`
+	PromptMode				enums.PromptMode	`json:"promptMode"`
+	PromptStrikesMax		int					`json:"promptStrikesMax"`
+	TurnDurationMin			int					`json:"turnDurationMin"`
+	WinCondition			enums.WinCondition	`json:"winCondition"`
 	// TODO: add cfg for hints after each strike?
 	// hints_enabled			bool
 	// hint_chars_per_turn		int
