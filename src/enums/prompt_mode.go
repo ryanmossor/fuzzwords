@@ -6,33 +6,33 @@ import (
 	"strings"
 )
 
-type PromptMode uint8
+type PromptMode int
 const (
 	Fuzzy PromptMode = iota
 	Classic
 )
 
 var (
-	PromptModeName = map[uint8]string{
+	PromptModeName = map[int]string{
 		0: "fuzzy",
 		1: "classic",
 	}
 
-	PromptModeValue = map[string]uint8{
+	PromptModeValue = map[string]int{
 		"fuzzy": 0,
 		"classic": 1,
 	}
 )
 
 func (m PromptMode) String() string {
-	return PromptModeName[uint8(m)]
+	return PromptModeName[int(m)]
 }
 
 func ParsePromptMode(s string) PromptMode {
 	s = strings.TrimSpace(strings.ToLower(s))
 	value, ok := PromptModeValue[s]
 	if !ok {
-		slog.Error("Invalid prompt mode - defaulting to fuzzy", "promptMode", s)
+		slog.Warn("Invalid prompt mode - defaulting to fuzzy", "promptMode", s)
 		return PromptMode(0)
 	}
 	return PromptMode(value)

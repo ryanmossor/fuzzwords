@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type WinCondition uint8
+type WinCondition int
 const (
 	Endless WinCondition = iota
 	MaxLives
@@ -14,13 +14,13 @@ const (
 )
 
 var (
-	WinCondName = map[uint8]string{
+	WinCondName = map[int]string{
 		0: "endless",
 		1: "max lives",
 		2: "debug",
 	}
 
-	WinCondValue = map[string]uint8{
+	WinCondValue = map[string]int{
 		"endless": 0,
 		"max lives": 1,
 		"debug": 2,
@@ -28,14 +28,14 @@ var (
 )
 
 func (w WinCondition) String() string {
-	return WinCondName[uint8(w)]
+	return WinCondName[int(w)]
 }
 
 func ParseWinCond(s string) WinCondition {
 	s = strings.TrimSpace(strings.ToLower(s))
 	value, ok := WinCondValue[s]
 	if !ok {
-		slog.Error("Invalid win condition - defaulting to endless", "winCond", s)
+		slog.Warn("Invalid win condition - defaulting to endless", "winCond", s)
 		return WinCondition(0)
 	}
 	return WinCondition(value)

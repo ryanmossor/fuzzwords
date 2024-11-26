@@ -1,0 +1,100 @@
+[
+    {
+        "name": "Alphabet",
+        "propName": "Alphabet",
+        "description": "Use all letters to earn an extra life",
+        "default": "easy",
+        "validValues": [
+            {
+                "name": "easy",
+                "description": "J/K/Q/V/X/Z removed"
+            },
+            {
+                "name": "medium",
+                "description": "X and Z removed"
+            },
+            {
+                "name": "full",
+                "description": "All letters"
+            }
+        ]
+    },
+    {
+        "name": "Prompt mode",
+        "propName": "PromptMode",
+        "description": "n/a",
+        "default": "fuzzy",
+        "validValues": [
+            {
+                "name": "fuzzy",
+                "description": "Non-consecutive prompt matching"
+            },
+            {
+                "name": "classic",
+                "description": "Consecutive prompt matching"
+            }
+        ]
+    },
+    {
+        "name": "Win condition",
+        "propName": "WinCondition",
+        "description": "n/a",
+        "default": "endless",
+        "validValues": [
+            {
+                "name": "endless",
+                "description": "Play until you run out of lives"
+            },
+            {
+                "name": "max lives",
+                "description": "Play until you reach the maximum number of lives"
+            }
+        ]
+    },
+    {
+        "name": "Initial health",
+        "propName": "HealthInitial",
+        "description": "Starting number of lives",
+        "default": "2",
+        "min": 2,
+        "max": 10
+    },
+    {
+        "name": "Max health",
+        "propName": "HealthMax",
+        "description": "Maxmimum lives that can be earned",
+        "default": "3",
+        "min": 3,
+        "max": 10
+    },
+    {
+        "name": "Minimum prompt length",
+        "propName": "PromptLenMin",
+        "default": "2",
+        "min": 2,
+        "max": 10
+    },
+    {
+        "name": "Maximum prompt length",
+        "propName": "PromptLenMax",
+        "default": "3",
+        "min": 2,
+        "max": 10
+    },
+    {
+        "name": "Minimum turn duration",
+        "propName": "TurnDurationMin",
+        "description": "Timer lasts for at least this many seconds",
+        "default": "5",
+        "min": 5,
+        "max": 60
+    },
+    {
+        "name": "Maximum prompt strikes",
+        "propName": "PromptStrikesMax",
+        "description": "Prompt will change after this many failed turns",
+        "default": "1",
+        "min": 1,
+        "max": 3
+    }
+]

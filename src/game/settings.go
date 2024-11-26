@@ -6,6 +6,22 @@ import (
 	"strings"
 )
 
+type ValidValue struct {
+	Name			string `json:"name"`
+	Description		string `json:"description"`
+}
+
+type Config struct {
+	Name			string 			`json:"name"`
+	PropName		string 			`json:"propName"`
+	Disabled		bool 			`json:"disabled"`
+	Default			string 			`json:"default"`
+	Description		string 			`json:"description,omitempty"`
+	Min				int 			`json:"min,omitempty"`
+	Max				int 			`json:"max,omitempty"`
+	ValidValues		[]ValidValue 	`json:"validValues,omitempty"`
+}
+
 // TODO: individual setting struct w/ name, default value, optional help text?
 type Settings struct {
 	Alphabet				enums.Alphabet		`json:"alphabet"`
@@ -70,6 +86,17 @@ func ExpertSettings() Settings {
 	cfg.PromptLenMax = 5
 	cfg.PromptStrikesMax = 1
 	return cfg
+}
+
+func (s *Settings) SetAlphabet(alphabet_idx int) *Settings {
+	if alphabet_idx < 1 {
+		alphabet_idx = len(enums.AlphabetValue) - 1
+	} else if alphabet_idx > len(enums.AlphabetValue) - 1 {
+		alphabet_idx = 1
+	}
+	s.Alphabet = enums.Alphabet(alphabet_idx)
+
+	return s
 }
 
 var HEALTH_MIN = 1
@@ -154,7 +181,6 @@ func (s *Settings) SetPromptMode(mode string) *Settings {
 	switch strings.ToLower(mode) {
 	case "classic":
 		s.PromptMode = enums.Classic
-	case "fuzzy":
 	default:
 		s.PromptMode = enums.Fuzzy
 	}
@@ -164,9 +190,10 @@ func (s *Settings) SetPromptMode(mode string) *Settings {
 
 func (s *Settings) SetWinCondition(cond string) *Settings {
 	switch strings.ToLower(cond) {
+	case "debug":
+		s.WinCondition = enums.Debug
 	case "max lives":
 		s.WinCondition = enums.MaxLives
-	case "endless":
 	default:
 		s.WinCondition = enums.Endless
 	}

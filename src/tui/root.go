@@ -78,9 +78,14 @@ type model struct {
 	game_state			game.GameState
 	game_settings		*game.Settings
 	game_settings_copy	game.Settings
+	settings_menu_json	[]game.Config // TODO rename
+	settings_path		string
 
 	game_start_time		time.Time
 }
+
+//go:embed settings_info.json
+var settings_info_json []byte
 
 func NewModel() tea.Model {
 	cfg_dir, err := os.UserConfigDir()
@@ -114,6 +119,12 @@ func NewModel() tea.Model {
 		slog.Error("Error writing settings.json", "error", err)
 	}
 
+	var settings_info_parsed []game.Config
+	if err := json.Unmarshal(settings_info_json, &settings_info_parsed); err != nil {
+		slog.Error("Error parsing settings_info.json", "error", err)
+		os.Exit(1)
+	}
+
 	text := textinput.New()
 	text.Placeholder = "Answer"
 	text.Focus()
@@ -138,6 +149,10 @@ func NewModel() tea.Model {
 		},
 
 		game_settings: &game_settings,
+		game_settings_copy: game_settings,
+		settings_menu_json: settings_info_parsed,
+		settings_path: settings_file_path,
+
 		state: state{
 			press_play: pressPlayState{ visible: true },
 			settings: settingsState{ selected: 0 },

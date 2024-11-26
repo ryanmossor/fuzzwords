@@ -6,47 +6,47 @@ import (
 	"strings"
 )
 
-type Alphabet uint8 
+type Alphabet int 
 const (
-	EasyAlphabet Alphabet = iota
+	DebugAlphabet Alphabet = iota
+	EasyAlphabet
 	MediumAlphabet
 	FullAlphabet
-	DebugAlphabet
 )
 
 var (
-	AlphabetName = map[uint8]string{
-		0: "easy",
-		1: "medium",
-		2: "full",
-		3: "debug",
+	AlphabetName = map[int]string{
+		0: "debug",
+		1: "easy",
+		2: "medium",
+		3: "full",
 	}
 
-	AlphabetValue = map[string]uint8{
-		"easy": 0,
-		"medium": 1,
-		"full": 2,
-		"debug": 3,
+	AlphabetValue = map[string]int{
+		"debug": 0,
+		"easy": 1,
+		"medium": 2,
+		"full": 3,
 	}
 
 	Alphabets = map[Alphabet]string{
+		DebugAlphabet: "ABC",
 		EasyAlphabet: "ABCDEFGHILMNOPRSTUWY", // J, K, Q, V, X, Z removed
 		MediumAlphabet: "ABCDEFGHIJKLMNOPQRSTUVWY", // X and Z removed
 		FullAlphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-		DebugAlphabet: "ABC",
 	}
 )
 
 func (a Alphabet) String() string {
-	return AlphabetName[uint8(a)]
+	return AlphabetName[int(a)]
 }
 
 func ParseAlphabet(s string) Alphabet {
 	s = strings.TrimSpace(strings.ToLower(s))
 	value, ok := AlphabetValue[s]
 	if !ok {
-		slog.Error("Invalid alphabet - defaulting to easy", "alphabet", s)
-		return Alphabet(0)
+		slog.Warn("Invalid alphabet - defaulting to easy", "alphabet", s)
+		return Alphabet(1)
 	}
 	return Alphabet(value)
 }
