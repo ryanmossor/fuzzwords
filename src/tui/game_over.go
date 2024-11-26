@@ -69,10 +69,13 @@ func (m model) GameOverView() string {
 		fastest_extra_life = "-"
 	}
 
+	solves_per_min := float64(m.game_state.Player.Stats.PromptsSolved) / (float64(m.game_state.Player.Stats.ElapsedSeconds) / 60.0)
+
 	stats := [][]string{
 		{"Time survived", utils.FormatTime(m.game_state.Player.Stats.ElapsedSeconds)},
 		{"Prompts solved", strconv.Itoa(m.game_state.Player.Stats.PromptsSolved)},
 		{"Prompts failed", strconv.Itoa(m.game_state.Player.Stats.PromptsFailed)},
+		{"Solves per minute", fmt.Sprintf("%.1f", solves_per_min)},
 		{"Average solve length", fmt.Sprintf("%.1f letters", m.game_state.Player.Stats.AverageSolveLength())},
 		{"Longest word used", longest_solve},
 		{"Extra lives gained", strconv.Itoa(m.game_state.Player.Stats.ExtraLivesGained)},
