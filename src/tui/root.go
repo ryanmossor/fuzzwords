@@ -53,9 +53,11 @@ type state struct {
 
 type model struct {
 	debug 				bool
+    ready               bool
 	game_active			bool
 	game_over			bool
 	switched			bool
+    has_scroll          bool
 
 	game_over_msg		string
 
@@ -192,9 +194,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.width_content = m.width_container - 4
-		// m = m.updateViewport() 
+		m = m.updateViewport()
 	case PressPlayTickMsg:
 		m, cmd := m.PressPlayUpdate(msg)
+        // m.viewport.SetContent(m.getContent())
 		return m, cmd
 	case EnableInputMsg:
 		m.state.game.restrict_input = false
@@ -231,8 +234,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.viewport.SetContent(m.getContent()) 
 	m.viewport, cmd = m.viewport.Update(msg)
 	if m.switched {
-		// TODO: updateViewport handles scrollbars, viewport width/height, etc
-		// m = m.updateViewport()
+		m = m.updateViewport()
 		m.switched = false
 	}
 	cmds = append(cmds, cmd)
@@ -268,12 +270,24 @@ func (m model) View() string {
 		} else {
 			content_style = content_style.Width(m.width_container)
 		}
-		content := content_style.Render(m.getContent())
+        content := m.viewport.View()
+
+        var view string
+		if m.has_scroll {
+			view = lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				content,
+				m.theme.Base().Width(1).Render(), // space between content and scrollbar
+				m.getScrollbar(),
+			)
+		} else {
+			view = m.getContent()
+		}
 
 		child := lipgloss.JoinVertical(
 			lipgloss.Center,
 			header,
-			content,
+            content_style.Render(view),
 			game_input,
 			footer,
 		) 
@@ -318,3 +332,72 @@ func (m model) getContent() string {
 
 	return page
 }
+
+func (m model) updateViewport() model {
+    header_height := lipgloss.Height(m.HeaderView())
+    footer_height := lipgloss.Height(m.FooterView())
+    vertical_margin_height := header_height + footer_height
+
+    width := m.width_container - 4
+	m.height_content = m.height_container - vertical_margin_height
+    m.width_content = m.width_container - 4
+
+    if !m.ready {
+        m.viewport = viewport.New(width, m.height_content)
+        m.viewport.YPosition = header_height
+        m.viewport.HighPerformanceRendering = false
+        m.ready = true
+
+        // m.viewport.YPosition = headerHeight + 1
+        m.viewport.YPosition = header_height
+    } else {
+        m.viewport.Width = width
+		m.viewport.Height = m.height_content
+		m.viewport.GotoTop()
+    }
+
+	m.has_scroll = m.viewport.VisibleLineCount() < m.viewport.TotalLineCount()
+
+	// if m.has_scroll {
+	// 	m.width_content = m.width_container - 4
+	// } else {
+	// 	// m.width_content = m.width_container - 2
+	// 	m.width_content = m.width_container - 4
+	// }
+
+    return m
+}
+
+func (m model) getScrollbar() string {
+	y := m.viewport.YOffset
+	viewport_height := m.viewport.Height
+	content_height := lipgloss.Height(m.getContent())
+	if viewport_height >= content_height {
+		return ""
+	}
+
+	scrollbar_height := (viewport_height * viewport_height) / content_height
+	max_scroll := content_height - viewport_height
+	scrollbar_pos := 1.0 - (float64(y) / float64(max_scroll))
+	if scrollbar_pos <= 0 {
+		scrollbar_pos = 1
+	} else if scrollbar_pos >= 1 {
+		scrollbar_pos = 0
+	}
+
+    bar := m.theme.Base().
+		Height(scrollbar_height).
+		Width(1).
+		Background(m.theme.Accent()).
+		Render()
+
+	style := m.theme.Base().Width(1).Height(viewport_height)
+    return style.Render(
+        lipgloss.PlaceVertical(
+            viewport_height,
+            lipgloss.Position(scrollbar_pos),
+            bar,
+        ),
+    )
+}
+

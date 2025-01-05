@@ -42,7 +42,11 @@ func main() {
     slog.SetDefault(slog.New(fileHandler))
 
 	menu := tui.NewModel()
-	prog := tea.NewProgram(menu, tea.WithAltScreen())
+	prog := tea.NewProgram(
+        menu,
+        tea.WithAltScreen(),
+        tea.WithMouseCellMotion(), // enable mouse support for scroll wheel usage
+    )
 	_, err = prog.Run()
 	if err != nil {
 		fmt.Println("Error running program:", err)

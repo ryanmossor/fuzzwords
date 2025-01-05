@@ -23,8 +23,9 @@ func (m model) SettingsSwitch() (model, tea.Cmd) {
 	m.footer_cmds = []footerCmd{
 		{key: "↑/↓", value: "scroll"},
 		{key: "←/→", value: "change"},
-		{key: "ctrl+r", value: "restore defaults"},
-		{key: "enter", value: "start"},
+		{key: "ctrl+r", value: "defaults"},
+        {key: "m", value: "main menu"},
+		{key: "enter", value: "play"},
 	}
 
 	return m, nil
@@ -50,7 +51,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.game_settings_copy = game.InitializeSettings()
 		case "b":
 			// TODO: beginner preset
-		case "m":
+		// case "m":
 			// TODO: medium preset
 		case "d":
 			// TODO: difficult preset
@@ -71,7 +72,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
             return m.GameSwitch()
-		case "esc":
+		case "m", "esc":
 			return m.MainMenuSwitch()
 		}
 	}
@@ -84,7 +85,7 @@ func (m model) SettingsView() string {
 	accent := m.theme.TextAccent().Render 
 
 	var lines []string
-	lines = append(lines, base("\nChange your ") + accent("game settings") + base(" here.\n"))
+	// lines = append(lines, base("\nChange your ") + accent("game settings") + base(" here.\n"))
 
 	for i, setting := range m.settings_menu_json {
 		if setting.Disabled {

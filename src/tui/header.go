@@ -30,10 +30,10 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) HeaderView() string {
-	if m.page == game_page {
+	if m.page == game_page || m.page == settings_page {
 		return ""
 	}
-	if m.page == game_over_page || m.page == settings_page {
+	if m.page == game_over_page {
 		// No content, but used for top margin
 		return "\n\n\n"
 	}
