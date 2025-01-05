@@ -23,6 +23,7 @@ func (m model) GameOverSwitch(game_over_msg string) (model, tea.Cmd) {
 
 	m.footer_cmds = []footerCmd{
 		{key: "m", value: "main menu"},
+        {key: "s", value: "change settings"},
 		{key: "enter", value: "new game"},
 		{key: "q", value: "quit"},
 	}
@@ -44,6 +45,9 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "m":
 			m.game_over = false
 			return m.MainMenuSwitch()
+		case "s":
+			m.game_over = false
+			return m.SettingsSwitch()
 		case "enter":
 			m.game_over = false
 			return m.GameSwitch()

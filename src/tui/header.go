@@ -8,7 +8,7 @@ import (
 
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// TODO: has_header flag
-	if m.game_active || m.game_over {
+	if m.game_active || m.game_over || m.page == settings_page {
 		return m, nil
 	}
 
@@ -16,7 +16,7 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "s":
-			return m.SettingsSwitch()
+			return m.StatsSwitch()
 		case "a":
 			return m.AboutSwitch()
 		case "m":
@@ -33,7 +33,7 @@ func (m model) HeaderView() string {
 	if m.page == game_page {
 		return ""
 	}
-	if m.page == game_over_page {
+	if m.page == game_over_page || m.page == settings_page {
 		// No content, but used for top margin
 		return "\n\n\n"
 	}
@@ -44,21 +44,21 @@ func (m model) HeaderView() string {
 
 	menu := accent("m") + base(" main menu")
 	about := accent("a") + base(" about")
-	settings := accent("s") + base(" settings")
+	stats := accent("s") + base(" stats")
 
 	switch m.page {
 	case splash_page:
 		menu = bold("m main menu")
 	case about_page:
 		about = bold("a about")
-	case settings_page:
-		settings = bold("s settings")
+	case stats_page:
+		stats = bold("s stats")
 	}
 
 	tabs := []string{
 		menu,
 		about,
-		settings,
+		stats,
 	}
 		
 	header := table.New().
@@ -67,9 +67,7 @@ func (m model) HeaderView() string {
 		Row(tabs...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
-			return m.theme.Base().
-				Padding(0, 1).
-				AlignHorizontal(lipgloss.Center)
+			return m.theme.Base().Padding(0, 1).AlignHorizontal(lipgloss.Center)
 		}).
 		Render()
 

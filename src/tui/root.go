@@ -21,6 +21,7 @@ const (
 	splash_page page = iota
 	about_page
 	settings_page
+    stats_page
 	game_page
 	game_over_page
 )
@@ -306,6 +307,8 @@ func (m model) getContent() string {
 		page = m.AboutView()
 	case settings_page:
 		page = m.SettingsView()
+	case stats_page:
+		page = m.StatsView()
 	case game_page:
 		// TODO: possible to return game hud, prompt, and input as single page?
 		page = m.GamePromptView()

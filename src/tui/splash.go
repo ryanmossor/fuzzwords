@@ -19,7 +19,7 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			return m.GameSwitch()
+			return m.SettingsSwitch()
 		case "q":
 			return m, tea.Quit
 		}

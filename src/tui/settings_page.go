@@ -14,7 +14,6 @@ import (
 
 type settingsState struct {
 	selected		int
-	updated			bool
 }
 
 func (m model) SettingsSwitch() (model, tea.Cmd) {
@@ -25,7 +24,7 @@ func (m model) SettingsSwitch() (model, tea.Cmd) {
 		{key: "↑/↓", value: "scroll"},
 		{key: "←/→", value: "change"},
 		{key: "ctrl+r", value: "restore defaults"},
-		{key: "enter", value: "save"},
+		{key: "enter", value: "start"},
 	}
 
 	return m, nil
@@ -59,7 +58,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			// TODO: expert preset
 		case "enter":
 			m.game_settings = &m.game_settings_copy
-		
+
 			// TODO: return m, cmd that updates game_settings
 			// TODO: abstract this save logic to common func shared with root initalization of settings
 			marshaled_settings, err := json.MarshalIndent(m.game_settings, "", "    ")
@@ -68,17 +67,15 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			if err := os.WriteFile(m.settings_path, marshaled_settings, 0644); err != nil {
-				slog.Error("Error writing settings.json", "error", err)
+                slog.Error("Error writing settings.json", "error", err)
 			}
 
-			m.state.settings.updated = true
-			return m, nil
+            return m.GameSwitch()
 		case "esc":
 			return m.MainMenuSwitch()
 		}
 	}
 
-	m.state.settings.updated = false
 	return m, nil
 }
 

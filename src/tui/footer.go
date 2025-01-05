@@ -5,7 +5,6 @@ import "github.com/charmbracelet/lipgloss"
 func (m model) FooterView() string {
 	bold := m.theme.TextAccent().Bold(true).Render
 	base := m.theme.Base().Render
-	green := m.theme.TextGreen().Bold(true).Render 
 
 	table := m.theme.Base().
 		Width(m.width_container).
@@ -20,14 +19,8 @@ func (m model) FooterView() string {
 		commands = append(commands, bold(" " + cmd.key + " ") + base(cmd.value + "  "))
 	}
 
-	var footer_note string
-	if m.state.settings.updated {
-		footer_note = green("Game settings updated")
-	}
-
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		footer_note,
 		table.Render(
 			lipgloss.JoinHorizontal(
 				lipgloss.Center,
