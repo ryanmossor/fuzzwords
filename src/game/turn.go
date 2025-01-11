@@ -79,12 +79,12 @@ func (g *GameState) ValidateAnswer() string {
 		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
 	}
 
-	if !is_valid {
-		g.CurrentTurn.Strikes++
-	}
+	// if !is_valid {
+	// 	g.CurrentTurn.Strikes++
+	// }
 
 	slog.Debug("Answer validated", 
-		"promptStr", g.CurrentTurn.Prompt,
+		"prompt", g.CurrentTurn.Prompt,
 		"sourceWord", g.CurrentTurn.SourceWord,
 		"answer", g.CurrentTurn.Answer,
 		"isValid", is_valid,

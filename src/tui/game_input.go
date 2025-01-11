@@ -1,9 +1,11 @@
 package tui
 
 import (
+	"fmt"
 	"fzwds/src/enums"
 	"fzwds/src/game"
 	"fzwds/src/utils"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -11,8 +13,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
-
-type EnableInputMsg time.Time
 
 var win_msg string = "===== YOU WIN! ====="
 var game_over_msg string = "===== GAME OVER ====="
@@ -30,6 +30,8 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 
 	m.game_start_time = time.Now()
 
+    m.game_timer.remaining_time = 30 * time.Second
+
 	m.footer_cmds = []footerCmd{
 		{key: "esc", value: "clear input"},
 		{key: "ctrl+q", value: "quit"},
@@ -38,7 +40,9 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game.restrict_input = false
 	m.text_input.Reset()
 
-	return m, textinput.Blink
+	cmds := []tea.Cmd{textinput.Blink, setTurnTickerCmd()}
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
@@ -46,6 +50,32 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	green := m.theme.TextGreen().Bold(true).Render
 
 	switch msg := msg.(type) {
+    case TurnTimerTickMsg:
+		if m.game_timer.remaining_time <= 0 {
+            m.game_state.HandleFailedTurn()
+
+            turn_duration_min := max(m.game_settings.TurnDurationMin, 10)
+            turn_duration_max := 30
+            turn_time := rand.Intn(turn_duration_max - turn_duration_min + 1) + turn_duration_min 
+            m.game_timer.remaining_time = time.Duration(turn_time) * time.Second
+
+            if m.game_state.Player.HealthCurrent == 0 {
+                return m.GameOverSwitch(red(game_over_msg))
+            } else {
+                m.state.game.validation_msg = fmt.Sprintf(
+                    "Prompt %s failed. Possible answer: %s",
+                    strings.ToUpper(m.game_state.CurrentTurn.Prompt),
+                    strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
+
+                m.game_state.NewTurn()
+            }
+
+            m.text_input.Reset()
+		}
+
+		m.game_timer.remaining_time -= time.Millisecond * 100
+
+		return m, setTurnTickerCmd()
 	case tea.KeyMsg:
 		// clear validation msg while debouncing enter presses (yes this is kinda scuffed)
 		if msg.String() != "enter" {
@@ -76,6 +106,10 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				}
 
 				m.game_state.NewTurn()
+
+                if m.game_timer.remaining_time < time.Duration(m.game_settings.TurnDurationMin) * time.Second {
+                    m.game_timer.remaining_time = time.Duration(m.game_settings.TurnDurationMin) * time.Second
+                }
 			}
 
 			if (m.game_state.Settings.WinCondition == enums.Debug && m.game_state.Player.Stats.PromptsSolved == 10) {
@@ -86,23 +120,9 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return m.GameOverSwitch(green(win_msg))
 			}
 
-			if m.game_state.CurrentTurn.Strikes == m.game_state.Settings.PromptStrikesMax {
-				m.game_state.HandleFailedTurn()
-
-				if m.game_state.Player.HealthCurrent == 0 {
-					return m.GameOverSwitch(red(game_over_msg))
-				} else {
-					m.game_state.NewTurn()
-					// time.Sleep(2 * time.Second)
-				}
-			}
-
 			m.text_input.Reset()
 
-			// Debounce addtional enter presses
-			return m, tea.Tick(time.Millisecond * 300, func(t time.Time) tea.Msg {
-				return EnableInputMsg(t)
-			})
+            return m, debounceInputCmd(300)
 		}
 	}
 
@@ -197,10 +217,8 @@ func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
 		return m.theme.TextGreen().Bold(true).Render(m.state.game.validation_msg), border_color
 	}
 
-	if m.game_state.CurrentTurn.Strikes > 0 {
-		m.text_input.PromptStyle = m.theme.TextRed()
-		border_color = m.theme.red
-	}
+    m.text_input.PromptStyle = m.theme.TextRed()
+    border_color = m.theme.red
 
 	return m.theme.TextRed().Render(m.state.game.validation_msg), border_color
 }

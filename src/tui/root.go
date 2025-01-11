@@ -51,6 +51,11 @@ type state struct {
 	settings			settingsState
 }
 
+type gameTimer struct {
+	remaining_time      time.Duration
+	done                bool
+}
+
 type model struct {
 	debug 				bool
     ready               bool
@@ -85,6 +90,7 @@ type model struct {
 	settings_path		string
 
 	game_start_time		time.Time
+    game_timer          gameTimer
 }
 
 //go:embed settings_info.json
@@ -166,6 +172,20 @@ func NewModel() tea.Model {
 func (m model) Init() tea.Cmd {
 	// TODO: batch async cmds - I/O, db loading, settings json etc
 	return m.PressPlayInit()
+}
+
+type EnableInputMsg time.Time
+func debounceInputCmd(duration_ms int) tea.Cmd {
+    return tea.Tick(time.Millisecond * time.Duration(duration_ms), func(t time.Time) tea.Msg {
+		return EnableInputMsg(t)
+	})
+}
+
+type TurnTimerTickMsg struct{}
+func setTurnTickerCmd() tea.Cmd {
+	return tea.Tick(time.Millisecond * 100, func(t time.Time) tea.Msg {
+		return TurnTimerTickMsg{}
+	})
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

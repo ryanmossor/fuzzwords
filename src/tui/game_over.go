@@ -29,9 +29,8 @@ func (m model) GameOverSwitch(game_over_msg string) (model, tea.Cmd) {
 	}
 
 	// Briefly prevent key presses on game over screen
-	return m, tea.Tick(time.Millisecond * 1000, func(t time.Time) tea.Msg {
-		return EnableInputMsg(t)
-	})
+    m.state.game.restrict_input = true
+	return m, debounceInputCmd(500)
 }
 
 func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
@@ -73,7 +72,10 @@ func (m model) GameOverView() string {
 		fastest_extra_life = "-"
 	}
 
-	solves_per_min := float64(m.game_state.Player.Stats.PromptsSolved) / (float64(m.game_state.Player.Stats.ElapsedSeconds) / 60.0)
+	var solves_per_min float64 = 0
+    if m.game_state.Player.Stats.PromptsSolved > 0 {
+        solves_per_min = float64(m.game_state.Player.Stats.PromptsSolved) / (float64(m.game_state.Player.Stats.ElapsedSeconds) / 60.0)
+    }
 
 	stats := [][]string{
 		{"Time survived", utils.FormatTime(m.game_state.Player.Stats.ElapsedSeconds)},

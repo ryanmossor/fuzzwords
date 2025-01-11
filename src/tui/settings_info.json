@@ -84,7 +84,7 @@
     {
         "name": "Minimum turn duration",
         "propName": "TurnDurationMin",
-        "description": "Timer lasts for at least this many seconds",
+        "description": "Timer will allow at least this many seconds per turn",
         "default": "5",
         "min": 5,
         "max": 60

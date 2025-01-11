@@ -24,8 +24,7 @@ func (m model) StatsUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) StatsView() string {
 	return m.theme.Base().Render(lipgloss.JoinVertical(
-		lipgloss.Left,
-		// lines...,
-        "TODO",
-	)) 
+		lipgloss.Center,
+        "🚧 Under construction 🚧",
+	))
 }

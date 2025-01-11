@@ -2,8 +2,8 @@ package tui
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -19,26 +19,30 @@ func (m model) GameHudView() string {
 		return ""
 	}
 
-	base := m.theme.Base().Render
+	// base := m.theme.Base().Render
 	dim := m.theme.TextExtraDim().Render
 	yellow := m.theme.TextYellow().Bold(true).Render
 	red := m.theme.TextRed().Render
 
 	health := m.RenderHealthDisplay()
 
-	var strikes string
-	if m.game_state.CurrentTurn.Strikes > 0 {
-		strikes = base("Strikes: ") + red(strconv.Itoa(m.game_state.CurrentTurn.Strikes)) + base(" / " + strconv.Itoa(m.game_state.Settings.PromptStrikesMax))
+    var timer_display string
+	if m.game_timer.remaining_time >= 10 * time.Second {
+        timer_display = fmt.Sprintf("Time: %.0fs", m.game_timer.remaining_time.Seconds())
 	} else {
-		strikes = fmt.Sprintf("Strikes: %d / %d", m.game_state.CurrentTurn.Strikes, m.game_state.Settings.PromptStrikesMax)
-	}
+        timer_display = fmt.Sprintf("Time: %.1fs", m.game_timer.remaining_time.Seconds())
+    }
+
+    if m.game_timer.remaining_time < 5 * time.Second {
+        timer_display = red(timer_display)
+    }
 
 	game_mode := fmt.Sprintf("Mode: %s", m.game_state.Settings.PromptMode.String())
 
 	fields := []string{
 		health,
 		game_mode,
-		strikes,
+        timer_display,
 	}
 
 	header := table.New().
