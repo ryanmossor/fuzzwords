@@ -175,7 +175,9 @@ func (m model) Init() tea.Cmd {
 }
 
 type EnableInputMsg time.Time
-func debounceInputCmd(duration_ms int) tea.Cmd {
+func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
+    m.state.game.restrict_input = true
+
     return tea.Tick(time.Millisecond * time.Duration(duration_ms), func(t time.Time) tea.Msg {
 		return EnableInputMsg(t)
 	})

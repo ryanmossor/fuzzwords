@@ -73,9 +73,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             }
 
             m.text_input.Reset()
-
-			m.state.game.restrict_input = true
-            cmds = append(cmds, debounceInputCmd(500))
+            cmds = append(cmds, m.debounceInputCmd(500))
 		}
 
 		m.game_timer.remaining_time -= time.Millisecond * 100
@@ -120,9 +118,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
                     m.game_timer.remaining_time = time.Duration(m.game_settings.TurnDurationMin) * time.Second
                 }
 
-                m.state.game.restrict_input = true
-                return m, debounceInputCmd(300)
-			}
+                return m, m.debounceInputCmd(300)
+            }
 
 			if (m.game_state.Settings.WinCondition == enums.Debug && m.game_state.Player.Stats.PromptsSolved == 10) {
 				return m.GameOverSwitch(green("stop stalling and do some work"))

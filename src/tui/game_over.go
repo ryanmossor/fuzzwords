@@ -29,8 +29,7 @@ func (m model) GameOverSwitch(game_over_msg string) (model, tea.Cmd) {
 	}
 
 	// Briefly prevent key presses on game over screen
-    m.state.game.restrict_input = true
-	return m, debounceInputCmd(500)
+	return m, m.debounceInputCmd(500)
 }
 
 func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
