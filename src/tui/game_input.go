@@ -85,7 +85,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             return m, nil
         }
 
-		// clear validation msg while debouncing enter presses (yes this is kinda scuffed)
 		if msg.String() != "enter" {
 			m.state.game.validation_msg = ""
 		}
@@ -96,10 +95,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "ctrl+q":
 			return m.GameOverSwitch(red(game_over_msg))
 		case "enter":
-			if m.state.game.restrict_input {
-				return m, nil
-			}
-
 			// TODO: trim answer & take only first word before any spaces/symbols
 			m.game_state.CurrentTurn.Answer = strings.ToLower(m.text_input.Value())
             m.text_input.Reset()
