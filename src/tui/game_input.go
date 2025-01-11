@@ -95,8 +95,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "ctrl+q":
 			return m.GameOverSwitch(red(game_over_msg))
 		case "enter":
-			// TODO: trim answer & take only first word before any spaces/symbols
-			m.game_state.CurrentTurn.Answer = strings.ToLower(m.text_input.Value())
+			m.game_state.CurrentTurn.Answer = strings.ToLower(strings.TrimSpace(m.text_input.Value()))
             m.text_input.Reset()
 			m.state.game.validation_msg = m.game_state.ValidateAnswer()
 
