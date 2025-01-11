@@ -9,10 +9,7 @@ func (m model) StatsSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(stats_page)
 
 	m.footer_cmds = []footerCmd{
-		{key: "↑/↓", value: "scroll"},
-		{key: "←/→", value: "change"},
-		{key: "ctrl+r", value: "restore defaults"},
-		{key: "enter", value: "start"},
+		{key: "q", value: "quit"},
 	}
 
 	return m, nil

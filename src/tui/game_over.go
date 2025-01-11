@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fzwds/src/utils"
 	"strconv"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -11,15 +12,24 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (m model) GameOverSwitch(game_over_msg string) (model, tea.Cmd) {
+func (m model) GameOverSwitch(msg string, win bool) (model, tea.Cmd) {
 	// TODO: are both of these flags needed?
 	m.game_active = false
 	m.game_over = true
 
 	m.game_state.Player.Stats.ElapsedSeconds = int(time.Since(m.game_start_time).Seconds())
 
-	m.game_over_msg = game_over_msg
+	m.game_over_msg = msg
 	m = m.SwitchPage(game_over_page)
+
+    if win {
+        m.state.game.validation_msg = ""
+    } else {
+        m.state.game.validation_msg = fmt.Sprintf(
+            "Possible answer for final prompt %s: %s",
+            strings.ToUpper(m.game_state.CurrentTurn.Prompt),
+            strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
+    }
 
 	m.footer_cmds = []footerCmd{
 		{key: "m", value: "main menu"},
@@ -108,10 +118,14 @@ func (m model) GameOverView() string {
 		}).
 		Render()
 
+    validation_msg, _ := m.renderValidationMsg()
+
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		m.game_over_msg,
 		"",
 		stats_table,
+		"",
+        validation_msg,
 	)
 }

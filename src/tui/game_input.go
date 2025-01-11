@@ -62,7 +62,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             m.game_timer.remaining_time = time.Duration(turn_time) * time.Second
 
             if m.game_state.Player.HealthCurrent == 0 {
-                return m.GameOverSwitch(red(game_over_msg))
+                return m.GameOverSwitch(red(game_over_msg), false)
             } else {
                 m.state.game.validation_msg = fmt.Sprintf(
                     "Prompt %s failed. Possible answer: %s",
@@ -85,15 +85,16 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             return m, nil
         }
 
-		if msg.String() != "enter" {
+        key := msg.String()
+		if key != "enter" {
 			m.state.game.validation_msg = ""
 		}
 
-		switch msg.String() {
+		switch key {
 		case "esc":
 			m.text_input.Reset()
 		case "ctrl+q":
-			return m.GameOverSwitch(red(game_over_msg))
+			return m.GameOverSwitch(red(game_over_msg), false)
 		case "enter":
 			m.game_state.CurrentTurn.Answer = strings.ToLower(strings.TrimSpace(m.text_input.Value()))
             m.text_input.Reset()
@@ -103,7 +104,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.game_state.HandleCorrectAnswer()
 
 				if len(m.game_state.WordLists.Available) == 0 {
-					return m.GameOverSwitch(green(win_msg))
+					return m.GameOverSwitch(green(win_msg), true)
 				}
 
 				m.game_state.NewTurn()
@@ -112,16 +113,16 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
                     m.game_timer.remaining_time = time.Duration(m.game_settings.TurnDurationMin) * time.Second
                 }
 
+                if (m.game_state.Settings.WinCondition == enums.Debug && m.game_state.Player.Stats.PromptsSolved == 10) {
+                    return m.GameOverSwitch(green("stop stalling and do some work"), true)
+                }
+
+                if (m.game_state.Settings.WinCondition == enums.MaxLives && m.game_state.Player.HealthCurrent == m.game_state.Settings.HealthMax) {
+                    return m.GameOverSwitch(green(win_msg), true)
+                }
+
                 return m, m.debounceInputCmd(300)
             }
-
-			if (m.game_state.Settings.WinCondition == enums.Debug && m.game_state.Player.Stats.PromptsSolved == 10) {
-				return m.GameOverSwitch(green("stop stalling and do some work"))
-			}
-
-			if (m.game_state.Settings.WinCondition == enums.MaxLives && m.game_state.Player.HealthCurrent == m.game_state.Settings.HealthMax) {
-				return m.GameOverSwitch(green(win_msg))
-			}
 		}
 	}
 
