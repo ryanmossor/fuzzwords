@@ -51,6 +51,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 	switch msg := msg.(type) {
     case TurnTimerTickMsg:
+        cmds := []tea.Cmd{}
+
 		if m.game_timer.remaining_time <= 0 {
             m.game_state.HandleFailedTurn()
 
@@ -71,12 +73,20 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             }
 
             m.text_input.Reset()
+
+			m.state.game.restrict_input = true
+            cmds = append(cmds, debounceInputCmd(500))
 		}
 
 		m.game_timer.remaining_time -= time.Millisecond * 100
 
-		return m, setTurnTickerCmd()
+        cmds = append(cmds, setTurnTickerCmd())
+        return m, tea.Batch(cmds...)
 	case tea.KeyMsg:
+        if m.state.game.restrict_input {
+            return m, nil
+        }
+
 		// clear validation msg while debouncing enter presses (yes this is kinda scuffed)
 		if msg.String() != "enter" {
 			m.state.game.validation_msg = ""
@@ -92,10 +102,9 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return m, nil
 			}
 
-			m.state.game.restrict_input = true
-
 			// TODO: trim answer & take only first word before any spaces/symbols
 			m.game_state.CurrentTurn.Answer = strings.ToLower(m.text_input.Value())
+            m.text_input.Reset()
 			m.state.game.validation_msg = m.game_state.ValidateAnswer()
 
 			if m.game_state.CurrentTurn.IsValid {
@@ -110,6 +119,9 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
                 if m.game_timer.remaining_time < time.Duration(m.game_settings.TurnDurationMin) * time.Second {
                     m.game_timer.remaining_time = time.Duration(m.game_settings.TurnDurationMin) * time.Second
                 }
+
+                m.state.game.restrict_input = true
+                return m, debounceInputCmd(300)
 			}
 
 			if (m.game_state.Settings.WinCondition == enums.Debug && m.game_state.Player.Stats.PromptsSolved == 10) {
@@ -119,10 +131,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if (m.game_state.Settings.WinCondition == enums.MaxLives && m.game_state.Player.HealthCurrent == m.game_state.Settings.HealthMax) {
 				return m.GameOverSwitch(green(win_msg))
 			}
-
-			m.text_input.Reset()
-
-            return m, debounceInputCmd(300)
 		}
 	}
 
