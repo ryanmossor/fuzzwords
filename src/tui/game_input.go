@@ -63,14 +63,16 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
             if m.game_state.Player.HealthCurrent == 0 {
                 return m.GameOverSwitch(red(game_over_msg), false)
-            } else {
+			} else if m.game_state.CurrentTurn.Strikes == m.game_state.Settings.PromptStrikesMax {
                 m.state.game.validation_msg = fmt.Sprintf(
                     "Prompt %s failed. Possible answer: %s",
                     strings.ToUpper(m.game_state.CurrentTurn.Prompt),
                     strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
 
                 m.game_state.NewTurn()
-            }
+            } else if m.game_state.CurrentTurn.Strikes < m.game_state.Settings.PromptStrikesMax {
+                m.state.game.validation_msg = " " // no message, but color input box red
+			}
 
             m.text_input.Reset()
             cmds = append(cmds, m.debounceInputCmd(500))
@@ -213,7 +215,7 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
 	border_color := m.theme.Border()
 
-	if strings.Contains(m.state.game.validation_msg, "Correct") {
+	if strings.HasPrefix(m.state.game.validation_msg, "✓") {
 		return m.theme.TextGreen().Bold(true).Render(m.state.game.validation_msg), border_color
 	}
 

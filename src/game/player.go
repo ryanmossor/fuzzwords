@@ -57,6 +57,7 @@ func (g *GameState) HandleCorrectAnswer() {
 }
 
 func (g *GameState) HandleFailedTurn() {
+	g.CurrentTurn.Strikes++
 	g.Player.HealthCurrent--
 	g.Player.TurnsSinceLastExtraLife++
 	g.Player.Stats.UpdateFailedStats()

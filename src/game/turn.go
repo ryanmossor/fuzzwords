@@ -53,14 +53,13 @@ func (g *GameState) NewTurn() {
 
 func (g *GameState) ValidateAnswer() string {
 	is_valid := true
-	msg := "✓ Correct!"
+	answer_upper := strings.ToUpper(g.CurrentTurn.Answer)
+	msg := fmt.Sprintf("✓ %s", answer_upper)
 
 	if len(g.CurrentTurn.Answer) == 0 {
 		is_valid = false
 		msg = "No answer given"
 	}
-
-	answer_upper := strings.ToUpper(g.CurrentTurn.Answer)
 
 	if is_valid && !g.WordLists.FULL_MAP[g.CurrentTurn.Answer] {
 		is_valid = false
@@ -78,10 +77,6 @@ func (g *GameState) ValidateAnswer() string {
 		is_valid = false
 		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
 	}
-
-	// if !is_valid {
-	// 	g.CurrentTurn.Strikes++
-	// }
 
 	slog.Debug("Answer validated", 
 		"prompt", g.CurrentTurn.Prompt,
