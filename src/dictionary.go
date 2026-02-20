@@ -262923,7 +262923,6 @@ var EnglishDictionary = []string{
 	"vexillologist",
 	"vexillologists",
 	"vexillology",
-	"vexillology",
 	"vexillum",
 	"vexils",
 	"vexing",
