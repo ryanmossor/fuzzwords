@@ -18,6 +18,7 @@ func (m model) GameOverSwitch(msg string, win bool) (model, tea.Cmd) {
 	m.game_over = true
 
 	m.game_state.Player.Stats.ElapsedSeconds = int(time.Since(m.game_start_time).Seconds())
+	m.state.game.damaged = false
 
 	m.game_over_msg = msg
 	m = m.SwitchPage(game_over_page)

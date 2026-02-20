@@ -28,9 +28,9 @@ func (m model) GameHudView() string {
 
     var timer_display string
 	if m.game_timer.remaining_time >= 10 * time.Second {
-        timer_display = fmt.Sprintf("Time: %.0fs", m.game_timer.remaining_time.Seconds())
+        timer_display = fmt.Sprintf("%.0fs", m.game_timer.remaining_time.Seconds())
 	} else {
-        timer_display = fmt.Sprintf("Time: %.1fs", m.game_timer.remaining_time.Seconds())
+        timer_display = fmt.Sprintf("%.1fs", m.game_timer.remaining_time.Seconds())
     }
 
     if m.game_timer.remaining_time < 5 * time.Second {
@@ -42,12 +42,19 @@ func (m model) GameHudView() string {
 	fields := []string{
 		health,
 		game_mode,
-        timer_display,
+		"Time: " + timer_display,
+	}
+
+	var border_style lipgloss.Style
+	if m.state.game.damaged {
+		border_style = m.renderer.NewStyle().Foreground(m.theme.red)
+	} else {
+		border_style = m.renderer.NewStyle().Foreground(m.theme.Border())
 	}
 
 	header := table.New().
 		Border(lipgloss.NormalBorder()).
-		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
+		BorderStyle(border_style).
 		Row(fields...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
@@ -75,12 +82,18 @@ func (m model) GameHudView() string {
 func (m model) RenderHealthDisplay() string {
 	base := m.theme.Base().Render
 	green := m.theme.TextGreen().Render
+	red := m.theme.TextRed().Render
 
 	var health_display strings.Builder
 	i := 0
 
 	for i < m.game_state.Player.HealthCurrent {
-		health_display.WriteString(green("█"))
+		if m.state.game.damaged {
+			health_display.WriteString(red("█"))
+		} else {
+			health_display.WriteString(green("█"))
+		}
+
 		if i < m.game_state.Settings.HealthMax - 1 {
 			health_display.WriteString(" ")
 		}

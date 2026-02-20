@@ -24,6 +24,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.game_active = true
 	m.game_over = false
 	m.state.game.validation_msg = ""
+	m.state.game.damaged = false
 
 	m.game_state = game.InitializeGame(m.game_settings)
 	m.game_state.NewTurn()
@@ -55,6 +56,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		if m.game_timer.remaining_time <= 0 {
             m.game_state.HandleFailedTurn()
+			cmds = append(cmds, m.setPlayerDamagedStateCmd())
 
             turn_duration_min := max(m.game_settings.TurnDurationMin, 10)
             turn_duration_max := 30
@@ -213,14 +215,18 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 }
 
 func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
-	border_color := m.theme.Border()
+	var border_color lipgloss.TerminalColor
+	if m.state.game.damaged {
+		border_color = m.theme.red
+		m.text_input.PromptStyle = m.theme.TextRed()
+	} else {
+		border_color = m.theme.Border()
+		m.text_input.Reset()
+	}
 
 	if strings.HasPrefix(m.state.game.validation_msg, "✓") {
 		return m.theme.TextGreen().Bold(true).Render(m.state.game.validation_msg), border_color
 	}
-
-    m.text_input.PromptStyle = m.theme.TextRed()
-    border_color = m.theme.red
 
 	return m.theme.TextRed().Render(m.state.game.validation_msg), border_color
 }

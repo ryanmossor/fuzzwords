@@ -40,6 +40,7 @@ type footerCmd struct {
 }
 
 type gameState struct {
+	damaged				bool
 	restrict_input		bool
 	validation_msg		string
 }
@@ -165,6 +166,11 @@ func NewModel() tea.Model {
 		state: state{
 			press_play: pressPlayState{ visible: true },
 			settings: settingsState{ selected: 0 },
+			game: gameState{
+				damaged: false,
+				restrict_input: false,
+				validation_msg: "",
+			},
 		},
 	}
 }
@@ -180,6 +186,14 @@ func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
 
     return tea.Tick(time.Millisecond * time.Duration(duration_ms), func(t time.Time) tea.Msg {
 		return EnableInputMsg(t)
+	})
+}
+
+type TogglePlayerDamagedMsg struct{}
+func (m *model) setPlayerDamagedStateCmd() tea.Cmd {
+	m.state.game.damaged = true
+    return tea.Tick(time.Millisecond * time.Duration(250), func(t time.Time) tea.Msg {
+		return TogglePlayerDamagedMsg{}
 	})
 }
 
@@ -223,6 +237,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	case EnableInputMsg:
 		m.state.game.restrict_input = false
+	case TogglePlayerDamagedMsg:
+		m.state.game.damaged = false
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
