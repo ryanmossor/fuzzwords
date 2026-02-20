@@ -23,13 +23,14 @@ func (m model) GameOverSwitch(msg string, win bool) (model, tea.Cmd) {
 	m.game_over_msg = msg
 	m = m.SwitchPage(game_over_page)
 
+	accent := m.theme.TextAccent().Render
+	red := m.theme.TextRed().Render
+
     if win {
         m.state.game.validation_msg = ""
     } else {
-        m.state.game.validation_msg = fmt.Sprintf(
-            "Possible answer for final prompt %s: %s",
-            strings.ToUpper(m.game_state.CurrentTurn.Prompt),
-            strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
+		m.state.game.validation_msg = red(fmt.Sprintf("Possible answer for final prompt %s: ", strings.ToUpper(m.game_state.CurrentTurn.Prompt)))
+		m.state.game.validation_msg += accent(strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
     }
 
 	m.footer_cmds = []footerCmd{
