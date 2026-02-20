@@ -34,9 +34,9 @@ func (g *GameState) NewTurn() {
 		if len(word) <= g.Settings.PromptLenMax {
 			prompt = word
 		} else {
-			rand_max := len(word) - g.Settings.PromptLenMax
+			rand_max := len(word) - prompt_len
 			rand_idx := rand.Intn(rand_max)
-			prompt = word[rand_idx:g.Settings.PromptLenMax + rand_idx]
+			prompt = word[rand_idx:prompt_len + rand_idx]
 		}
 	}
 
