@@ -39,10 +39,19 @@ func (m model) GameHudView() string {
 
 	game_mode := fmt.Sprintf("Mode: %s", m.game_state.Settings.PromptMode.String())
 
-	fields := []string{
-		health,
-		game_mode,
-		"Time: " + timer_display,
+	var fields []string
+	if m.state.game.damaged {
+		fields = []string{
+			red(health),
+			red(game_mode),
+			"Time: " + timer_display,
+		}
+	} else {
+		fields = []string{
+			health,
+			game_mode,
+			"Time: " + timer_display,
+		}
 	}
 
 	var border_style lipgloss.Style
@@ -67,6 +76,8 @@ func (m model) GameHudView() string {
 		letter := string(c)
 		if m.game_state.Player.LettersRemaining[letter] {
 			letters_remaining = append(letters_remaining, dim(letter))
+		} else if m.state.game.damaged {
+			letters_remaining = append(letters_remaining, red(letter))
 		} else {
 			letters_remaining = append(letters_remaining, yellow(letter))
 		}
