@@ -61,6 +61,8 @@ type gameTimer struct {
 
 type model struct {
 	debug 				bool
+	debug_map			map[string]string
+
     ready               bool
 	game_active			bool
 	game_over			bool
@@ -151,6 +153,8 @@ func NewModel() tea.Model {
 
 	return model{
 		// debug: true,
+		debug_map: make(map[string]string),
+
 		game_active: false,
 
 		renderer: renderer,

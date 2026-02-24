@@ -45,18 +45,21 @@ func (m model) DebugView() string {
 		return ""
 	}
 
-	// tabs := []string{
-	// 	"VH " + strconv.Itoa(m.viewport_height),
-	// 	"VW " + strconv.Itoa(m.viewport_width),
-	// 	"CW " + strconv.Itoa(m.width_container),
-	// 	m.size.String(),
-	// }
+	tabs := []string{
+		// "VH " + strconv.Itoa(m.viewport_height),
+		// "VW " + strconv.Itoa(m.viewport_width),
+		// "CW " + strconv.Itoa(m.width_container),
+		"coloredStrikeLen " + m.debug_map["coloredStrikeLen"],
+		"visibleLen " + m.debug_map["visibleLen"],
+		"strikeLen " + m.debug_map["strikeLen"],
+		m.size.String(),
+	}
 
 	return table.New().
 		Border(lipgloss.HiddenBorder()).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
-		Row(memStatsView()...).
-		// Row(tabs...).
+		// Row(memStatsView()...).
+		Row(tabs...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			return m.theme.Base().AlignHorizontal(lipgloss.Center)
