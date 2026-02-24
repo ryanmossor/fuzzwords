@@ -58,7 +58,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		if m.game_timer.remaining_time <= 0 {
             m.game_state.HandleFailedTurn()
-			cmds = append(cmds, m.setPlayerDamagedStateCmd())
+			cmds = append(cmds, m.setPlayerDamagedStateCmd(), m.damageShakeAnimationCmd(6))
 
             turn_duration_min := max(m.game_settings.TurnDurationMin, 10)
             turn_duration_max := 30
@@ -127,6 +127,13 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
                 return m, m.debounceInputCmd(300)
             }
+		}
+	case DamageShakeAnimationMsg:
+		if m.state.game.damage_anim_padding > 0 {
+			m.state.game.damage_anim_padding -= 2
+			return m, tea.Tick(time.Second / time.Duration(m.anim_fps), func(t time.Time) tea.Msg {
+				return DamageShakeAnimationMsg{}
+			})
 		}
 	}
 
@@ -224,9 +231,20 @@ func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
 		m.text_input.Reset()
 	}
 
-	if strings.HasPrefix(m.state.game.validation_msg, "✓") {
-		return m.theme.TextGreen().Bold(true).Render(m.state.game.validation_msg), border_color
+	var msg string
+	if m.game_over {
+		msg = m.state.game.validation_msg
+	} else {
+		msg, _ = m.applyDamageShakeAnimation(m.state.game.validation_msg)
+		// Add padding to msg if necessary to prevent prompt from shaking
+		if len(msg) % 2 == 1 {
+			msg = utils.RightPad(msg, 1)
+		}
 	}
 
-	return m.theme.TextRed().Render(m.state.game.validation_msg), border_color
+	if strings.HasPrefix(m.state.game.validation_msg, "✓") {
+		return m.theme.TextGreen().Bold(true).Render(msg), border_color
+	}
+
+	return m.theme.TextRed().Render(msg), border_color
 }

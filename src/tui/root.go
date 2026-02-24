@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fzwds/src/game"
+	"fzwds/src/utils"
 	"log/slog"
 	"math"
 	"os"
@@ -41,6 +42,7 @@ type footerCmd struct {
 
 type gameState struct {
 	damaged				bool
+	damage_anim_padding	int
 	restrict_input		bool
 	validation_msg		string
 }
@@ -92,6 +94,9 @@ type model struct {
 
 	game_start_time		time.Time
     game_timer          gameTimer
+
+	anim_fps			int
+	enable_animations	bool
 }
 
 //go:embed settings_info.json
@@ -172,6 +177,9 @@ func NewModel() tea.Model {
 				validation_msg: "",
 			},
 		},
+
+		anim_fps: 30,
+		enable_animations: true,
 	}
 }
 
@@ -194,6 +202,21 @@ func (m *model) setPlayerDamagedStateCmd() tea.Cmd {
 	m.state.game.damaged = true
     return tea.Tick(time.Millisecond * time.Duration(250), func(t time.Time) tea.Msg {
 		return TogglePlayerDamagedMsg{}
+	})
+}
+
+type DamageShakeAnimationMsg struct{}
+func (m *model) damageShakeAnimationCmd(count int) tea.Cmd {
+	if !m.enable_animations {
+		return nil
+	}
+
+	m.state.game.damage_anim_padding = count * 2
+	return tea.Tick(time.Second / time.Duration(m.anim_fps), func(t time.Time) tea.Msg {
+		if m.state.game.damage_anim_padding > 0 {
+			return DamageShakeAnimationMsg{}
+		}
+		return nil
 	})
 }
 
@@ -439,3 +462,26 @@ func (m model) getScrollbar() string {
     )
 }
 
+
+// Apply spacing to string to produce a shaking animation.
+// The first return value is the padded string.
+// The second return value is the number of padding spaces applied.
+func (m model) applyDamageShakeAnimation(str string) (string, int) {
+	if m.state.game.damage_anim_padding <= 0 {
+		return str, 0
+	}
+
+	result := str
+
+	pad := m.state.game.damage_anim_padding / 2
+	var padding_spaces int
+	if pad % 2 == 0 {
+		padding_spaces = pad
+		result = utils.RightPad(result, padding_spaces)
+	} else {
+		padding_spaces = m.state.game.damage_anim_padding
+		result = utils.LeftPad(result, padding_spaces)
+	}
+
+	return result, padding_spaces
+}

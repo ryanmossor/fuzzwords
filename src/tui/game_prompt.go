@@ -2,30 +2,40 @@ package tui
 
 import (
 	"fmt"
-	"strconv"
+	"fzwds/src/utils"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
 func (m model) GamePromptView() string {
-	if m.game_state.CurrentTurn.Strikes > 0 {
-		strike_count := "\nStrikes: " + m.theme.TextRed().Render(
-			fmt.Sprintf("%s/%s",
-				strconv.Itoa(m.game_state.CurrentTurn.Strikes),
-				strconv.Itoa(m.game_state.Settings.PromptStrikesMax)))
-
+	if m.game_state.CurrentTurn.Strikes == 0 {
 		return lipgloss.JoinVertical(
 			lipgloss.Center,
-			"\n\n\n\n",
+			"\n\n",
 			m.theme.TextAccent().Bold(true).Render(strings.ToUpper(m.game_state.CurrentTurn.Prompt)),
-			strike_count,
 		)
+	}
+
+	strike_label := "Strikes: "
+	plain_strikes := fmt.Sprintf("%d/%d", m.game_state.CurrentTurn.Strikes, m.game_state.Settings.PromptStrikesMax)
+	colored_strikes := m.theme.TextRed().Render(plain_strikes)
+	strike_counter := strike_label + colored_strikes
+	strike_counter, padding_spaces := m.applyDamageShakeAnimation(strike_counter)
+
+	// Length of "Strikes: x/y" plus padding; excludes terminal color codes
+	strike_counter_visible_len := len(strike_label) + len(plain_strikes) + padding_spaces
+
+	prompt := m.game_state.CurrentTurn.Prompt
+	if (len(prompt) % 2) == (strike_counter_visible_len % 2) {
+		// Add padding to prompt if necessary to prevent prompt from shaking
+		prompt = utils.RightPad(m.game_state.CurrentTurn.Prompt, 1)
 	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		"\n\n",
-		m.theme.TextAccent().Bold(true).Render(strings.ToUpper(m.game_state.CurrentTurn.Prompt)),
-	) 
+		"\n\n\n\n",
+		m.theme.TextAccent().Bold(true).Render(strings.ToUpper(prompt)),
+		strike_counter,
+	)
 }

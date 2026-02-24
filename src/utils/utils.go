@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"strings"
 )
 
 func Average(arr []int) float64 {
@@ -100,4 +101,18 @@ func IsFuzzyMatch(answer string, prompt string) bool {
     }
 
     return false
+}
+
+func LeftPad(s string, n int) string {
+	if n <= 0 {
+		return s
+	}
+	return strings.Repeat(" ", n) + s
+}
+
+func RightPad(s string, n int) string {
+	if n <= 0 {
+		return s
+	}
+	return s + strings.Repeat(" ", n)
 }
