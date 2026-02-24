@@ -11,9 +11,9 @@ func (m model) CreateBox(content string, selected bool) string {
 
 	var style lipgloss.Style
 	if selected {
-		style = base.BorderForeground(m.theme.Accent()).BorderStyle(lipgloss.DoubleBorder())
+		style = base.BorderForeground(m.theme.Accent()).BorderStyle(lipgloss.RoundedBorder())
 	} else {
-		style = base.BorderForeground(m.theme.Border()).BorderStyle(lipgloss.NormalBorder())
+		style = base.BorderForeground(m.theme.Border()).BorderStyle(lipgloss.RoundedBorder())
 	}
 
 	return style.PaddingLeft(1).Render(padded)
