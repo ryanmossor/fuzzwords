@@ -255,7 +255,15 @@ func (m *model) damageShakeAnimationCmd(count int) tea.Cmd {
 }
 
 type TurnTimerTickMsg struct{}
-func setTurnTickerCmd() tea.Cmd {
+func (m *model) setTurnTickerCmd() tea.Cmd {
+	if m.game_timer.remaining_time > time.Second * 10 {
+		m.game_timer.remaining_time -= time.Second
+		return tea.Tick(time.Second, func(t time.Time) tea.Msg {
+			return TurnTimerTickMsg{}
+		})
+	}
+
+	m.game_timer.remaining_time -= time.Millisecond * 100
 	return tea.Tick(time.Millisecond * 100, func(t time.Time) tea.Msg {
 		return TurnTimerTickMsg{}
 	})
