@@ -229,6 +229,10 @@ func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
 		m.text_input.Reset()
 	}
 
+	if strings.HasPrefix(m.state.game.validation_msg, "✓") {
+		return m.theme.TextGreen().Render(strings.TrimSpace(m.state.game.validation_msg)), border_color
+	}
+
 	var msg string
 	if m.game_over {
 		msg = m.state.game.validation_msg
@@ -238,10 +242,6 @@ func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
 		if len(msg) % 2 == 1 {
 			msg = utils.RightPad(msg, 1)
 		}
-	}
-
-	if strings.HasPrefix(m.state.game.validation_msg, "✓") {
-		return m.theme.TextGreen().Bold(true).Render(msg), border_color
 	}
 
 	return m.theme.TextRed().Render(msg), border_color
