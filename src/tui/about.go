@@ -18,38 +18,34 @@ func (m model) AboutUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) AboutView() string {
-	// base := m.theme.Base().Width(m.widthContent).Render
-	// bold := m.theme.TextAccent().Bold(true).Render
-	// bold := m.theme.TextAccent().Bold(true).Render
-
 	base := m.theme.Base().Render
-	accent := m.theme.TextAccent().Bold(true).Render 
-
-	// first_line_accent := m.theme.TextAccent().Render 
-	// accent := m.theme.TextAccent().Width(m.widthContent).Render
+	accent := m.theme.TextAccent().Render
+	highlight := m.theme.TextHighlight().Render
+	lavender_bold := m.theme.TextLavender().Bold(true).Render
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		accent("Fuzzwords") + base(" is a word game inspired by ") + accent("BombParty: https://jklm.fun/"),
 		"",
-		"BombParty challenges players with a prompt that must be fulfilled by a word containing the letters of the prompt in " + 
-			accent("consecutive order") +
-			base(" (e.g., the word OVE") + 
-			accent("RWO") +
-			base("RKED satisfies the prompt ") +
-			accent("RWO") +
-			base(")."),
+		base("In BombParty, players respond to a prompt (a sequence of letters) by typing " +
+			"a word containing those letters in ") + accent("consecutive order") + base("."),
 		"",
-		"Fuzzwords allows for " + 
-			accent("\"fuzzy\" matching") +
-			base(", meaning the letters of the prompt must appear in the answer in the given order, but are not required to be consecutive."),
+		lavender_bold(" ▶ Example:") +
+		accent(" OVE") + highlight("RWO") + accent("RKED") +
+		base(" solves the prompt ") + accent("RWO"),
 		"",
-		"For example, words like IN" + accent("V") + base("ES") + accent("TM") + base("ENT and ") +
-			accent("V") + base("EN") + accent("T") + base("RILOQUIS") + accent("M") +
-			base(" satisfy the prompt ") +
-			accent("VTM") +
-			base(". However, MOTIVE does not, as the letters are not in the correct order."),
-		// TODO: rules on extra lives, game modes (endless/LMS), etc
+		base("Fuzzwords allows for ") +
+		accent("\"fuzzy\" matching") +
+		base(", meaning the letters of the prompt must still be used in the same order " +
+			"as in the prompt, but they do not need to be consecutive."),
+		"",
+		lavender_bold(" ▶ Example:") +
+		accent(" IN") + highlight("V") + accent("ES") + highlight("TM") + accent("ENT") +
+		base(" and ") +
+		highlight("V") + accent("EN") + highlight("T") + accent("RILOQUIS") + highlight("M") +
+		base(" both solve the prompt ") + accent("VTM"),
+
+		// TODO: rules on extra lives, game modes (endless/max lives), etc
 		// TODO: scrollbar and/or rule pages
 	)
 }
