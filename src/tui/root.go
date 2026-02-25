@@ -51,6 +51,7 @@ type gameState struct {
 type splashState struct {
 	logo_idx			int
 	init				bool
+	color_green			bool
 }
 
 type state struct {
@@ -190,6 +191,7 @@ func NewModel() tea.Model {
 			title: splashState{
 				logo_idx: 0,
 				init: false,
+				color_green: false,
 			},
 		},
 
@@ -216,7 +218,14 @@ func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
 }
 
 type LogoUpdateMsg struct{}
-func mainMenuLogoUpdateCmd() tea.Cmd {
+type LogoGreenMsg struct{}
+func (m *model) mainMenuLogoUpdateCmd() tea.Cmd {
+	if m.state.title.logo_idx == len(constants.GAME_TITLE) {
+		return tea.Tick(1250 * time.Millisecond, func(t time.Time) tea.Msg {
+			return LogoGreenMsg{}
+		})
+	}
+
 	return tea.Tick(250 * time.Millisecond, func(t time.Time) tea.Msg {
 		return LogoUpdateMsg{}
 	})
@@ -294,12 +303,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case LogoInitMsg:
 		m.state.title.init = true
-		return m, mainMenuLogoUpdateCmd()
+		return m, m.mainMenuLogoUpdateCmd()
 	case LogoUpdateMsg:
 		if m.state.title.logo_idx < len(constants.GAME_TITLE) {
 			m.state.title.logo_idx++
-			return m, mainMenuLogoUpdateCmd()
+			return m, m.mainMenuLogoUpdateCmd()
 		}
+	case LogoGreenMsg:
+		m.state.title.color_green = true
+		return m, nil
 	}
 
 	var cmd tea.Cmd

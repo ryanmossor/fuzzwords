@@ -136,6 +136,10 @@ func (m model) MainMenuView() string {
 					}
 				}
 
+				if m.state.title.color_green {
+					style = m.theme.TextGreen().Render
+				}
+
 				letter_arr := letters[current_title_char]
 				for k, line := range letter_arr {
 					idx := HEADER_LEN + k
