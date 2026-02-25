@@ -3,9 +3,9 @@ package tui
 import (
 	_ "embed"
 	"encoding/json"
-	fzwds "fzwds/src"
 	"fzwds/src/game"
 	"fzwds/src/utils"
+	"fzwds/src/constants"
 	"log/slog"
 	"math"
 	"os"
@@ -296,7 +296,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state.title.init = true
 		return m, mainMenuLogoUpdateCmd()
 	case LogoUpdateMsg:
-		if m.state.title.logo_idx < len(fzwds.GAME_TITLE) {
+		if m.state.title.logo_idx < len(constants.GAME_TITLE) {
 			m.state.title.logo_idx++
 			return m, mainMenuLogoUpdateCmd()
 		}

@@ -1,7 +1,7 @@
 package tui
 
 import (
-	fzwds "fzwds/src"
+	"fzwds/src/constants"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -123,11 +123,11 @@ func (m model) MainMenuView() string {
 		} else {
 			prompt_idx := 0
 			for i := range m.state.title.logo_idx {
-				current_title_char := fzwds.GAME_TITLE[i]
+				current_title_char := constants.GAME_TITLE[i]
 
 				style := base
-				for j := prompt_idx; j < len(fzwds.TITLE_PROMPT); j++ {
-					c := fzwds.TITLE_PROMPT[j]
+				for j := prompt_idx; j < len(constants.TITLE_PROMPT); j++ {
+					c := constants.TITLE_PROMPT[j]
 					is_prompt_letter := c == current_title_char
 					if is_prompt_letter {
 						style = highlight
