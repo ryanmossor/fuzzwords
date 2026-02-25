@@ -3,6 +3,7 @@ package tui
 import (
 	_ "embed"
 	"encoding/json"
+	fzwds "fzwds/src"
 	"fzwds/src/game"
 	"fzwds/src/utils"
 	"log/slog"
@@ -47,8 +48,14 @@ type gameState struct {
 	validation_msg		string
 }
 
+type splashState struct {
+	logo_idx			int
+	init				bool
+}
+
 type state struct {
 	press_play			pressPlayState
+	title				splashState
 	// TODO: change to game_input state and move GameState here?
 	game				gameState
 	settings			settingsState
@@ -180,6 +187,10 @@ func NewModel() tea.Model {
 				restrict_input: false,
 				validation_msg: "",
 			},
+			title: splashState{
+				logo_idx: 0,
+				init: false,
+			},
 		},
 
 		anim_fps: 30,
@@ -189,7 +200,10 @@ func NewModel() tea.Model {
 
 func (m model) Init() tea.Cmd {
 	// TODO: batch async cmds - I/O, db loading, settings json etc
-	return m.PressPlayInit()
+	return tea.Batch(
+		m.PressPlayInit(),
+		m.MainMenuInit(),
+	)
 }
 
 type EnableInputMsg time.Time
@@ -198,6 +212,13 @@ func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
 
     return tea.Tick(time.Millisecond * time.Duration(duration_ms), func(t time.Time) tea.Msg {
 		return EnableInputMsg(t)
+	})
+}
+
+type LogoUpdateMsg struct{}
+func mainMenuLogoUpdateCmd() tea.Cmd {
+	return tea.Tick(250 * time.Millisecond, func(t time.Time) tea.Msg {
+		return LogoUpdateMsg{}
 	})
 }
 
@@ -270,6 +291,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
+		}
+	case LogoInitMsg:
+		m.state.title.init = true
+		return m, mainMenuLogoUpdateCmd()
+	case LogoUpdateMsg:
+		if m.state.title.logo_idx < len(fzwds.GAME_TITLE) {
+			m.state.title.logo_idx++
+			return m, mainMenuLogoUpdateCmd()
 		}
 	}
 

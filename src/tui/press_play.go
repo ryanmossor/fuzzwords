@@ -11,20 +11,23 @@ type pressPlayState struct {
 }
 
 type PressPlayTickMsg struct {}
+type LogoInitMsg struct{}
 
-func (m model) PressPlayInit() tea.Cmd {
-	return tea.Every(time.Millisecond * 700, func(t time.Time) tea.Msg {
+func pressPlayFlashCmd() tea.Cmd {
+	return tea.Every(700 * time.Millisecond, func(t time.Time) tea.Msg {
 		return PressPlayTickMsg{}
 	})
+}
+
+func (m model) PressPlayInit() tea.Cmd {
+	return pressPlayFlashCmd()
 }
 
 func (m model) PressPlayUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg.(type) {
 	case PressPlayTickMsg:
 		m.state.press_play.visible = !m.state.press_play.visible
-		return m, tea.Every(time.Millisecond * 700, func(t time.Time) tea.Msg {
-			return PressPlayTickMsg{}
-		})
+		return m, pressPlayFlashCmd()
 	}
 	return m, nil
 }
