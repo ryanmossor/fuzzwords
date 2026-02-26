@@ -16,7 +16,7 @@ func (m model) GameOverSwitch(msg string, win bool) (model, tea.Cmd) {
 	m.state.game_ui.game_active = false
 	m.state.game_ui.game_over_msg = msg
 	m.state.game_ui.player_damaged = false
-	m.game_state.Player.Stats.ElapsedSeconds = int(time.Since(m.state.game_ui.start_time).Seconds())
+	m.state.game.Player.Stats.ElapsedSeconds = int(time.Since(m.state.game_ui.start_time).Seconds())
 
 	m = m.SwitchPage(game_over_page)
 
@@ -26,8 +26,8 @@ func (m model) GameOverSwitch(msg string, win bool) (model, tea.Cmd) {
     if win {
         m.state.game_ui.validation_msg = ""
     } else {
-		m.state.game_ui.validation_msg = red(fmt.Sprintf("Possible answer for final prompt %s: ", strings.ToUpper(m.game_state.CurrentTurn.Prompt)))
-		m.state.game_ui.validation_msg += accent(strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
+		m.state.game_ui.validation_msg = red(fmt.Sprintf("Possible answer for final prompt %s: ", strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
+		m.state.game_ui.validation_msg += accent(strings.ToUpper(m.state.game.CurrentTurn.SourceWord))
     }
 
 	m.footer_keymaps = []footer_keymaps{
@@ -65,31 +65,31 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) GameOverView() string {
 	longest_solve := fmt.Sprintf("%s (%d)",
-		m.game_state.Player.Stats.LongestSolve,
-		len(m.game_state.Player.Stats.LongestSolve))
+		m.state.game.Player.Stats.LongestSolve,
+		len(m.state.game.Player.Stats.LongestSolve))
 
-	if m.game_state.Player.Stats.LongestSolve == "" {
+	if m.state.game.Player.Stats.LongestSolve == "" {
 		longest_solve = "-"
 	}
 
-	fastest_extra_life := fmt.Sprintf("%d turns", m.game_state.Player.Stats.FewestExtraLifeSolves)
-	if m.game_state.Player.Stats.FewestExtraLifeSolves == 0 {
+	fastest_extra_life := fmt.Sprintf("%d turns", m.state.game.Player.Stats.FewestExtraLifeSolves)
+	if m.state.game.Player.Stats.FewestExtraLifeSolves == 0 {
 		fastest_extra_life = "-"
 	}
 
 	var solves_per_min float64 = 0
-    if m.game_state.Player.Stats.PromptsSolved > 0 {
-        solves_per_min = float64(m.game_state.Player.Stats.PromptsSolved) / (float64(m.game_state.Player.Stats.ElapsedSeconds) / 60.0)
+    if m.state.game.Player.Stats.PromptsSolved > 0 {
+        solves_per_min = float64(m.state.game.Player.Stats.PromptsSolved) / (float64(m.state.game.Player.Stats.ElapsedSeconds) / 60.0)
     }
 
 	stats := [][]string{
-		{"Time survived", utils.FormatTime(m.game_state.Player.Stats.ElapsedSeconds)},
-		{"Prompts solved", strconv.Itoa(m.game_state.Player.Stats.PromptsSolved)},
-		{"Prompts failed", strconv.Itoa(m.game_state.Player.Stats.PromptsFailed)},
+		{"Time survived", utils.FormatTime(m.state.game.Player.Stats.ElapsedSeconds)},
+		{"Prompts solved", strconv.Itoa(m.state.game.Player.Stats.PromptsSolved)},
+		{"Prompts failed", strconv.Itoa(m.state.game.Player.Stats.PromptsFailed)},
 		{"Solves per minute", fmt.Sprintf("%.1f", solves_per_min)},
-		{"Average solve length", fmt.Sprintf("%.1f letters", m.game_state.Player.Stats.AverageSolveLength())},
+		{"Average solve length", fmt.Sprintf("%.1f letters", m.state.game.Player.Stats.AverageSolveLength())},
 		{"Longest word used", longest_solve},
-		{"Extra lives gained", strconv.Itoa(m.game_state.Player.Stats.ExtraLivesGained)},
+		{"Extra lives gained", strconv.Itoa(m.state.game.Player.Stats.ExtraLivesGained)},
 		{"Fastest extra life", fastest_extra_life},
 	}
 		

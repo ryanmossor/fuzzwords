@@ -62,6 +62,7 @@ type SplashScreenState struct {
 }
 
 type State struct {
+	game				game.GameState
 	game_ui				GameUIState
 	press_play			PressPlayState
 	settings			SettingsState
@@ -92,7 +93,6 @@ type model struct {
 	text_input			textinput.Model
 
 	state				State
-	game_state			game.GameState
 	game_settings		*game.Settings
 	game_settings_copy	game.Settings
 	settings_menu_json	[]game.Config // TODO rename

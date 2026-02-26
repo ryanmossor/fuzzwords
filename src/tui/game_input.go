@@ -24,8 +24,8 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game_ui.validation_msg = ""
 	m.state.game_ui.player_damaged = false
 
-	m.game_state = game.InitializeGame(m.game_settings)
-	m.game_state.NewTurn()
+	m.state.game = game.InitializeGame(m.game_settings)
+	m.state.game.NewTurn()
 
 	m.state.game_ui.start_time = time.Now()
     m.state.game_ui.timer = (30 + 1) * time.Second
@@ -54,7 +54,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
         cmds := []tea.Cmd{}
 
 		if m.state.game_ui.timer <= 0 {
-            m.game_state.HandleFailedTurn()
+            m.state.game.HandleFailedTurn()
 			cmds = append(cmds, m.setPlayerDamagedStateCmd(), m.damageShakeAnimationCmd(6))
 
             turn_duration_min := max(m.game_settings.TurnDurationMin, 10)
@@ -62,20 +62,20 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             turn_time := rand.Intn(turn_duration_max - turn_duration_min + 1) + turn_duration_min 
             m.state.game_ui.timer = time.Duration(turn_time) * time.Second
 
-            if m.game_state.Player.HealthCurrent == 0 {
+            if m.state.game.Player.HealthCurrent == 0 {
                 return m.GameOverSwitch(red_bold(game_over_msg), false)
-			} else if m.game_state.CurrentTurn.Strikes == m.game_state.Settings.PromptStrikesMax {
+			} else if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikesMax {
 				m.state.game_ui.validation_msg = red(
 					fmt.Sprintf(
 						"Prompt %s failed. Possible answer: ",
-						strings.ToUpper(m.game_state.CurrentTurn.Prompt)))
-				m.state.game_ui.validation_msg += accent(strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
+						strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
+				m.state.game_ui.validation_msg += accent(strings.ToUpper(m.state.game.CurrentTurn.SourceWord))
 
 				m.text_input.Reset()
 				cmds = append(cmds, m.debounceInputCmd(500))
 
-                m.game_state.NewTurn()
-            } else if m.game_state.CurrentTurn.Strikes < m.game_state.Settings.PromptStrikesMax {
+                m.state.game.NewTurn()
+            } else if m.state.game.CurrentTurn.Strikes < m.state.game.Settings.PromptStrikesMax {
                 m.state.game_ui.validation_msg = ""
 			}
 		}
@@ -98,23 +98,23 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "ctrl+q":
 			return m.GameOverSwitch(red_bold(game_over_msg), false)
 		case "enter":
-			m.game_state.CurrentTurn.Answer = strings.ToLower(strings.TrimSpace(m.text_input.Value()))
+			m.state.game.CurrentTurn.Answer = strings.ToLower(strings.TrimSpace(m.text_input.Value()))
             m.text_input.Reset()
-			m.state.game_ui.validation_msg = m.game_state.ValidateAnswer()
+			m.state.game_ui.validation_msg = m.state.game.ValidateAnswer()
 
-			if m.game_state.CurrentTurn.IsValid {
-				m.game_state.HandleCorrectAnswer()
+			if m.state.game.CurrentTurn.IsValid {
+				m.state.game.HandleCorrectAnswer()
 
 				// TODO: move win condition check to game_over?
-				if len(m.game_state.WordLists.Available) == 0 {
+				if len(m.state.game.WordLists.Available) == 0 {
 					return m.GameOverSwitch(green(win_msg), true)
-				} else if (m.game_state.Settings.WinCondition == enums.Debug && m.game_state.Player.Stats.PromptsSolved == 10) {
+				} else if (m.state.game.Settings.WinCondition == enums.Debug && m.state.game.Player.Stats.PromptsSolved == 10) {
                     return m.GameOverSwitch(green("stop stalling and do some work"), true)
-                } else if (m.game_state.Settings.WinCondition == enums.MaxLives && m.game_state.Player.HealthCurrent == m.game_state.Settings.HealthMax) {
+                } else if (m.state.game.Settings.WinCondition == enums.MaxLives && m.state.game.Player.HealthCurrent == m.state.game.Settings.HealthMax) {
                     return m.GameOverSwitch(green(win_msg), true)
                 }
 
-				m.game_state.NewTurn()
+				m.state.game.NewTurn()
 
 				if m.state.game_ui.timer < time.Duration(m.game_settings.TurnDurationMin) * time.Second {
 					m.state.game_ui.timer = time.Duration(m.game_settings.TurnDurationMin) * time.Second
@@ -165,7 +165,7 @@ func (m model) GameInputView() string {
 }
 
 func (m model) setInputBorderColor(answer string) lipgloss.TerminalColor {
-	if m.game_state.WordLists.FULL_MAP[strings.ToLower(answer)] {
+	if m.state.game.WordLists.FULL_MAP[strings.ToLower(answer)] {
 		return m.theme.green
 	}
 	return m.theme.red
@@ -176,11 +176,11 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 	accent := m.theme.TextAccent().Render
 	blue := m.theme.TextBlue().Render
 
-	prompt_upper := strings.ToUpper(m.game_state.CurrentTurn.Prompt)
+	prompt_upper := strings.ToUpper(m.state.game.CurrentTurn.Prompt)
 	answer_upper := strings.ToUpper(m.text_input.Value())
 	var sb strings.Builder
 	 
-	switch m.game_state.Settings.PromptMode {
+	switch m.state.game.Settings.PromptMode {
 	case enums.Fuzzy:
 		prompt_idx := 0
 		for _, c := range answer_upper {
@@ -194,7 +194,7 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 			}
 		}
 
-		if m.game_state.Settings.HighlightInput && utils.IsFuzzyMatch(answer_upper, prompt_upper) {
+		if m.state.game.Settings.HighlightInput && utils.IsFuzzyMatch(answer_upper, prompt_upper) {
 			border_color = m.setInputBorderColor(answer_upper)
 		}
 	case enums.Classic:
@@ -208,7 +208,7 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 		sb.WriteString(blue(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
 		sb.WriteString(accent(answer_upper[sub_idx + len(prompt_upper):]))
 
-		if m.game_state.Settings.HighlightInput {
+		if m.state.game.Settings.HighlightInput {
 			border_color = m.setInputBorderColor(answer_upper)
 		}
 	}

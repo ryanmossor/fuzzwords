@@ -37,7 +37,7 @@ func (m model) GameHudView() string {
         timer_display = red(timer_display)
     }
 
-	game_mode := fmt.Sprintf("Mode: %s", m.game_state.Settings.PromptMode.String())
+	game_mode := fmt.Sprintf("Mode: %s", m.state.game.Settings.PromptMode.String())
 
 	var fields []string
 	if m.state.game_ui.player_damaged {
@@ -72,9 +72,9 @@ func (m model) GameHudView() string {
 		Render()
 
 	letters_remaining := []string{}
-	for _, c := range m.game_state.Alphabet {
+	for _, c := range m.state.game.Alphabet {
 		letter := string(c)
-		if m.game_state.Player.LettersRemaining[letter] {
+		if m.state.game.Player.LettersRemaining[letter] {
 			letters_remaining = append(letters_remaining, dim(letter))
 		} else if m.state.game_ui.player_damaged {
 			letters_remaining = append(letters_remaining, red(letter))
@@ -98,22 +98,22 @@ func (m model) RenderHealthDisplay() string {
 	var health_display strings.Builder
 	i := 0
 
-	for i < m.game_state.Player.HealthCurrent {
+	for i < m.state.game.Player.HealthCurrent {
 		if m.state.game_ui.player_damaged {
 			health_display.WriteString(red("█"))
 		} else {
 			health_display.WriteString(green("█"))
 		}
 
-		if i < m.game_state.Settings.HealthMax - 1 {
+		if i < m.state.game.Settings.HealthMax - 1 {
 			health_display.WriteString(" ")
 		}
 		i++
 	}
 
-	for i < m.game_state.Settings.HealthMax {
+	for i < m.state.game.Settings.HealthMax {
 		health_display.WriteString(base("▒"))
-		if i < m.game_state.Settings.HealthMax - 1 {
+		if i < m.state.game.Settings.HealthMax - 1 {
 			health_display.WriteString(" ")
 		}
 		i++
