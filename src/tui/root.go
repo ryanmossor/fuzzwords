@@ -175,7 +175,11 @@ func NewModel() tea.Model {
 			settings: SettingsState{ selected: 0 },
 			game_ui: GameUIState{
 				game_active: false,
+				game_over_msg: "",
+
+				damage_anim_padding: 0,
 				player_damaged: false,
+
 				input_restricted: false,
 				validation_msg: "",
 			},
