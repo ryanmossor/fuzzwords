@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type settingsState struct {
+type SettingsState struct {
 	selected		int
 }
 
@@ -20,7 +20,7 @@ func (m model) SettingsSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(settings_page)
 	m.state.settings.selected = 0
 
-	m.footer_cmds = []footerCmd{
+	m.footer_keymaps = []footer_keymaps{
 		{key: "↑/↓", value: "scroll"},
 		{key: "←/→", value: "change"},
 		{key: "ctrl+r", value: "defaults"},

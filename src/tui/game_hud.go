@@ -15,7 +15,7 @@ func (m model) GameHudUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) GameHudView() string {
-	if !m.game_active {
+	if !m.state.game_ui.game_active {
 		return ""
 	}
 
@@ -27,20 +27,20 @@ func (m model) GameHudView() string {
 	health := m.RenderHealthDisplay()
 
     var timer_display string
-	if m.game_timer.remaining_time >= 10 * time.Second {
-        timer_display = fmt.Sprintf("%.0fs", m.game_timer.remaining_time.Seconds())
+	if m.state.game_ui.timer >= 10 * time.Second {
+        timer_display = fmt.Sprintf("%.0fs", m.state.game_ui.timer.Seconds())
 	} else {
-        timer_display = fmt.Sprintf("%.1fs", m.game_timer.remaining_time.Seconds())
+        timer_display = fmt.Sprintf("%.1fs", m.state.game_ui.timer.Seconds())
     }
 
-    if m.game_timer.remaining_time < 5 * time.Second {
+    if m.state.game_ui.timer < 5 * time.Second {
         timer_display = red(timer_display)
     }
 
 	game_mode := fmt.Sprintf("Mode: %s", m.game_state.Settings.PromptMode.String())
 
 	var fields []string
-	if m.state.game.damaged {
+	if m.state.game_ui.player_damaged {
 		fields = []string{
 			red(health),
 			red(game_mode),
@@ -55,7 +55,7 @@ func (m model) GameHudView() string {
 	}
 
 	var border_style lipgloss.Style
-	if m.state.game.damaged {
+	if m.state.game_ui.player_damaged {
 		border_style = m.renderer.NewStyle().Foreground(m.theme.red)
 	} else {
 		border_style = m.renderer.NewStyle().Foreground(m.theme.Border())
@@ -76,7 +76,7 @@ func (m model) GameHudView() string {
 		letter := string(c)
 		if m.game_state.Player.LettersRemaining[letter] {
 			letters_remaining = append(letters_remaining, dim(letter))
-		} else if m.state.game.damaged {
+		} else if m.state.game_ui.player_damaged {
 			letters_remaining = append(letters_remaining, red(letter))
 		} else {
 			letters_remaining = append(letters_remaining, yellow(letter))
@@ -99,7 +99,7 @@ func (m model) RenderHealthDisplay() string {
 	i := 0
 
 	for i < m.game_state.Player.HealthCurrent {
-		if m.state.game.damaged {
+		if m.state.game_ui.player_damaged {
 			health_display.WriteString(red("█"))
 		} else {
 			health_display.WriteString(green("█"))

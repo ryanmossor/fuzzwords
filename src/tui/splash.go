@@ -75,7 +75,7 @@ func (m model) MainMenuInit() tea.Cmd {
 
 func (m model) MainMenuSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(splash_page)
-	m.footer_cmds = []footerCmd{
+	m.footer_keymaps = []footer_keymaps{
 		{key: "q", value: "quit"},
 	}
 
@@ -114,7 +114,7 @@ func (m model) MainMenuView() string {
 			logo[4] = yellow("▀██▀ ██ ██ ▀▀▀██ ▀▀▀██ ██   ██ ▄███▄ ████▄ ▄████ ▄█▀▀▀")
 			logo[5] = yellow(" ██  ██ ██   ▄█▀   ▄█▀ ██ █ ██ ██ ██ ██ ▀▀ ██ ██ ▀███▄")
 			logo[6] = yellow(" ██  ▀██▀█ ▄██▄▄ ▄██▄▄  ██▀██  ▀███▀ ██    ▀████ ▄▄▄█▀")
-		} else if !m.state.title.init {
+		} else if !m.state.title.logo_anim_active {
 			logo[2] = yellow("  ▄▄                  ▄▄      ")
 			logo[3] = yellow(" ██                   ██      ")
 			logo[4] = yellow("▀██▀ ▀▀▀██ ██   ██ ▄████ ▄█▀▀▀")
@@ -122,7 +122,7 @@ func (m model) MainMenuView() string {
 			logo[6] = yellow(" ██  ▄██▄▄  ██▀██  ▀████ ▄▄▄█▀")
 		} else {
 			prompt_idx := 0
-			for i := range m.state.title.logo_idx {
+			for i := range m.state.title.logo_anim_idx {
 				current_title_char := constants.GAME_TITLE[i]
 
 				style := base
@@ -136,7 +136,7 @@ func (m model) MainMenuView() string {
 					}
 				}
 
-				if m.state.title.color_green {
+				if m.state.title.validate_logo {
 					style = m.theme.TextGreen().Render
 				}
 

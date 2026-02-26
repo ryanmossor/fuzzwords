@@ -20,25 +20,22 @@ var game_over_msg string = "===== GAME OVER ====="
 func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
 
-	// TODO: move these to game state?
-	m.game_active = true
-	m.game_over = false
-	m.state.game.validation_msg = ""
-	m.state.game.damaged = false
+	m.state.game_ui.game_active = true
+	m.state.game_ui.validation_msg = ""
+	m.state.game_ui.player_damaged = false
 
 	m.game_state = game.InitializeGame(m.game_settings)
 	m.game_state.NewTurn()
 
-	m.game_start_time = time.Now()
+	m.state.game_ui.start_time = time.Now()
+    m.state.game_ui.timer = (30 + 1) * time.Second
 
-    m.game_timer.remaining_time = (30 + 1) * time.Second
-
-	m.footer_cmds = []footerCmd{
+	m.footer_keymaps = []footer_keymaps{
 		{key: "esc", value: "clear input"},
 		{key: "ctrl+q", value: "quit"},
 	}
 
-	m.state.game.restrict_input = false
+	m.state.game_ui.input_restricted = false
 	m.text_input.Reset()
 
 	cmds := []tea.Cmd{textinput.Blink, m.setTurnTickerCmd()}
@@ -56,43 +53,43 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
     case TurnTimerTickMsg:
         cmds := []tea.Cmd{}
 
-		if m.game_timer.remaining_time <= 0 {
+		if m.state.game_ui.timer <= 0 {
             m.game_state.HandleFailedTurn()
 			cmds = append(cmds, m.setPlayerDamagedStateCmd(), m.damageShakeAnimationCmd(6))
 
             turn_duration_min := max(m.game_settings.TurnDurationMin, 10)
             turn_duration_max := 30
             turn_time := rand.Intn(turn_duration_max - turn_duration_min + 1) + turn_duration_min 
-            m.game_timer.remaining_time = time.Duration(turn_time) * time.Second
+            m.state.game_ui.timer = time.Duration(turn_time) * time.Second
 
             if m.game_state.Player.HealthCurrent == 0 {
                 return m.GameOverSwitch(red_bold(game_over_msg), false)
 			} else if m.game_state.CurrentTurn.Strikes == m.game_state.Settings.PromptStrikesMax {
-				m.state.game.validation_msg = red(
+				m.state.game_ui.validation_msg = red(
 					fmt.Sprintf(
 						"Prompt %s failed. Possible answer: ",
 						strings.ToUpper(m.game_state.CurrentTurn.Prompt)))
-				m.state.game.validation_msg += accent(strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
+				m.state.game_ui.validation_msg += accent(strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
 
 				m.text_input.Reset()
 				cmds = append(cmds, m.debounceInputCmd(500))
 
                 m.game_state.NewTurn()
             } else if m.game_state.CurrentTurn.Strikes < m.game_state.Settings.PromptStrikesMax {
-                m.state.game.validation_msg = ""
+                m.state.game_ui.validation_msg = ""
 			}
 		}
 
         cmds = append(cmds, m.setTurnTickerCmd())
         return m, tea.Batch(cmds...)
 	case tea.KeyMsg:
-        if m.state.game.restrict_input {
+        if m.state.game_ui.input_restricted {
             return m, nil
         }
 
         key := msg.String()
 		if key != "enter" {
-			m.state.game.validation_msg = ""
+			m.state.game_ui.validation_msg = ""
 		}
 
 		switch key {
@@ -103,7 +100,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "enter":
 			m.game_state.CurrentTurn.Answer = strings.ToLower(strings.TrimSpace(m.text_input.Value()))
             m.text_input.Reset()
-			m.state.game.validation_msg = m.game_state.ValidateAnswer()
+			m.state.game_ui.validation_msg = m.game_state.ValidateAnswer()
 
 			if m.game_state.CurrentTurn.IsValid {
 				m.game_state.HandleCorrectAnswer()
@@ -119,16 +116,16 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 				m.game_state.NewTurn()
 
-                if m.game_timer.remaining_time < time.Duration(m.game_settings.TurnDurationMin) * time.Second {
-                    m.game_timer.remaining_time = time.Duration(m.game_settings.TurnDurationMin) * time.Second
-                }
+				if m.state.game_ui.timer < time.Duration(m.game_settings.TurnDurationMin) * time.Second {
+					m.state.game_ui.timer = time.Duration(m.game_settings.TurnDurationMin) * time.Second
+				}
 
                 return m, m.debounceInputCmd(300)
             }
 		}
 	case DamageShakeAnimationMsg:
-		if m.state.game.damage_anim_padding > 0 {
-			m.state.game.damage_anim_padding -= 2
+		if m.state.game_ui.damage_anim_padding > 0 {
+			m.state.game_ui.damage_anim_padding -= 2
 			return m, tea.Tick(time.Second / time.Duration(m.anim_fps), func(t time.Time) tea.Msg {
 				return DamageShakeAnimationMsg{}
 			})
@@ -142,14 +139,14 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) GameInputView() string {
-	if !m.game_active {
+	if !m.state.game_ui.game_active {
 		return ""
 	}
 
 	var colorized_text string
 	var border_color lipgloss.TerminalColor
 
-	if m.state.game.validation_msg != "" {
+	if m.state.game_ui.validation_msg != "" {
 		colorized_text, border_color = m.renderValidationMsg()
 	} else {
 		colorized_text, border_color = m.renderColorizedInput()
@@ -221,7 +218,7 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 
 func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
 	var border_color lipgloss.TerminalColor
-	if m.state.game.damaged {
+	if m.state.game_ui.player_damaged {
 		border_color = m.theme.red
 		m.text_input.PromptStyle = m.theme.TextRed()
 	} else {
@@ -229,15 +226,15 @@ func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
 		m.text_input.Reset()
 	}
 
-	if strings.HasPrefix(m.state.game.validation_msg, "✓") {
-		return m.theme.TextGreen().Render(strings.TrimSpace(m.state.game.validation_msg)), border_color
+	if strings.HasPrefix(m.state.game_ui.validation_msg, "✓") {
+		return m.theme.TextGreen().Render(strings.TrimSpace(m.state.game_ui.validation_msg)), border_color
 	}
 
 	var msg string
-	if m.game_over {
-		msg = m.state.game.validation_msg
+	if !m.state.game_ui.game_active {
+		msg = m.state.game_ui.validation_msg
 	} else {
-		msg, _ = m.applyDamageShakeAnimation(m.state.game.validation_msg)
+		msg, _ = m.applyDamageShakeAnimation(m.state.game_ui.validation_msg)
 		// Add padding to msg if necessary to prevent prompt from shaking
 		if len(msg) % 2 == 1 {
 			msg = utils.RightPad(msg, 1)

@@ -7,7 +7,7 @@ func (m model) FooterView() string {
 	base := m.theme.Base().Render
 
 	var border_style lipgloss.TerminalColor
-	if m.state.game.damaged {
+	if m.state.game_ui.player_damaged {
 		border_style = m.theme.red
 	} else {
 		border_style = m.theme.Border()
@@ -21,9 +21,9 @@ func (m model) FooterView() string {
 		PaddingBottom(1).
 		Align(lipgloss.Center)
 
-	commands := []string{}
-	for _, cmd := range m.footer_cmds {
-		commands = append(commands, bold(" " + cmd.key + " ") + base(cmd.value + "  "))
+	keymaps := []string{}
+	for _, k := range m.footer_keymaps {
+		keymaps = append(keymaps, bold(" " + k.key + " ") + base(k.value + "  "))
 	}
 
 	return lipgloss.JoinVertical(
@@ -31,7 +31,7 @@ func (m model) FooterView() string {
 		table.Render(
 			lipgloss.JoinHorizontal(
 				lipgloss.Center,
-				commands...,
+				keymaps...,
 			),
 		))
 } 

@@ -36,35 +36,36 @@ const (
 	large
 )
 
-type footerCmd struct {
+type footer_keymaps struct {
 	key		string
 	value	string
 }
 
-type gameState struct {
-	damaged				bool
+type GameUIState struct {
+	start_time			time.Time
+	timer 				time.Duration
+
+	game_active			bool
+	game_over_msg		string
+
 	damage_anim_padding	int
-	restrict_input		bool
+	player_damaged		bool
+
+	input_restricted	bool
 	validation_msg		string
 }
 
-type splashState struct {
-	logo_idx			int
-	init				bool
-	color_green			bool
+type SplashScreenState struct {
+	logo_anim_active	bool
+	logo_anim_idx		int
+	validate_logo		bool
 }
 
-type state struct {
-	press_play			pressPlayState
-	title				splashState
-	// TODO: change to game_input state and move GameState here?
-	game				gameState
-	settings			settingsState
-}
-
-type gameTimer struct {
-	remaining_time      time.Duration
-	done                bool
+type State struct {
+	game_ui				GameUIState
+	press_play			PressPlayState
+	settings			SettingsState
+	title				SplashScreenState
 }
 
 type model struct {
@@ -72,12 +73,8 @@ type model struct {
 	debug_map			map[string]string
 
     ready               bool
-	game_active			bool
-	game_over			bool
 	switched			bool
     has_scroll          bool
-
-	game_over_msg		string
 
 	page				page
 	viewport			viewport.Model
@@ -90,20 +87,16 @@ type model struct {
 	renderer        	*lipgloss.Renderer
 	theme 				theme
 	size				size
-	footer_cmds			[]footerCmd
+	footer_keymaps		[]footer_keymaps
 
 	text_input			textinput.Model
-	default_prompt_style	lipgloss.Style
 
-	state				state
+	state				State
 	game_state			game.GameState
 	game_settings		*game.Settings
 	game_settings_copy	game.Settings
 	settings_menu_json	[]game.Config // TODO rename
 	settings_path		string
-
-	game_start_time		time.Time
-    game_timer          gameTimer
 
 	anim_fps			int
 	enable_animations	bool
@@ -163,15 +156,12 @@ func NewModel() tea.Model {
 		// debug: true,
 		debug_map: make(map[string]string),
 
-		game_active: false,
-
 		renderer: renderer,
 		theme: BasicTheme(renderer),
 
 		text_input: text,
-		default_prompt_style: text.PromptStyle,
 
-		footer_cmds: []footerCmd{
+		footer_keymaps: []footer_keymaps{
 			{key: "q", value: "quit"},
 		},
 
@@ -180,18 +170,19 @@ func NewModel() tea.Model {
 		settings_menu_json: settings_info_parsed,
 		settings_path: settings_file_path,
 
-		state: state{
-			press_play: pressPlayState{ visible: true },
-			settings: settingsState{ selected: 0 },
-			game: gameState{
-				damaged: false,
-				restrict_input: false,
+		state: State{
+			press_play: PressPlayState{ visible: true },
+			settings: SettingsState{ selected: 0 },
+			game_ui: GameUIState{
+				game_active: false,
+				player_damaged: false,
+				input_restricted: false,
 				validation_msg: "",
 			},
-			title: splashState{
-				logo_idx: 0,
-				init: false,
-				color_green: false,
+			title: SplashScreenState{
+				logo_anim_idx: 0,
+				logo_anim_active: false,
+				validate_logo: false,
 			},
 		},
 
@@ -210,7 +201,7 @@ func (m model) Init() tea.Cmd {
 
 type EnableInputMsg time.Time
 func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
-    m.state.game.restrict_input = true
+    m.state.game_ui.input_restricted = true
 
     return tea.Tick(time.Millisecond * time.Duration(duration_ms), func(t time.Time) tea.Msg {
 		return EnableInputMsg(t)
@@ -220,7 +211,7 @@ func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
 type LogoUpdateMsg struct{}
 type LogoGreenMsg struct{}
 func (m *model) mainMenuLogoUpdateCmd() tea.Cmd {
-	if m.state.title.logo_idx == len(constants.GAME_TITLE) {
+	if m.state.title.logo_anim_idx == len(constants.GAME_TITLE) {
 		return tea.Tick(1250 * time.Millisecond, func(t time.Time) tea.Msg {
 			return LogoGreenMsg{}
 		})
@@ -233,7 +224,7 @@ func (m *model) mainMenuLogoUpdateCmd() tea.Cmd {
 
 type TogglePlayerDamagedMsg struct{}
 func (m *model) setPlayerDamagedStateCmd() tea.Cmd {
-	m.state.game.damaged = true
+	m.state.game_ui.player_damaged = true
     return tea.Tick(time.Millisecond * time.Duration(250), func(t time.Time) tea.Msg {
 		return TogglePlayerDamagedMsg{}
 	})
@@ -245,9 +236,9 @@ func (m *model) damageShakeAnimationCmd(count int) tea.Cmd {
 		return nil
 	}
 
-	m.state.game.damage_anim_padding = count * 2
+	m.state.game_ui.damage_anim_padding = count * 2
 	return tea.Tick(time.Second / time.Duration(m.anim_fps), func(t time.Time) tea.Msg {
-		if m.state.game.damage_anim_padding > 0 {
+		if m.state.game_ui.damage_anim_padding > 0 {
 			return DamageShakeAnimationMsg{}
 		}
 		return nil
@@ -256,14 +247,14 @@ func (m *model) damageShakeAnimationCmd(count int) tea.Cmd {
 
 type TurnTimerTickMsg struct{}
 func (m *model) setTurnTickerCmd() tea.Cmd {
-	if m.game_timer.remaining_time > time.Second * 10 {
-		m.game_timer.remaining_time -= time.Second
+	if m.state.game_ui.timer > time.Second * 10 {
+		m.state.game_ui.timer -= time.Second
 		return tea.Tick(time.Second, func(t time.Time) tea.Msg {
 			return TurnTimerTickMsg{}
 		})
 	}
 
-	m.game_timer.remaining_time -= time.Millisecond * 100
+	m.state.game_ui.timer -= time.Millisecond * 100
 	return tea.Tick(time.Millisecond * 100, func(t time.Time) tea.Msg {
 		return TurnTimerTickMsg{}
 	})
@@ -301,24 +292,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         // m.viewport.SetContent(m.getContent())
 		return m, cmd
 	case EnableInputMsg:
-		m.state.game.restrict_input = false
+		m.state.game_ui.input_restricted = false
 	case TogglePlayerDamagedMsg:
-		m.state.game.damaged = false
+		m.state.game_ui.player_damaged = false
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
 		}
 	case LogoInitMsg:
-		m.state.title.init = true
+		m.state.title.logo_anim_active = true
 		return m, m.mainMenuLogoUpdateCmd()
 	case LogoUpdateMsg:
-		if m.state.title.logo_idx < len(constants.GAME_TITLE) {
-			m.state.title.logo_idx++
+		if m.state.title.logo_anim_idx < len(constants.GAME_TITLE) {
+			m.state.title.logo_anim_idx++
 			return m, m.mainMenuLogoUpdateCmd()
 		}
 	case LogoGreenMsg:
-		m.state.title.color_green = true
+		m.state.title.validate_logo = true
 		return m, nil
 	}
 
@@ -520,19 +511,19 @@ func (m model) getScrollbar() string {
 // The first return value is the padded string.
 // The second return value is the number of padding spaces applied.
 func (m model) applyDamageShakeAnimation(str string) (string, int) {
-	if m.state.game.damage_anim_padding <= 0 {
+	if m.state.game_ui.damage_anim_padding <= 0 {
 		return str, 0
 	}
 
 	result := str
 
-	pad := m.state.game.damage_anim_padding / 2
+	pad := m.state.game_ui.damage_anim_padding / 2
 	var padding_spaces int
 	if pad % 2 == 0 {
 		padding_spaces = pad
 		result = utils.RightPad(result, padding_spaces)
 	} else {
-		padding_spaces = m.state.game.damage_anim_padding
+		padding_spaces = m.state.game_ui.damage_anim_padding
 		result = utils.LeftPad(result, padding_spaces)
 	}
 

@@ -13,27 +13,24 @@ import (
 )
 
 func (m model) GameOverSwitch(msg string, win bool) (model, tea.Cmd) {
-	// TODO: are both of these flags needed?
-	m.game_active = false
-	m.game_over = true
+	m.state.game_ui.game_active = false
+	m.state.game_ui.game_over_msg = msg
+	m.state.game_ui.player_damaged = false
+	m.game_state.Player.Stats.ElapsedSeconds = int(time.Since(m.state.game_ui.start_time).Seconds())
 
-	m.game_state.Player.Stats.ElapsedSeconds = int(time.Since(m.game_start_time).Seconds())
-	m.state.game.damaged = false
-
-	m.game_over_msg = msg
 	m = m.SwitchPage(game_over_page)
 
 	accent := m.theme.TextAccent().Render
 	red := m.theme.TextRed().Render
 
     if win {
-        m.state.game.validation_msg = ""
+        m.state.game_ui.validation_msg = ""
     } else {
-		m.state.game.validation_msg = red(fmt.Sprintf("Possible answer for final prompt %s: ", strings.ToUpper(m.game_state.CurrentTurn.Prompt)))
-		m.state.game.validation_msg += accent(strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
+		m.state.game_ui.validation_msg = red(fmt.Sprintf("Possible answer for final prompt %s: ", strings.ToUpper(m.game_state.CurrentTurn.Prompt)))
+		m.state.game_ui.validation_msg += accent(strings.ToUpper(m.game_state.CurrentTurn.SourceWord))
     }
 
-	m.footer_cmds = []footerCmd{
+	m.footer_keymaps = []footer_keymaps{
 		{key: "m", value: "main menu"},
         {key: "s", value: "change settings"},
 		{key: "enter", value: "new game"},
@@ -47,19 +44,16 @@ func (m model) GameOverSwitch(msg string, win bool) (model, tea.Cmd) {
 func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.state.game.restrict_input {
+		if m.state.game_ui.input_restricted {
 			return m, nil
 		}
 
 		switch msg.String() {
 		case "m":
-			m.game_over = false
 			return m.MainMenuSwitch()
 		case "s":
-			m.game_over = false
 			return m.SettingsSwitch()
 		case "enter":
-			m.game_over = false
 			return m.GameSwitch()
 		case "q":
 			return m, tea.Quit
@@ -124,7 +118,7 @@ func (m model) GameOverView() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		m.game_over_msg,
+		m.state.game_ui.game_over_msg,
 		"",
 		stats_table,
 		"",

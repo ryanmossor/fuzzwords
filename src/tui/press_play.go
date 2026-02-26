@@ -6,7 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type pressPlayState struct {
+type PressPlayState struct {
 	visible bool
 }
 

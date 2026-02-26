@@ -8,7 +8,7 @@ import (
 
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// TODO: has_header flag
-	if m.game_active || m.game_over || m.page == settings_page {
+	if m.state.game_ui.game_active || m.page == settings_page {
 		return m, nil
 	}
 
