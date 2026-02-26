@@ -57,8 +57,8 @@ type GameUIState struct {
 
 type SplashScreenState struct {
 	logo_anim_active	bool
+	logo_anim_complete	bool
 	logo_anim_idx		int
-	validate_logo		bool
 }
 
 type State struct {
@@ -184,9 +184,9 @@ func NewModel() tea.Model {
 				validation_msg: "",
 			},
 			title: SplashScreenState{
-				logo_anim_idx: 0,
 				logo_anim_active: false,
-				validate_logo: false,
+				logo_anim_complete: false,
+				logo_anim_idx: 0,
 			},
 		},
 
@@ -198,70 +198,9 @@ func NewModel() tea.Model {
 func (m model) Init() tea.Cmd {
 	// TODO: batch async cmds - I/O, db loading, settings json etc
 	return tea.Batch(
-		m.PressPlayInit(),
 		m.MainMenuInit(),
+		m.PressPlayInit(),
 	)
-}
-
-type EnableInputMsg time.Time
-func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
-    m.state.game_ui.input_restricted = true
-
-    return tea.Tick(time.Millisecond * time.Duration(duration_ms), func(t time.Time) tea.Msg {
-		return EnableInputMsg(t)
-	})
-}
-
-type LogoUpdateMsg struct{}
-type LogoGreenMsg struct{}
-func (m *model) mainMenuLogoUpdateCmd() tea.Cmd {
-	if m.state.title.logo_anim_idx == len(constants.GAME_TITLE) {
-		return tea.Tick(1250 * time.Millisecond, func(t time.Time) tea.Msg {
-			return LogoGreenMsg{}
-		})
-	}
-
-	return tea.Tick(250 * time.Millisecond, func(t time.Time) tea.Msg {
-		return LogoUpdateMsg{}
-	})
-}
-
-type TogglePlayerDamagedMsg struct{}
-func (m *model) setPlayerDamagedStateCmd() tea.Cmd {
-	m.state.game_ui.player_damaged = true
-    return tea.Tick(time.Millisecond * time.Duration(250), func(t time.Time) tea.Msg {
-		return TogglePlayerDamagedMsg{}
-	})
-}
-
-type DamageShakeAnimationMsg struct{}
-func (m *model) damageShakeAnimationCmd(count int) tea.Cmd {
-	if !m.enable_animations {
-		return nil
-	}
-
-	m.state.game_ui.damage_anim_padding = count * 2
-	return tea.Tick(time.Second / time.Duration(m.anim_fps), func(t time.Time) tea.Msg {
-		if m.state.game_ui.damage_anim_padding > 0 {
-			return DamageShakeAnimationMsg{}
-		}
-		return nil
-	})
-}
-
-type TurnTimerTickMsg struct{}
-func (m *model) setTurnTickerCmd() tea.Cmd {
-	if m.state.game_ui.timer > time.Second * 10 {
-		m.state.game_ui.timer -= time.Second
-		return tea.Tick(time.Second, func(t time.Time) tea.Msg {
-			return TurnTimerTickMsg{}
-		})
-	}
-
-	m.state.game_ui.timer -= time.Millisecond * 100
-	return tea.Tick(time.Millisecond * 100, func(t time.Time) tea.Msg {
-		return TurnTimerTickMsg{}
-	})
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -307,13 +246,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case LogoInitMsg:
 		m.state.title.logo_anim_active = true
 		return m, m.mainMenuLogoUpdateCmd()
-	case LogoUpdateMsg:
+	case LogoTickMsg:
 		if m.state.title.logo_anim_idx < len(constants.GAME_TITLE) {
 			m.state.title.logo_anim_idx++
 			return m, m.mainMenuLogoUpdateCmd()
 		}
-	case LogoGreenMsg:
-		m.state.title.validate_logo = true
+	case LogoCompleteMsg:
+		m.state.title.logo_anim_complete = true
 		return m, nil
 	}
 
@@ -509,7 +448,6 @@ func (m model) getScrollbar() string {
         ),
     )
 }
-
 
 // Apply spacing to string to produce a shaking animation.
 // The first return value is the padded string.

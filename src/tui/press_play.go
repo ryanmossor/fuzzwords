@@ -11,8 +11,6 @@ type PressPlayState struct {
 }
 
 type PressPlayTickMsg struct {}
-type LogoInitMsg struct{}
-
 func pressPlayFlashCmd() tea.Cmd {
 	return tea.Every(700 * time.Millisecond, func(t time.Time) tea.Msg {
 		return PressPlayTickMsg{}

@@ -67,6 +67,7 @@ var letters = map[byte][]string {
 	},
 }
 
+type LogoInitMsg struct{}
 func (m model) MainMenuInit() tea.Cmd {
 	return tea.Tick(3500 * time.Millisecond, func(t time.Time) tea.Msg {
 		return LogoInitMsg{}
@@ -136,7 +137,7 @@ func (m model) MainMenuView() string {
 					}
 				}
 
-				if m.state.title.validate_logo {
+				if m.state.title.logo_anim_complete {
 					style = m.theme.TextGreen().Render
 				}
 

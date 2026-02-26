@@ -22,7 +22,6 @@ type theme struct {
 	lavender	lipgloss.TerminalColor
 
 	base lipgloss.Style
-	// form *huh.Theme
 }
 
 func BasicTheme(renderer *lipgloss.Renderer) theme {
@@ -46,13 +45,12 @@ func BasicTheme(renderer *lipgloss.Renderer) theme {
 	base.extra_dim = lipgloss.AdaptiveColor{Dark: "#6C7086", Light: "#ACB0BE"} // Overlay 0
 	base.lavender = lipgloss.AdaptiveColor{Dark: "#B4BEFE", Light: "#7287FD"}
 
-	base.highlight = lipgloss.Color("#74C7EC")
+	base.highlight = lipgloss.AdaptiveColor{Dark: "#74C7EC", Light: "#209FB5"}
 
 	// base.error = lipgloss.Color("203")
 	base.red = lipgloss.AdaptiveColor{Dark: "#F38BA8", Light: "#D20F39"}
 
 	base.base = renderer.NewStyle().Foreground(base.body)
-	// base.form = HuhTheme(base)
 
 	return base
 }
@@ -74,7 +72,7 @@ func (b theme) Accent() lipgloss.TerminalColor {
 }
 
 func (b theme) Base() lipgloss.Style {
-	return b.base.Copy()
+	return b.base
 }
 
 func (b theme) TextBody() lipgloss.Style {
@@ -120,10 +118,6 @@ func (b theme) TextDim() lipgloss.Style {
 func (b theme) TextExtraDim() lipgloss.Style {
 	return b.Base().Foreground(b.extra_dim)
 }
-
-// func (b theme) Form() *huh.Theme {
-// 	return b.form
-// }
 
 func (b theme) Border() lipgloss.TerminalColor {
 	return b.dim
