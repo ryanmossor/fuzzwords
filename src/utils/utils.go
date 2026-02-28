@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"strconv"
 	"strings"
 )
 
@@ -115,4 +116,37 @@ func RightPad(s string, n int) string {
 		return s
 	}
 	return s + strings.Repeat(" ", n)
+}
+
+func ParseInt(n any) (int, bool) {
+	switch v := n.(type) {
+	case int:
+		return v, true
+	case int8:
+		return int(v), true
+	case int16:
+		return int(v), true
+	case int32:
+		return int(v), true
+	case int64:
+		return int(v), true
+	case float32:
+		if float64(v) != math.Trunc(float64(v)) {
+			return 0, false
+		}
+		return int(v), true
+	case float64:
+		if v != math.Trunc(v) {
+			return 0, false
+		}
+		return int(v), true
+	case string:
+		vInt, err := strconv.Atoi(v)
+		if err != nil {
+			return 0, false
+		}
+		return vInt, true
+	default:
+		return 0, false
+	}
 }

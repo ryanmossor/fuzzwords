@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"fzwds/src/enums"
+	"fzwds/src/utils"
 	"log/slog"
 	"reflect"
 )
@@ -116,8 +117,6 @@ func (s *Settings) SetSetting(propName string, value any, schema SettingsSchema)
 			"propName", propName,
 			"value", value,
 			"default", schema_item.Default)
-		// TODO: Since Default is of type any, default value is float64 for numeric settings
-		// Consider changing int settings to float64 to avoid int parsing issues?
 		s.SetSetting(propName, schema_item.Default, schema)
 		return fmt.Errorf("Invalid value for %s: %v", propName, value)
 	}
@@ -136,11 +135,11 @@ func (s *Settings) SetSetting(propName string, value any, schema SettingsSchema)
 			s.WinCondition = enums.ParseWinCond(vStr)
 		}
 	case "HealthInitial":
-		if vInt, ok := value.(int); ok {
+		if vInt, ok := utils.ParseInt(value); ok {
 			s.HealthInitial = vInt
 		}
 	case "HealthMax":
-		if vInt, ok := value.(int); ok {
+		if vInt, ok := utils.ParseInt(value); ok {
 			s.HealthMax = vInt
 		}
 	case "HighlightInput":
@@ -148,25 +147,19 @@ func (s *Settings) SetSetting(propName string, value any, schema SettingsSchema)
 			s.HighlightInput = vbool
 		}
 	case "PromptLenMin":
-		if vInt, ok := value.(int); ok {
+		if vInt, ok := utils.ParseInt(value); ok {
 			s.PromptLenMin = vInt
 		}
 	case "PromptLenMax":
-		if vInt, ok := value.(int); ok {
+		if vInt, ok := utils.ParseInt(value); ok {
 			s.PromptLenMax = vInt
 		}
 	case "TurnDurationMin":
-		if vFloat, ok := value.(float64); ok {
-			s.TurnDurationMin = int(vFloat)
-		} else if vInt, ok := value.(int); ok {
+		if vInt, ok := utils.ParseInt(value); ok {
 			s.TurnDurationMin = vInt
 		}
 	case "PromptStrikesMax":
-		if vFloat, ok := value.(float64); ok {
-			slog.Debug("Setting PromptStrikesMax as FLOAT", "val", vFloat)
-			s.PromptStrikesMax = int(vFloat)
-		} else if vInt, ok := value.(int); ok {
-			slog.Debug("Setting PromptStrikesMax as INT", "val", vInt)
+		if vInt, ok := utils.ParseInt(value); ok {
 			s.PromptStrikesMax = vInt
 		}
 	}
