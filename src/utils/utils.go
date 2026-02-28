@@ -150,3 +150,19 @@ func ParseInt(n any) (int, bool) {
 		return 0, false
 	}
 }
+
+func ValuesEqual(a, b any) bool {
+	if int_a, ok_a := ParseInt(a); ok_a {
+		if int_b, ok_b := ParseInt(b); ok_b {
+			return int_a == int_b
+		}
+	}
+
+	float_a, ok_a := a.(float64)
+	float_b, ok_b := b.(float64)
+	if ok_a && ok_b {
+		return float_a == float_b
+	}
+
+	return a == b
+}

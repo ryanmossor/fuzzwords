@@ -246,27 +246,16 @@ func (s *Settings) ValidateSettings(schema SettingsSchema) *Settings {
 func ValidateSettingValue(schema_item SettingsSchemaItem, value any) bool {
 	switch schema_item.Type {
 	case "int":
-		var vInt int
-		switch val := value.(type) {
-		case int:
-			vInt = val
-		case float64:
-			vInt = int(val)
-		default:
+		vInt, ok := utils.ParseInt(value)
+		if !ok {
 			return false
 		}
 
 		if len(schema_item.ValidValues) > 0 {
 			for _, vv := range schema_item.ValidValues {
-				switch vvInt := vv.Value.(type) {
-				case float64:
-					if vInt == int(vvInt) {
-						return true
-					}
-				case int:
-					if vInt == vvInt {
-						return true
-					}
+				vvInt, ok := utils.ParseInt(vv.Value)
+				if ok && vInt == vvInt {
+					return true
 				}
 			}
 			return false

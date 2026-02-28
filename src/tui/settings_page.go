@@ -3,6 +3,7 @@ package tui
 import (
 	"encoding/json"
 	"fzwds/src/game"
+	"fzwds/src/utils"
 	"log/slog"
 	"os"
 	"strconv"
@@ -49,7 +50,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if len(current_setting.ValidValues) > 0 {
 				current_val_idx := -1
 				for i, val := range current_setting.ValidValues {
-					if valuesEqual(val.Value, current_val) {
+					if utils.ValuesEqual(val.Value, current_val) {
 						current_val_idx = i
 						break
 					}
@@ -77,7 +78,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if len(current_setting.ValidValues) > 0 {
 				current_val_idx := -1
 				for i, val := range current_setting.ValidValues {
-					if valuesEqual(val.Value, current_val) {
+					if utils.ValuesEqual(val.Value, current_val) {
 						current_val_idx = i
 						break
 					}
@@ -157,7 +158,7 @@ func (m model) SettingsView() string {
 		if setting.ValidValues != nil {
 			sub_desc = ""
 			for _, val := range setting.ValidValues {
-				if valuesEqual(val.Value, current_val) {
+				if utils.ValuesEqual(val.Value, current_val) {
 					sub_desc = val.Description
 					break
 				}
@@ -233,27 +234,4 @@ func (m model) SettingsView() string {
 		lipgloss.Left,
 		lines...,
 	)) 
-}
-
-func valuesEqual(a, b any) bool {
-	switch val_a := a.(type) {
-	case float64:
-		switch val_b := b.(type) {
-		case int:
-			return int(val_a) == val_b
-		case float64:
-			return val_a == val_b
-		}
-	case int:
-		switch val_b := b.(type) {
-		case float64:
-			return val_a == int(val_b)
-		case int:
-			return val_a == val_b
-		}
-	default:
-		return a == b
-	}
-
-	return false
 }
