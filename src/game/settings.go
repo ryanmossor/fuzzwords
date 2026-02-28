@@ -7,33 +7,36 @@ import (
 )
 
 type ValidValue struct {
-	Name			string `json:"name"`
-	Description		string `json:"description"`
+	Value			any		`json:"value"`
+	Description		string 	`json:"description"`
 }
 
-type Config struct {
-	Name			string 			`json:"name"`
+type SettingsSchema struct {
 	PropName		string 			`json:"propName"`
+	DisplayName		string 			`json:"displayName"`
+	Type			string			`json:"type"`
 	Disabled		bool 			`json:"disabled"`
-	Default			string 			`json:"default"`
 	Description		string 			`json:"description,omitempty"`
+	Default			any 			`json:"default"`
 	Min				int 			`json:"min,omitempty"`
 	Max				int 			`json:"max,omitempty"`
 	ValidValues		[]ValidValue 	`json:"validValues,omitempty"`
+	BindTo			string			`json:"bindTo,omitempty"`
+	BindRule		string			`json:"bindRule,omitempty"`
 }
 
 // TODO: individual setting struct w/ name, default value, optional help text?
 type Settings struct {
 	Alphabet				enums.Alphabet		`json:"alphabet"`
+	PromptMode				enums.PromptMode	`json:"promptMode"`
+	WinCondition			enums.WinCondition	`json:"winCondition"`
 	HealthInitial			int					`json:"healthInital"`
 	HealthMax				int					`json:"healthMax"`
 	HighlightInput			bool				`json:"highlightInput"`
 	PromptLenMin			int					`json:"promptLenMin"`
 	PromptLenMax			int					`json:"promptLenMax"`
-	PromptMode				enums.PromptMode	`json:"promptMode"`
-	PromptStrikesMax		int					`json:"promptStrikesMax"`
 	TurnDurationMin			int					`json:"turnDurationMin"`
-	WinCondition			enums.WinCondition	`json:"winCondition"`
+	PromptStrikesMax		int					`json:"promptStrikesMax"`
 	// TODO: add cfg for hints after each strike?
 	// hints_enabled			bool
 	// hint_chars_per_turn		int

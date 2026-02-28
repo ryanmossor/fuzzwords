@@ -95,15 +95,15 @@ type model struct {
 	state				State
 	game_settings		*game.Settings
 	game_settings_copy	game.Settings
-	settings_menu_json	[]game.Config // TODO rename
+	settings_schema		[]game.SettingsSchema // TODO rename
 	settings_path		string
 
 	anim_fps			int
 	enable_animations	bool
 }
 
-//go:embed settings_info.json
-var settings_info_json []byte
+//go:embed game_settings_schema.json
+var game_settings_schema_json []byte
 
 func NewModel() tea.Model {
 	cfg_dir, err := os.UserConfigDir()
@@ -137,9 +137,9 @@ func NewModel() tea.Model {
 		slog.Error("Error writing settings.json", "error", err)
 	}
 
-	var settings_info_parsed []game.Config
-	if err := json.Unmarshal(settings_info_json, &settings_info_parsed); err != nil {
-		slog.Error("Error parsing settings_info.json", "error", err)
+	var game_settings_schema_parsed []game.SettingsSchema
+	if err := json.Unmarshal(game_settings_schema_json, &game_settings_schema_parsed); err != nil {
+		slog.Error("Error parsing game_settings_schema.json", "error", err)
 		os.Exit(1)
 	}
 
@@ -167,7 +167,7 @@ func NewModel() tea.Model {
 
 		game_settings: &game_settings,
 		game_settings_copy: game_settings,
-		settings_menu_json: settings_info_parsed,
+		settings_schema: game_settings_schema_parsed,
 		settings_path: settings_file_path,
 
 		state: State{

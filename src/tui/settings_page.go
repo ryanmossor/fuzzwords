@@ -36,7 +36,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down", "tab":
-			if m.state.settings.selected < len(m.settings_menu_json) - 1 {
+			if m.state.settings.selected < len(m.settings_schema) - 1 {
 				m.state.settings.selected++
 			}
 		case "k", "up", "shift+tab":
@@ -87,12 +87,12 @@ func (m model) SettingsView() string {
 	var lines []string
 	// lines = append(lines, base("\nChange your ") + accent("game settings") + base(" here.\n"))
 
-	for i, setting := range m.settings_menu_json {
+	for i, setting := range m.settings_schema {
 		if setting.Disabled {
 			continue
 		}
 
-		name := accent(setting.Name)
+		name := accent(setting.DisplayName)
 		setting_val, sub_desc := m.getSettingValueAndSubDesc(setting.PropName)
 		default_text := accent("  " + setting_val + "    ")
 		
@@ -218,7 +218,7 @@ func (m model) getSettingValueAndSubDesc(propName string) (string, string) {
 }
 
 func (m *model) changeSetting(selected int, count int) {
-	switch m.settings_menu_json[selected].PropName {
+	switch m.settings_schema[selected].PropName {
 	case "Alphabet":
 		alphabet_idx := int(m.game_settings_copy.Alphabet) + count
 		m.game_settings_copy.SetAlphabet(alphabet_idx)
@@ -250,8 +250,8 @@ func (m *model) changeSetting(selected int, count int) {
 }
 
 func (m model) getSubDescription(propName string, val string) string {
-	var setting game.Config
-	for _, s := range m.settings_menu_json {
+	var setting game.SettingsSchema
+	for _, s := range m.settings_schema {
 		if s.PropName == propName {
 			setting = s
 			break
@@ -259,7 +259,7 @@ func (m model) getSubDescription(propName string, val string) string {
 	}
 
 	for _, v := range setting.ValidValues {
-		if v.Name == val {
+		if v.Value == val {
 			return v.Description
 		}
 	}
