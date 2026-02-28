@@ -93,16 +93,20 @@ func (m model) SettingsView() string {
 		}
 
 		name := accent(setting.Name)
-
-		default_val := strconv.Itoa(m.getIntSetting(setting.PropName))
-		var sub_desc string
-		if setting.ValidValues != nil {
-			default_val, sub_desc = m.getStringSetting(setting.PropName)
-		}
-		default_text := base("  ") + accent(default_val) + base("    ")
+		setting_val, sub_desc := m.getSettingValueAndSubDesc(setting.PropName)
+		default_text := accent("  " + setting_val + "    ")
 		
 		if m.state.settings.selected == i {
-			default_text = accent("← " + default_val + " →  ")
+			setting_val_int, err := strconv.Atoi(setting_val)
+			if err != nil {
+				default_text = accent("← " + setting_val + " →  ")
+			} else if setting_val_int == setting.Max {
+				default_text = accent("← " + setting_val + "    ")
+			} else if setting_val_int == setting.Min {
+				default_text = accent("  " + setting_val + " →  ")
+			} else {
+				default_text = accent("← " + setting_val + " →  ")
+			}
 		}
 		row_1_space := m.width_content - lipgloss.Width(name) - lipgloss.Width(default_text) - 3
 
@@ -181,19 +185,36 @@ func (m model) getIntSetting(propName string) int {
 	return 0
 }
 
-func (m model) getStringSetting(propName string) (string, string) {
+func (m model) getSettingValueAndSubDesc(propName string) (string, string) {
 	var val string
 
 	switch propName {
 	case "Alphabet":
 		val = m.game_settings_copy.Alphabet.String()
+		return val, m.getSubDescription(propName, val)
 	case "PromptMode":
 		val = m.game_settings_copy.PromptMode.String()
+		return val, m.getSubDescription(propName, val)
 	case "WinCondition":
 		val = m.game_settings_copy.WinCondition.String()
+		return val, m.getSubDescription(propName, val)
+	case "HealthInitial":
+		return strconv.Itoa(m.game_settings_copy.HealthInitial), ""
+	case "HealthMax":
+		return strconv.Itoa(m.game_settings_copy.HealthMax), ""
+	case "PromptLenMin":
+		return strconv.Itoa(m.game_settings_copy.PromptLenMin), ""
+	case "PromptLenMax":
+		return strconv.Itoa(m.game_settings_copy.PromptLenMax), ""
+	case "PromptStrikesMax":
+		return strconv.Itoa(m.game_settings_copy.PromptStrikesMax), ""
+	case "TurnDurationMin":
+		return strconv.Itoa(m.game_settings_copy.TurnDurationMin), ""
+	default:
+		return "", ""
 	}
 
-	return val, m.getSubDescription(propName, val)
+	// return val, m.getSubDescription(propName, val)
 }
 
 func (m *model) changeSetting(selected int, count int) {
@@ -215,8 +236,8 @@ func (m *model) changeSetting(selected int, count int) {
 		} else {
 			m.game_settings_copy.SetPromptMode(enums.Fuzzy.String())
 		}
-	// case "PromptStrikesMax":
-	// 	return m.game_settings.PromptStrikesMax
+	case "PromptStrikesMax":
+		m.game_settings_copy.SetPromptStrikesMax(m.game_settings_copy.PromptStrikesMax + count)
 	// case "TurnDurationMin":
 	// 	return m.game_settings.TurnDurationMin
 	case "WinCondition":
