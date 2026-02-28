@@ -2,7 +2,6 @@ package tui
 
 import (
 	"encoding/json"
-	"fzwds/src/enums"
 	"fzwds/src/game"
 	"log/slog"
 	"os"
@@ -44,9 +43,63 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.state.settings.selected--
 			}
 		case "+", "=", "right", "l":
-			m.changeSetting(m.state.settings.selected, 1)
+			current_setting := m.settings_schema[m.state.settings.selected]
+			current_val := m.game_settings_copy.GetSetting(current_setting.PropName)
+			var new_val any
+			if len(current_setting.ValidValues) > 0 {
+				current_val_idx := -1
+				for i, val := range current_setting.ValidValues {
+					if valuesEqual(val.Value, current_val) {
+						current_val_idx = i
+						break
+					}
+				}
+				var next_idx int
+				if current_setting.Type == "int" {
+					next_idx = min(current_val_idx + 1, len(current_setting.ValidValues) - 1)
+				} else {
+					// % len allows for circular indexing -- wraps around if current_val_idx + 1 < 0
+					next_idx = (current_val_idx + 1) % len(current_setting.ValidValues)
+				}
+				new_val = current_setting.ValidValues[next_idx].Value
+			} else if current_setting.Type == "int" {
+				v := current_val.(int)
+				new_val = v + 1
+				if current_setting.Max != nil && new_val.(int) > *current_setting.Max {
+					new_val = *current_setting.Max
+				}
+			}
+			m.game_settings_copy.SetSetting(current_setting.PropName, new_val, m.settings_schema)
 		case "-", "left", "h": 
-			m.changeSetting(m.state.settings.selected, -1)
+			current_setting := m.settings_schema[m.state.settings.selected]
+			current_val := m.game_settings_copy.GetSetting(current_setting.PropName)
+			var new_val any
+			if len(current_setting.ValidValues) > 0 {
+				current_val_idx := -1
+				for i, val := range current_setting.ValidValues {
+					if valuesEqual(val.Value, current_val) {
+						current_val_idx = i
+						break
+					}
+				}
+
+				var prev_idx int
+				if current_setting.Type == "int" {
+					prev_idx = max(current_val_idx - 1, 0)
+				} else {
+					// Adding arr len and calculating % allows for circular indexing -- wraps around if current_val_idx - 1 < 0
+					prev_idx = (current_val_idx - 1 + len(current_setting.ValidValues)) % len(current_setting.ValidValues)
+				}
+
+				new_val = current_setting.ValidValues[prev_idx].Value
+			} else if current_setting.Type == "int" {
+				v := current_val.(int)
+				new_val = v - 1
+				if current_setting.Min != nil && new_val.(int) < *current_setting.Min {
+					new_val = *current_setting.Min
+				}
+			}
+			m.game_settings_copy.SetSetting(current_setting.PropName, new_val, m.settings_schema)
 		case "ctrl+r":
 			m.game_settings_copy = game.InitializeSettings()
 		case "b":
@@ -85,30 +138,48 @@ func (m model) SettingsView() string {
 	accent := m.theme.TextAccent().Render 
 
 	var lines []string
-	// lines = append(lines, base("\nChange your ") + accent("game settings") + base(" here.\n"))
 
 	for i, setting := range m.settings_schema {
 		if setting.Disabled {
 			continue
 		}
 
-		name := accent(setting.DisplayName)
-		setting_val, sub_desc := m.getSettingValueAndSubDesc(setting.PropName)
-		default_text := accent("  " + setting_val + "    ")
-		
-		if m.state.settings.selected == i {
-			setting_val_int, err := strconv.Atoi(setting_val)
-			if err != nil {
-				default_text = accent("← " + setting_val + " →  ")
-			} else if setting_val_int == setting.Max {
-				default_text = accent("← " + setting_val + "    ")
-			} else if setting_val_int == setting.Min {
-				default_text = accent("  " + setting_val + " →  ")
-			} else {
-				default_text = accent("← " + setting_val + " →  ")
+		var default_val, sub_desc string
+		current_val := m.game_settings_copy.GetSetting(setting.PropName)
+
+		switch setting.Type {
+		case "int":
+			default_val = strconv.Itoa(current_val.(int))
+		case "enum", "string":
+			default_val = current_val.(string)
+		}
+
+		if setting.ValidValues != nil {
+			sub_desc = ""
+			for _, val := range setting.ValidValues {
+				if valuesEqual(val.Value, current_val) {
+					sub_desc = val.Description
+					break
+				}
 			}
 		}
-		row_1_space := m.width_content - lipgloss.Width(name) - lipgloss.Width(default_text) - 3
+		default_text := accent("  " + default_val + "    ")
+		
+		if m.state.settings.selected == i {
+			setting_val_int, err := strconv.Atoi(default_val)
+			if err != nil {
+				default_text = accent("← " + default_val + " →  ")
+			} else if setting_val_int == *setting.Max {
+				default_text = accent("← " + default_val + "    ")
+			} else if setting_val_int == *setting.Min {
+				default_text = accent("  " + default_val + " →  ")
+			} else {
+				default_text = accent("← " + default_val + " →  ")
+			}
+		}
+
+		display_name := accent(setting.DisplayName)
+		row_1_space := m.width_content - lipgloss.Width(display_name) - lipgloss.Width(default_text) - 3
 
 		var content string
 		description := setting.Description
@@ -118,9 +189,7 @@ func (m model) SettingsView() string {
 			row_2_space := m.width_content - lipgloss.Width(description) - lipgloss.Width(sub_desc) - 5
 			var row_2 string
 
-			// if strings.TrimSpace(setting.Description) != "" {
 			if setting.Description != "n/a" {
-			// if sub_desc != "" {
 				row_2 = lipgloss.JoinHorizontal(
 					lipgloss.Top,
 					description,
@@ -138,7 +207,7 @@ func (m model) SettingsView() string {
 				lipgloss.Left,
 				lipgloss.JoinHorizontal(
 					lipgloss.Top,
-					name,
+					display_name,
 					m.theme.Base().Width(row_1_space).Render(),
 					default_text,
 				),
@@ -149,7 +218,7 @@ func (m model) SettingsView() string {
 				lipgloss.Left,
 				lipgloss.JoinHorizontal(
 					lipgloss.Top,
-					name,
+					display_name,
 					m.theme.Base().Width(row_1_space).Render(),
 					default_text,
 				),
@@ -166,103 +235,25 @@ func (m model) SettingsView() string {
 	)) 
 }
 
-func (m model) getIntSetting(propName string) int {
-	switch propName {
-	case "HealthInitial":
-		return m.game_settings_copy.HealthInitial
-	case "HealthMax":
-		return m.game_settings_copy.HealthMax
-	case "PromptLenMin":
-		return m.game_settings_copy.PromptLenMin
-	case "PromptLenMax":
-		return m.game_settings_copy.PromptLenMax
-	case "PromptStrikesMax":
-		return m.game_settings_copy.PromptStrikesMax
-	case "TurnDurationMin":
-		return m.game_settings_copy.TurnDurationMin
-	}
-
-	return 0
-}
-
-func (m model) getSettingValueAndSubDesc(propName string) (string, string) {
-	var val string
-
-	switch propName {
-	case "Alphabet":
-		val = m.game_settings_copy.Alphabet.String()
-		return val, m.getSubDescription(propName, val)
-	case "PromptMode":
-		val = m.game_settings_copy.PromptMode.String()
-		return val, m.getSubDescription(propName, val)
-	case "WinCondition":
-		val = m.game_settings_copy.WinCondition.String()
-		return val, m.getSubDescription(propName, val)
-	case "HealthInitial":
-		return strconv.Itoa(m.game_settings_copy.HealthInitial), ""
-	case "HealthMax":
-		return strconv.Itoa(m.game_settings_copy.HealthMax), ""
-	case "PromptLenMin":
-		return strconv.Itoa(m.game_settings_copy.PromptLenMin), ""
-	case "PromptLenMax":
-		return strconv.Itoa(m.game_settings_copy.PromptLenMax), ""
-	case "PromptStrikesMax":
-		return strconv.Itoa(m.game_settings_copy.PromptStrikesMax), ""
-	case "TurnDurationMin":
-		return strconv.Itoa(m.game_settings_copy.TurnDurationMin), ""
+func valuesEqual(a, b any) bool {
+	switch val_a := a.(type) {
+	case float64:
+		switch val_b := b.(type) {
+		case int:
+			return int(val_a) == val_b
+		case float64:
+			return val_a == val_b
+		}
+	case int:
+		switch val_b := b.(type) {
+		case float64:
+			return val_a == int(val_b)
+		case int:
+			return val_a == val_b
+		}
 	default:
-		return "", ""
+		return a == b
 	}
 
-	// return val, m.getSubDescription(propName, val)
-}
-
-func (m *model) changeSetting(selected int, count int) {
-	switch m.settings_schema[selected].PropName {
-	case "Alphabet":
-		alphabet_idx := int(m.game_settings_copy.Alphabet) + count
-		m.game_settings_copy.SetAlphabet(alphabet_idx)
-	case "HealthInitial":
-		m.game_settings_copy.SetHealthInitial(m.game_settings_copy.HealthInitial + count)
-	case "HealthMax":
-		m.game_settings_copy.SetHealthMax(m.game_settings_copy.HealthMax + count)
-	case "PromptLenMin":
-		m.game_settings_copy.SetPromptLenMin(m.game_settings_copy.PromptLenMin + count)
-	case "PromptLenMax":
-		m.game_settings_copy.SetPromptLenMax(m.game_settings_copy.PromptLenMax + count)
-	case "PromptMode":
-		if m.game_settings_copy.PromptMode == enums.Fuzzy {
-			m.game_settings_copy.SetPromptMode(enums.Classic.String())
-		} else {
-			m.game_settings_copy.SetPromptMode(enums.Fuzzy.String())
-		}
-	case "PromptStrikesMax":
-		m.game_settings_copy.SetPromptStrikesMax(m.game_settings_copy.PromptStrikesMax + count)
-	// case "TurnDurationMin":
-	// 	return m.game_settings.TurnDurationMin
-	case "WinCondition":
-		if m.game_settings_copy.WinCondition == enums.Endless {
-			m.game_settings_copy.SetWinCondition(enums.MaxLives.String())
-		} else {
-			m.game_settings_copy.SetWinCondition(enums.Endless.String())
-		}
-	}
-}
-
-func (m model) getSubDescription(propName string, val string) string {
-	var setting game.SettingsSchema
-	for _, s := range m.settings_schema {
-		if s.PropName == propName {
-			setting = s
-			break
-		}
-	}
-
-	for _, v := range setting.ValidValues {
-		if v.Value == val {
-			return v.Description
-		}
-	}
-
-	return ""
+	return false
 }

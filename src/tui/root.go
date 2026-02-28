@@ -95,7 +95,7 @@ type model struct {
 	state				State
 	game_settings		*game.Settings
 	game_settings_copy	game.Settings
-	settings_schema		[]game.SettingsSchema // TODO rename
+	settings_schema		game.SettingsSchema
 	settings_path		string
 
 	anim_fps			int
@@ -121,11 +121,17 @@ func NewModel() tea.Model {
 		game_settings = game.InitializeSettings()
 	}
 
+	var game_settings_schema_parsed game.SettingsSchema
+	if err := json.Unmarshal(game_settings_schema_json, &game_settings_schema_parsed); err != nil {
+		slog.Error("Error parsing game_settings_schema.json", "error", err)
+		os.Exit(1)
+	}
+
     if err := json.Unmarshal(contents, &game_settings); err != nil {
 		slog.Error("Error parsing settings.json - restoring default settings", "error", err)
 		game_settings = game.InitializeSettings()
 	} else {
-		game_settings.ValidateSettings()
+		game_settings.ValidateSettings(game_settings_schema_parsed)
 	}
 
 	marshaled_settings, err := json.MarshalIndent(game_settings, "", "    ")
@@ -135,12 +141,6 @@ func NewModel() tea.Model {
 
 	if err := os.WriteFile(settings_file_path, marshaled_settings, 0644); err != nil {
 		slog.Error("Error writing settings.json", "error", err)
-	}
-
-	var game_settings_schema_parsed []game.SettingsSchema
-	if err := json.Unmarshal(game_settings_schema_json, &game_settings_schema_parsed); err != nil {
-		slog.Error("Error parsing game_settings_schema.json", "error", err)
-		os.Exit(1)
 	}
 
 	text := textinput.New()
