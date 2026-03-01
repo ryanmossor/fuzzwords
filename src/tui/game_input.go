@@ -105,6 +105,10 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if m.state.game.CurrentTurn.IsValid {
 				m.state.game.HandleCorrectAnswer()
 
+				// Reset damage animation to ensure it doesn't keep playing from previous failed turn
+				m.state.game_ui.player_damaged = false
+				m.state.game_ui.damage_anim_padding = 0
+
 				// TODO: move win condition check to game_over?
 				if len(m.state.game.WordLists.Available) == 0 {
 					return m.GameOverSwitch(green(win_msg), true)
