@@ -24,9 +24,9 @@ type Settings struct {
 	// hint_chars_per_turn		int
 }
 
-func InitializeSettings() Settings {
+func GetDefaultSettings() Settings {
 	return Settings{
-		Alphabet: 			enums.FullAlphabet,
+		Alphabet: 			enums.EasyAlphabet,
 		PromptMode: 		enums.Fuzzy,
 		WinCondition: 		enums.Endless,
 		HealthInitial: 		2,

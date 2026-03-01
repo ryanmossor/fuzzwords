@@ -119,7 +119,7 @@ func NewModel() tea.Model {
 	settings_file_path := filepath.Join(fzwds_cfg_path, "settings.json")
 	contents, err := os.ReadFile(settings_file_path)
     if err != nil {
-		game_settings = game.InitializeSettings()
+		game_settings = game.GetDefaultSettings()
 	}
 
 	var game_settings_schema_parsed game.SettingsSchema
@@ -130,7 +130,7 @@ func NewModel() tea.Model {
 
     if err := json.Unmarshal(contents, &game_settings); err != nil {
 		slog.Error("Error parsing settings.json - restoring default settings", "error", err)
-		game_settings = game.InitializeSettings()
+		game_settings = game.GetDefaultSettings()
 	} else {
 		game_settings.ValidateSettings(game_settings_schema_parsed)
 	}
