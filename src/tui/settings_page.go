@@ -44,63 +44,9 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.state.settings.selected--
 			}
 		case "+", "=", "right", "l":
-			current_setting := m.settings_schema[m.state.settings.selected]
-			current_val := m.game_settings_copy.GetSetting(current_setting.PropName)
-			var new_val any
-			if len(current_setting.ValidValues) > 0 {
-				current_val_idx := -1
-				for i, val := range current_setting.ValidValues {
-					if utils.ValuesEqual(val.Value, current_val) {
-						current_val_idx = i
-						break
-					}
-				}
-				var next_idx int
-				if current_setting.Type == "int" {
-					next_idx = min(current_val_idx + 1, len(current_setting.ValidValues) - 1)
-				} else {
-					// % len allows for circular indexing -- wraps around if current_val_idx + 1 < 0
-					next_idx = (current_val_idx + 1) % len(current_setting.ValidValues)
-				}
-				new_val = current_setting.ValidValues[next_idx].Value
-			} else if current_setting.Type == "int" {
-				v := current_val.(int)
-				new_val = v + 1
-				if current_setting.Max != nil && new_val.(int) > *current_setting.Max {
-					new_val = *current_setting.Max
-				}
-			}
-			m.game_settings_copy.SetSetting(current_setting.PropName, new_val, m.settings_schema)
+			m.changeCurrentSetting(Next)
 		case "-", "left", "h": 
-			current_setting := m.settings_schema[m.state.settings.selected]
-			current_val := m.game_settings_copy.GetSetting(current_setting.PropName)
-			var new_val any
-			if len(current_setting.ValidValues) > 0 {
-				current_val_idx := -1
-				for i, val := range current_setting.ValidValues {
-					if utils.ValuesEqual(val.Value, current_val) {
-						current_val_idx = i
-						break
-					}
-				}
-
-				var prev_idx int
-				if current_setting.Type == "int" {
-					prev_idx = max(current_val_idx - 1, 0)
-				} else {
-					// Adding arr len and calculating % allows for circular indexing -- wraps around if current_val_idx - 1 < 0
-					prev_idx = (current_val_idx - 1 + len(current_setting.ValidValues)) % len(current_setting.ValidValues)
-				}
-
-				new_val = current_setting.ValidValues[prev_idx].Value
-			} else if current_setting.Type == "int" {
-				v := current_val.(int)
-				new_val = v - 1
-				if current_setting.Min != nil && new_val.(int) < *current_setting.Min {
-					new_val = *current_setting.Min
-				}
-			}
-			m.game_settings_copy.SetSetting(current_setting.PropName, new_val, m.settings_schema)
+			m.changeCurrentSetting(Prev)
 		case "ctrl+r":
 			m.game_settings_copy = game.InitializeSettings()
 		case "b":
@@ -234,4 +180,59 @@ func (m model) SettingsView() string {
 		lipgloss.Left,
 		lines...,
 	)) 
+}
+
+type Direction int
+const (
+    Next Direction = 1
+    Prev Direction = -1
+)
+
+func (m *model) changeCurrentSetting(dir Direction) {
+    if m.state.settings.selected < 0 || m.state.settings.selected >= len(m.settings_schema) {
+        return
+    }
+
+	dir_int := int(dir)
+
+    setting := m.settings_schema[m.state.settings.selected]
+    cur_val := m.game_settings_copy.GetSetting(setting.PropName)
+    var new_val any
+
+    if len(setting.ValidValues) > 0 {
+        cur_idx := -1
+        for i, opt := range setting.ValidValues {
+            if utils.ValuesEqual(opt.Value, cur_val) {
+                cur_idx = i
+                break
+            }
+        }
+
+        var next_idx int
+        if setting.Type == "int" {
+            // Linear (clamp)
+            next_idx = max(cur_idx + dir_int, 0)
+            if next_idx >= len(setting.ValidValues) {
+                next_idx = len(setting.ValidValues) - 1
+            }
+        } else {
+            // Circular wrap-around
+            next_idx = (cur_idx + dir_int + len(setting.ValidValues)) % len(setting.ValidValues)
+        }
+
+        new_val = setting.ValidValues[next_idx].Value
+    } else if setting.Type == "int" {
+        new_val = cur_val.(int) + dir_int
+
+        if setting.Min != nil && new_val.(int) < *setting.Min {
+            new_val = *setting.Min
+        }
+        if setting.Max != nil && new_val.(int) > *setting.Max {
+            new_val = *setting.Max
+        }
+    } else {
+        return
+    }
+
+    m.game_settings_copy.SetSetting(setting.PropName, new_val, m.settings_schema)
 }
