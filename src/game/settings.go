@@ -39,40 +39,6 @@ func InitializeSettings() Settings {
 	}
 }
 
-func EasySettings() Settings {
-	cfg := InitializeSettings()
-	cfg.Alphabet = enums.EasyAlphabet
-	cfg.TurnDurationMin = 20
-	return cfg
-}
-
-func MediumSettings() Settings {
-	cfg := InitializeSettings()
-	cfg.Alphabet = enums.MediumAlphabet
-	cfg.TurnDurationMin = 10
-	return cfg
-}
-
-func DifficultSettings() Settings {
-	cfg := InitializeSettings()
-	cfg.Alphabet = enums.FullAlphabet
-	cfg.TurnDurationMin = 5
-	cfg.PromptLenMax = 4
-	cfg.PromptStrikesMax = 2
-	return cfg
-}
-
-func ExpertSettings() Settings {
-	cfg := InitializeSettings()
-	cfg.Alphabet = enums.FullAlphabet
-	cfg.HealthInitial = 1
-	cfg.HealthMax = 1
-	cfg.TurnDurationMin = 5
-	cfg.PromptLenMax = 5
-	cfg.PromptStrikesMax = 1
-	return cfg
-}
-
 func (s *Settings) GetSetting(propName string) any {
 	switch propName {
 	case "Alphabet":

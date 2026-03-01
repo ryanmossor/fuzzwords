@@ -49,14 +49,6 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.changeCurrentSetting(Prev)
 		case "ctrl+r":
 			m.game_settings_copy = game.InitializeSettings()
-		case "b":
-			// TODO: beginner preset
-		// case "m":
-			// TODO: medium preset
-		case "d":
-			// TODO: difficult preset
-		case "x":
-			// TODO: expert preset
 		case "enter":
 			m.game_settings = &m.game_settings_copy
 
