@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fzwds/src/constants"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -69,9 +68,7 @@ var letters = map[byte][]string {
 
 type LogoInitMsg struct{}
 func (m model) MainMenuInit() tea.Cmd {
-	return tea.Tick(3500 * time.Millisecond, func(t time.Time) tea.Msg {
-		return LogoInitMsg{}
-	})
+	return m.initMainMenuLogoAnimCmd()
 }
 
 func (m model) MainMenuSwitch() (model, tea.Cmd) {
@@ -106,6 +103,15 @@ func (m model) MainMenuView() string {
 	logo := make([]string, HEADER_LEN + len(letters['f']))
 	logo[0] = "\n"
 	logo[1] = "\n"
+
+	if m.state.title.logo_hidden {
+		logo = append(logo, "\n\n\n")
+		logo = append(logo, m.PressPlayView())
+		return lipgloss.JoinVertical(
+			lipgloss.Center,
+			logo...
+		)
+	}
 
 	switch m.size {
 	case large:

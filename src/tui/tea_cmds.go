@@ -18,9 +18,17 @@ func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
 
 type LogoTickMsg struct{}
 type LogoCompleteMsg struct{}
+type LogoRestartMsg struct{}
+type LogoUnhideMsg struct{}
+func (m *model) initMainMenuLogoAnimCmd() tea.Cmd {
+	return tea.Tick(5 * time.Second, func(t time.Time) tea.Msg {
+		return LogoInitMsg{}
+	})
+}
+
 func (m *model) mainMenuLogoUpdateCmd() tea.Cmd {
 	if m.state.title.logo_anim_idx == len(constants.GAME_TITLE) {
-		return tea.Tick(1250 * time.Millisecond, func(t time.Time) tea.Msg {
+		return tea.Tick(1500 * time.Millisecond, func(t time.Time) tea.Msg {
 			return LogoCompleteMsg{}
 		})
 	}

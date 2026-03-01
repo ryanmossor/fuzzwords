@@ -59,6 +59,7 @@ type SplashScreenState struct {
 	logo_anim_active	bool
 	logo_anim_complete	bool
 	logo_anim_idx		int
+	logo_hidden			bool
 }
 
 type State struct {
@@ -183,10 +184,11 @@ func NewModel() tea.Model {
 				input_restricted: false,
 				validation_msg: "",
 			},
-			title: SplashScreenState{
-				logo_anim_active: false,
+			title: SplashScreenState {
+				logo_anim_active: 	false,
 				logo_anim_complete: false,
-				logo_anim_idx: 0,
+				logo_anim_idx: 		0,
+				logo_hidden: 		false,
 			},
 		},
 
@@ -253,7 +255,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case LogoCompleteMsg:
 		m.state.title.logo_anim_complete = true
-		return m, nil
+		return m, tea.Tick(10 * time.Second, func(t time.Time) tea.Msg {
+			return LogoRestartMsg{}
+		})
+	case LogoRestartMsg:
+		m.state.title = SplashScreenState {
+			logo_anim_active: 	false,
+			logo_anim_complete: false,
+			logo_anim_idx: 		0,
+			logo_hidden:		true,
+		}
+		return m, tea.Sequence(
+			tea.Tick(750 * time.Millisecond, func(t time.Time) tea.Msg {
+				return LogoUnhideMsg{}
+			}),
+			m.initMainMenuLogoAnimCmd(),
+		)
+	case LogoUnhideMsg:
+		m.state.title.logo_hidden = false
 	}
 
 	var cmd tea.Cmd
