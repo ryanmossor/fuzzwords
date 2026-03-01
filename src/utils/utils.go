@@ -166,3 +166,11 @@ func ValuesEqual(a, b any) bool {
 
 	return a == b
 }
+
+func CountUniqueLetters(s string) int {
+	unique := make(map[rune]bool)
+	for _, c := range s {
+		unique[c] = true
+	}
+	return len(unique)
+}

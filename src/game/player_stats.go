@@ -12,9 +12,9 @@ type PlayerStats struct {
 	ExtraLivesGained		int
 	FewestExtraLifeSolves	int
 	LongestSolve			string
+	MostUniqueLetters		string
 	LetterCounts			map[string]int
 	SolveLengths			[]int
-	// TODO: most unique letters in a solve
 	ElapsedSeconds			int
 }
 
@@ -33,6 +33,10 @@ func (s *PlayerStats) UpdateSolvedStats(answer string) {
 
 	if len(answer) > len(s.LongestSolve) {
 		s.LongestSolve = answer
+	}
+
+	if utils.CountUniqueLetters(answer) > len(s.MostUniqueLetters) {
+		s.MostUniqueLetters = answer
 	}
 
 	for _, ch := range strings.ToUpper(answer) {

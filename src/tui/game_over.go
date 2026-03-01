@@ -89,6 +89,12 @@ func (m model) GameOverView() string {
 		{"Solves per minute", fmt.Sprintf("%.1f", solves_per_min)},
 		{"Average solve length", fmt.Sprintf("%.1f letters", m.state.game.Player.Stats.AverageSolveLength())},
 		{"Longest word used", longest_solve},
+		{
+			"Solve w/ most unique letters",
+			fmt.Sprintf("%s (%d)",
+				m.state.game.Player.Stats.MostUniqueLetters,
+				utils.CountUniqueLetters(m.state.game.Player.Stats.MostUniqueLetters)),
+		},
 		{"Extra lives gained", strconv.Itoa(m.state.game.Player.Stats.ExtraLivesGained)},
 		{"Fastest extra life", fastest_extra_life},
 	}
