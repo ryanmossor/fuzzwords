@@ -47,7 +47,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	red_bold := m.theme.TextRed().Bold(true).Render
 	red := m.theme.TextRed().Render
 	green := m.theme.TextGreen().Bold(true).Render
-	accent := m.theme.TextAccent().Render
 
 	switch msg := msg.(type) {
     case TurnTimerTickMsg:
@@ -55,7 +54,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		if m.state.game_ui.timer <= 0 {
             m.state.game.HandleFailedTurn()
-			cmds = append(cmds, m.setPlayerDamagedStateCmd(), m.damageShakeAnimationCmd(6))
+			cmds = append(cmds, m.setPlayerDamagedStateCmd(), m.damageShakeAnimationCmd(8))
 
             turn_duration_min := max(m.game_settings.TurnDurationMin, 10)
             turn_duration_max := 30
@@ -67,9 +66,9 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			} else if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikesMax {
 				m.state.game_ui.validation_msg = red(
 					fmt.Sprintf(
-						"Prompt %s failed. Possible answer: ",
+						"Prompt %s failed. Possible solve: ",
 						strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
-				m.state.game_ui.validation_msg += accent(strings.ToUpper(m.state.game.CurrentTurn.SourceWord))
+				m.state.game_ui.validation_msg += m.colorizeInput(m.state.game.CurrentTurn.SourceWord)
 
 				m.text_input.Reset()
 				cmds = append(cmds, m.debounceInputCmd(500))
@@ -147,18 +146,26 @@ func (m model) GameInputView() string {
 		return ""
 	}
 
-	var colorized_text string
+	var colorized_input string
 	var border_color lipgloss.TerminalColor
 
 	if m.state.game_ui.validation_msg != "" {
-		colorized_text, border_color = m.renderValidationMsg()
+		colorized_input = m.renderValidationMsg()
+		border_color = m.getInputBorderColor()
+
+		if m.state.game_ui.player_damaged {
+			m.text_input.PromptStyle = m.theme.TextRed()
+		} else {
+			m.text_input.Reset()
+		}
 	} else {
-		colorized_text, border_color = m.renderColorizedInput()
+		colorized_input = m.colorizeInput(m.text_input.Value())
+		border_color = m.getInputBorderColor()
 	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		colorized_text,
+		colorized_input,
 		"\n",
 		lipgloss.NewStyle().
 			BorderForeground(border_color).
@@ -168,20 +175,16 @@ func (m model) GameInputView() string {
 	) 
 }
 
-func (m model) setInputBorderColor(answer string) lipgloss.TerminalColor {
-	if m.state.game.WordLists.FULL_MAP[strings.ToLower(answer)] {
-		return m.theme.green
-	}
-	return m.theme.red
+func (m model) wordInDictionary(answer string) bool {
+	return m.state.game.WordLists.FULL_MAP[strings.ToLower(answer)]
 }
 
-func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
-	border_color := m.theme.Border()
+func (m model) colorizeInput(answer string) string {
 	accent := m.theme.TextAccent().Render
-	blue := m.theme.TextBlue().Render
+	highlight := m.theme.TextHighlight().Render
 
 	prompt_upper := strings.ToUpper(m.state.game.CurrentTurn.Prompt)
-	answer_upper := strings.ToUpper(m.text_input.Value())
+	answer_upper := strings.ToUpper(answer)
 	var sb strings.Builder
 	 
 	switch m.state.game.Settings.PromptMode {
@@ -191,47 +194,58 @@ func (m model) renderColorizedInput() (string, lipgloss.TerminalColor) {
 			curr_char := string(c)
 
 			if prompt_idx < len(prompt_upper) && curr_char == string(prompt_upper[prompt_idx]) {
-				sb.WriteString(blue(curr_char))
+				sb.WriteString(highlight(curr_char))
 				prompt_idx++
 			} else {
 				sb.WriteString(accent(curr_char))
 			}
 		}
-
-		if m.state.game.Settings.HighlightInput && utils.IsFuzzyMatch(answer_upper, prompt_upper) {
-			border_color = m.setInputBorderColor(answer_upper)
-		}
 	case enums.Classic:
 		if !strings.Contains(answer_upper, prompt_upper) {
 			sb.WriteString(accent(answer_upper))
-			return sb.String(), border_color
+			return sb.String()
 		}
 		
 		sub_idx := strings.Index(answer_upper, prompt_upper)
 		sb.WriteString(accent(answer_upper[0:sub_idx]))
-		sb.WriteString(blue(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
+		sb.WriteString(highlight(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
 		sb.WriteString(accent(answer_upper[sub_idx + len(prompt_upper):]))
-
-		if m.state.game.Settings.HighlightInput {
-			border_color = m.setInputBorderColor(answer_upper)
-		}
 	}
 
-	return sb.String(), border_color
+	return sb.String()
 }
 
-func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
-	var border_color lipgloss.TerminalColor
-	if m.state.game_ui.player_damaged {
-		border_color = m.theme.red
-		m.text_input.PromptStyle = m.theme.TextRed()
-	} else {
-		border_color = m.theme.Border()
-		m.text_input.Reset()
+func (m model) getInputBorderColor() lipgloss.TerminalColor {
+	prompt_upper := strings.ToUpper(m.state.game.CurrentTurn.Prompt)
+	answer_upper := strings.ToUpper(m.text_input.Value())
+
+	is_match := false
+	switch m.state.game.Settings.PromptMode {
+	case enums.Fuzzy:
+		is_match = utils.IsFuzzyMatch(answer_upper, prompt_upper)
+	case enums.Classic:
+		is_match = strings.Contains(answer_upper, prompt_upper)
 	}
 
+	if m.state.game.Settings.HighlightInput {
+		valid_word := m.wordInDictionary(answer_upper)
+		if is_match && valid_word {
+			return m.theme.green
+		} else if is_match && !valid_word {
+			return m.theme.red
+		}
+	} 
+
+	if m.state.game_ui.player_damaged {
+		return m.theme.red
+	}
+
+	return m.theme.Border()
+}
+
+func (m *model) renderValidationMsg() string {
 	if strings.HasPrefix(m.state.game_ui.validation_msg, "✓") {
-		return m.theme.TextGreen().Render(strings.TrimSpace(m.state.game_ui.validation_msg)), border_color
+		return m.theme.TextGreen().Render(strings.TrimSpace(m.state.game_ui.validation_msg))
 	}
 
 	var msg string
@@ -239,11 +253,11 @@ func (m *model) renderValidationMsg() (string, lipgloss.TerminalColor) {
 		msg = m.state.game_ui.validation_msg
 	} else {
 		msg, _ = m.applyDamageShakeAnimation(m.state.game_ui.validation_msg)
-		// Add padding to msg if necessary to prevent prompt from shaking
-		if len(msg) % 2 == 1 {
+		// Add padding to msg if necessary to prevent input box from shaking
+		if len(utils.StripANSICodes(msg)) % 2 == 1 {
 			msg = utils.RightPad(msg, 1)
 		}
 	}
 
-	return m.theme.TextRed().Render(msg), border_color
+	return m.theme.TextRed().Render(msg)
 }

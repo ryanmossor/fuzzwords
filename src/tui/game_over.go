@@ -20,14 +20,15 @@ func (m model) GameOverSwitch(msg string, win bool) (model, tea.Cmd) {
 
 	m = m.SwitchPage(game_over_page)
 
-	accent := m.theme.TextAccent().Render
 	red := m.theme.TextRed().Render
 
     if win {
         m.state.game_ui.validation_msg = ""
     } else {
-		m.state.game_ui.validation_msg = red(fmt.Sprintf("Possible answer for final prompt %s: ", strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
-		m.state.game_ui.validation_msg += accent(strings.ToUpper(m.state.game.CurrentTurn.SourceWord))
+		m.state.game_ui.validation_msg = red(fmt.Sprintf(
+			"Possible answer for final prompt %s: ",
+			strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
+		m.state.game_ui.validation_msg += m.colorizeInput(m.state.game.CurrentTurn.SourceWord)
     }
 
 	m.footer_keymaps = []footer_keymaps{
@@ -120,7 +121,7 @@ func (m model) GameOverView() string {
 		}).
 		Render()
 
-    validation_msg, _ := m.renderValidationMsg()
+    validation_msg := m.renderValidationMsg()
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
