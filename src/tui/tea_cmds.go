@@ -87,7 +87,10 @@ func (m *model) extraLifeAnimInitMsg() tea.Cmd {
 }
 
 func (m *model) extraLifeAnimTickMsg() tea.Cmd {
-	anim := m.state.game_ui.extra_life_anim
+	anim := &m.state.game_ui.extra_life_anim
+	anim.cur_frame += 1
+	anim.offset = (anim.offset + 1) % anim.loop_frames
+
 	if anim.cur_frame == anim.total_frames {
 		return tea.Cmd(func() tea.Msg {
 			return ExtraLifeAnimCompleteMsg{}

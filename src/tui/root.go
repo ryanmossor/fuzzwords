@@ -294,14 +294,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case LogoUnhideMsg:
 		m.state.title.logo_hidden = false
 	case ExtraLifeAnimTickMsg:
-		anim := &m.state.game_ui.extra_life_anim
-		if anim.cur_frame <= anim.total_frames {
-			mod := anim.loop_frames
-			anim.offset = (anim.offset + 1) % mod
-			anim.cur_frame += 1
-
-			return m, m.extraLifeAnimTickMsg()
-		}
+		return m, m.extraLifeAnimTickMsg()
 	case ExtraLifeAnimCompleteMsg:
 		m.state.game_ui.extra_life_anim.cur_frame = 0
 		m.state.game_ui.extra_life_anim.active = false
