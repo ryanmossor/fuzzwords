@@ -10,16 +10,19 @@ type theme struct {
 	border     	lipgloss.TerminalColor
 	background 	lipgloss.TerminalColor
 	highlight  	lipgloss.TerminalColor
-	red      	lipgloss.TerminalColor
 	body       	lipgloss.TerminalColor
 	accent     	lipgloss.TerminalColor
-	yellow     	lipgloss.TerminalColor
-	green      	lipgloss.TerminalColor
-	blue		lipgloss.TerminalColor
-	orange		lipgloss.TerminalColor
 	dim			lipgloss.TerminalColor
 	extra_dim	lipgloss.TerminalColor
 	lavender	lipgloss.TerminalColor
+
+	red      	lipgloss.TerminalColor
+	orange		lipgloss.TerminalColor
+	yellow     	lipgloss.TerminalColor
+	green      	lipgloss.TerminalColor
+	blue		lipgloss.TerminalColor
+	indigo		lipgloss.TerminalColor
+	purple		lipgloss.TerminalColor
 
 	base lipgloss.Style
 }
@@ -32,23 +35,21 @@ func BasicTheme(renderer *lipgloss.Renderer) theme {
 	// TODO: look into ANSI colors for increased compatibility
 	base.background = lipgloss.AdaptiveColor{Dark: "#1E1E2E", Light: "#EFF1F5"}
 	base.border = lipgloss.AdaptiveColor{Dark: "#585B70", Light: "#ACB0BE"} // Surface 2
-	// base.body = lipgloss.AdaptiveColor{Dark: "#CDD6F4", Light: "#4C4F69"} // Text
 	base.body = lipgloss.AdaptiveColor{Dark: "#A6ADC8", Light: "#6C6F85"} // Subtext 0
 	base.accent = lipgloss.AdaptiveColor{Dark: "#FFFFFF", Light: "#11181C"}
-	// base.accent = lipgloss.AdaptiveColor{Dark: "#CDD6F4", Light: "#4C4F69"} // Text
-	base.yellow = lipgloss.AdaptiveColor{Dark: "#F9E2AF", Light: "#DF8E1D"}
-	base.green = lipgloss.AdaptiveColor{Dark: "#A6E3A1", Light: "#40A02B"}
-	base.blue = lipgloss.AdaptiveColor{Dark: "#74C7EC", Light: "#209FB5"}
-	base.orange = lipgloss.AdaptiveColor{Dark: "#FAB387", Light: "#FE640B"}
 	base.dim = lipgloss.AdaptiveColor{Dark: "#878787", Light: "#ACB0BE"} // not part of catppuccin palette
-	// base.extra_dim = lipgloss.AdaptiveColor{Dark: "#585B70", Light: "#ACB0BE"} // Surface 2
 	base.extra_dim = lipgloss.AdaptiveColor{Dark: "#6C7086", Light: "#ACB0BE"} // Overlay 0
 	base.lavender = lipgloss.AdaptiveColor{Dark: "#B4BEFE", Light: "#7287FD"}
 
 	base.highlight = lipgloss.AdaptiveColor{Dark: "#74C7EC", Light: "#209FB5"}
 
-	// base.error = lipgloss.Color("203")
 	base.red = lipgloss.AdaptiveColor{Dark: "#F38BA8", Light: "#D20F39"}
+	base.orange = lipgloss.AdaptiveColor{Dark: "#FAB387", Light: "#FE640B"}
+	base.yellow = lipgloss.AdaptiveColor{Dark: "#F9E2AF", Light: "#DF8E1D"}
+	base.green = lipgloss.AdaptiveColor{Dark: "#A6E3A1", Light: "#40A02B"}
+	base.blue = lipgloss.AdaptiveColor{Dark: "#74C7EC", Light: "#209FB5"}
+	base.indigo = lipgloss.AdaptiveColor{Dark: "#7287FD", Light: "#8839EF"} // swapped indigo/purple light values
+	base.purple = lipgloss.AdaptiveColor{Dark: "#CBA6F7", Light: "#7287FD"}
 
 	base.base = renderer.NewStyle().Foreground(base.body)
 
@@ -87,6 +88,14 @@ func (b theme) TextHighlight() lipgloss.Style {
 	return b.Base().Foreground(b.highlight)
 }
 
+func (b theme) TextRed() lipgloss.Style {
+	return b.Base().Foreground(b.red)
+}
+
+func (b theme) TextOrange() lipgloss.Style {
+	return b.Base().Foreground(b.orange)
+}
+
 func (b theme) TextYellow() lipgloss.Style {
 	return b.Base().Foreground(b.yellow)
 }
@@ -95,16 +104,16 @@ func (b theme) TextGreen() lipgloss.Style {
 	return b.Base().Foreground(b.green)
 }
 
-func (b theme) TextOrange() lipgloss.Style {
-	return b.Base().Foreground(b.orange)
-}
-
 func (b theme) TextBlue() lipgloss.Style {
 	return b.Base().Foreground(b.blue)
 }
 
-func (b theme) TextRed() lipgloss.Style {
-	return b.Base().Foreground(b.red)
+func (b theme) TextIndigo() lipgloss.Style {
+	return b.Base().Foreground(b.indigo)
+}
+
+func (b theme) TextPurple() lipgloss.Style {
+	return b.Base().Foreground(b.purple)
 }
 
 func (b theme) TextLavender() lipgloss.Style {
@@ -121,4 +130,16 @@ func (b theme) TextExtraDim() lipgloss.Style {
 
 func (b theme) Border() lipgloss.TerminalColor {
 	return b.dim
+}
+
+func (b theme) GetRainbowColors() []lipgloss.Style {
+	return []lipgloss.Style{
+		b.TextRed(),
+		b.TextOrange(),
+		b.TextYellow(),
+		b.TextGreen(),
+		b.TextBlue(),
+		b.TextIndigo(),
+		b.TextPurple(),
+	}
 }

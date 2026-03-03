@@ -19,7 +19,6 @@ func (m model) GameHudView() string {
 		return ""
 	}
 
-	// base := m.theme.Base().Render
 	dim := m.theme.TextExtraDim().Render
 	yellow := m.theme.TextYellow().Bold(true).Render
 	red := m.theme.TextRed().Render
@@ -72,15 +71,28 @@ func (m model) GameHudView() string {
 		Render()
 
 	letters_remaining := []string{}
+	var colored_alphabet string
 	for _, c := range m.state.game.Alphabet {
 		letter := string(c)
-		if m.state.game.Player.LettersRemaining[letter] {
+		// TODO: make this better
+		if m.state.game_ui.extra_life_anim.active {
+			colored_alphabet = m.ApplyExtraLifeFlashAnim()
+			break
+		} else if m.state.game.Player.LettersRemaining[letter] {
 			letters_remaining = append(letters_remaining, dim(letter))
 		} else if m.state.game_ui.player_damaged {
 			letters_remaining = append(letters_remaining, red(letter))
 		} else {
 			letters_remaining = append(letters_remaining, yellow(letter))
 		}
+	}
+
+	if colored_alphabet != "" {
+		return lipgloss.JoinVertical(
+			lipgloss.Center,
+			m.DebugView(),
+			header,
+			colored_alphabet)
 	}
 
 	return lipgloss.JoinVertical(
@@ -120,4 +132,20 @@ func (m model) RenderHealthDisplay() string {
 	}
 
 	return health_display.String()
+}
+
+func (m model) ApplyExtraLifeFlashAnim() string {
+	var colors []lipgloss.Style = m.theme.GetRainbowColors()
+	colored_letters := []string{}
+
+	for i, c := range m.state.game.Alphabet {
+		color_idx := (i - m.state.game_ui.extra_life_anim.offset) % len(colors)
+		if color_idx < 0 {
+			color_idx += len(colors)
+		}
+		color := colors[color_idx]
+		colored_letters = append(colored_letters, color.Bold(true).Render(string(c)))
+	}
+
+	return strings.Join(colored_letters, " ")
 }

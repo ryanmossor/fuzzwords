@@ -86,6 +86,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             return m, nil
         }
 
+		var cmds []tea.Cmd
+
         key := msg.String()
 		if key != "enter" {
 			m.state.game_ui.validation_msg = ""
@@ -103,6 +105,10 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			if m.state.game.CurrentTurn.IsValid {
 				m.state.game.HandleCorrectAnswer()
+				if len(m.state.game.Player.LettersUsed) >= len(m.state.game.Alphabet) {
+					m.state.game.GrantExtraLife()
+					cmds = append(cmds, m.extraLifeAnimInitMsg())
+				}
 
 				// Reset damage animation to ensure it doesn't keep playing from previous failed turn
 				m.state.game_ui.player_damaged = false
@@ -123,7 +129,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 					m.state.game_ui.timer = time.Duration(m.game_settings.TurnDurationMin) * time.Second
 				}
 
-                return m, m.debounceInputCmd(300)
+				cmds = append(cmds, m.debounceInputCmd(300))
+				return m, tea.Batch(cmds...)
             }
 		}
 	case DamageShakeAnimationMsg:

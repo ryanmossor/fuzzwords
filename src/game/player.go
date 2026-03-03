@@ -37,23 +37,23 @@ func (g *GameState) HandleCorrectAnswer() {
 		g.Player.LettersRemaining[ch] = true
 	}
 
-	if len(g.Player.LettersUsed) >= len(g.Alphabet) {
-		g.Player.LettersUsed = nil
-		g.Player.LettersRemaining = alphabetToMap(g.Alphabet)
-
-		g.Player.Stats.ExtraLivesGained++
-		if g.Player.Stats.FewestExtraLifeSolves == 0 || g.Player.TurnsSinceLastExtraLife < g.Player.Stats.FewestExtraLifeSolves {
-			g.Player.Stats.FewestExtraLifeSolves = g.Player.TurnsSinceLastExtraLife
-		}
-		g.Player.TurnsSinceLastExtraLife = 0
-
-		if g.Player.HealthCurrent < g.Settings.HealthMax {
-			g.Player.HealthCurrent++
-		}
-	}
-
 	slices.Sort(g.Player.LettersUsed)
 	g.Player.Stats.UpdateSolvedStats(g.CurrentTurn.Answer)
+}
+
+func (g *GameState) GrantExtraLife() {
+	g.Player.LettersUsed = nil
+	g.Player.LettersRemaining = alphabetToMap(g.Alphabet)
+
+	g.Player.Stats.ExtraLivesGained++
+	if g.Player.Stats.FewestExtraLifeSolves == 0 || g.Player.TurnsSinceLastExtraLife < g.Player.Stats.FewestExtraLifeSolves {
+		g.Player.Stats.FewestExtraLifeSolves = g.Player.TurnsSinceLastExtraLife
+	}
+	g.Player.TurnsSinceLastExtraLife = 0
+
+	if g.Player.HealthCurrent < g.Settings.HealthMax {
+		g.Player.HealthCurrent++
+	}
 }
 
 func (g *GameState) HandleFailedTurn() {

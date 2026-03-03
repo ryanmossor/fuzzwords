@@ -3,9 +3,9 @@ package tui
 import (
 	_ "embed"
 	"encoding/json"
+	"fzwds/src/constants"
 	"fzwds/src/game"
 	"fzwds/src/utils"
-	"fzwds/src/constants"
 	"log/slog"
 	"math"
 	"os"
@@ -41,18 +41,29 @@ type footer_keymaps struct {
 	value	string
 }
 
+type Animation struct {
+	active			bool
+	fps				int
+	cur_frame		int
+	loop_frames		int
+	total_frames	int
+	offset			int // TODO: feels hacky, would like a better solution
+}
+
 type GameUIState struct {
-	start_time			time.Time
-	timer 				time.Duration
+	start_time				time.Time
+	timer 					time.Duration
 
-	game_active			bool
-	game_over_msg		string
+	game_active				bool
+	game_over_msg			string
 
-	damage_anim_padding	int
-	player_damaged		bool
+	damage_anim_padding		int
+	player_damaged			bool
 
-	input_restricted	bool
-	validation_msg		string
+	extra_life_anim			Animation
+
+	input_restricted		bool
+	validation_msg			string
 }
 
 type SplashScreenState struct {
@@ -181,6 +192,15 @@ func NewModel() tea.Model {
 				damage_anim_padding: 0,
 				player_damaged: false,
 
+				extra_life_anim: Animation {
+					active: false,
+					fps: 15,
+					cur_frame: 0,
+					loop_frames: 7,
+					total_frames: 25,
+					offset: 0,
+				},
+
 				input_restricted: false,
 				validation_msg: "",
 			},
@@ -273,6 +293,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		)
 	case LogoUnhideMsg:
 		m.state.title.logo_hidden = false
+	case ExtraLifeAnimTickMsg:
+		anim := &m.state.game_ui.extra_life_anim
+		if anim.cur_frame <= anim.total_frames {
+			mod := anim.loop_frames
+			anim.offset = (anim.offset + 1) % mod
+			anim.cur_frame += 1
+
+			return m, m.extraLifeAnimTickMsg()
+		}
+	case ExtraLifeAnimCompleteMsg:
+		m.state.game_ui.extra_life_anim.cur_frame = 0
+		m.state.game_ui.extra_life_anim.active = false
 	}
 
 	var cmd tea.Cmd

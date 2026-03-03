@@ -75,3 +75,26 @@ func (m *model) setTurnTickerCmd() tea.Cmd {
 		return TurnTimerTickMsg{}
 	})
 }
+
+type ExtraLifeAnimInitMsg struct{}
+type ExtraLifeAnimTickMsg struct{}
+type ExtraLifeAnimCompleteMsg struct{}
+func (m *model) extraLifeAnimInitMsg() tea.Cmd {
+	m.state.game_ui.extra_life_anim.active = true
+	return tea.Cmd(func() tea.Msg {
+		return ExtraLifeAnimTickMsg{}
+	})
+}
+
+func (m *model) extraLifeAnimTickMsg() tea.Cmd {
+	anim := m.state.game_ui.extra_life_anim
+	if anim.cur_frame == anim.total_frames {
+		return tea.Cmd(func() tea.Msg {
+			return ExtraLifeAnimCompleteMsg{}
+		})
+	}
+
+	return tea.Tick(time.Second / time.Duration(anim.fps), func(t time.Time) tea.Msg {
+		return ExtraLifeAnimTickMsg{}
+	})
+}
