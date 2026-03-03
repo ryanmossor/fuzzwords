@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -173,4 +174,9 @@ func CountUniqueLetters(s string) int {
 		unique[c] = true
 	}
 	return len(unique)
+}
+
+var ansiRegex = regexp.MustCompile(`\x1B\[[0-9;]*[mJK]`)
+func StripANSICodes(s string) string {
+	return ansiRegex.ReplaceAllString(s, "")
 }
