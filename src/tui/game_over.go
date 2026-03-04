@@ -12,24 +12,26 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (m model) GameOverSwitch(msg string, win bool) (model, tea.Cmd) {
+func (m model) GameOverSwitch(win bool) (model, tea.Cmd) {
 	m.state.game_ui.game_active = false
-	m.state.game_ui.game_over_msg = msg
 	m.state.game_ui.player_damaged = false
 	m.state.game.Player.Stats.ElapsedSeconds = int(time.Since(m.state.game_ui.start_time).Seconds())
 
-	m = m.SwitchPage(game_over_page)
-
-	red := m.theme.TextRed().Render
+	red := m.theme.TextRed()
+	green := m.theme.TextGreen().Bold(true)
 
     if win {
         m.state.game_ui.validation_msg = ""
+        m.state.game_ui.game_over_msg = green.Render("===== YOU WIN! =====")
     } else {
-		m.state.game_ui.validation_msg = red(fmt.Sprintf(
+		m.state.game_ui.validation_msg = red.Render(fmt.Sprintf(
 			"Possible answer for final prompt %s: ",
 			strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
 		m.state.game_ui.validation_msg += m.colorizeInput(m.state.game.CurrentTurn.SourceWord)
+        m.state.game_ui.game_over_msg = red.Bold(true).Render("===== GAME OVER =====")
     }
+
+	m = m.SwitchPage(game_over_page)
 
 	m.footer_keymaps = []footer_keymaps{
 		{key: "m", value: "main menu"},
