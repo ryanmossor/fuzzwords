@@ -346,66 +346,62 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	switch m.page {
-	// case menuPage:
-		// return m.MenuView()
-		// return ""
-	default:
-		var header string
-		if m.page == game_page {
-			header = m.GameHudView()
-		} else {
-			header = m.HeaderView()
-		}
-
-		game_input := m.GameInputView()
-		footer := m.FooterView()
-
-		height := m.height_container
-		height -= lipgloss.Height(header)
-		height -= lipgloss.Height(game_input)
-		height -= lipgloss.Height(footer)
-
-		content_style := m.theme.Base().Height(height).Padding(0, 1)
-		if m.page == splash_page || m.page == game_page || m.page == game_over_page {
-			// center all content on screen
-			content_style = content_style.AlignVertical(lipgloss.Center)
-		} else {
-			content_style = content_style.Width(m.width_container)
-		}
-        content := m.viewport.View()
-
-        var view string
-		if m.has_scroll {
-			view = lipgloss.JoinHorizontal(
-				lipgloss.Top,
-				content,
-				m.theme.Base().Width(1).Render(), // space between content and scrollbar
-				m.getScrollbar(),
-			)
-		} else {
-			view = m.getContent()
-		}
-
-		child := lipgloss.JoinVertical(
-			lipgloss.Center,
-			header,
-            content_style.Render(view),
-			game_input,
-			footer,
-		) 
-
-		return m.renderer.Place(
-			m.viewport_width,
-			m.viewport_height,
-			lipgloss.Center,
-			lipgloss.Center,
-			m.theme.Base().
-				MaxWidth(m.width_container).
-				MaxHeight(m.height_container).
-				Render(child),
-		) 
+	var header string
+	if m.page == game_page {
+		// TODO: move this to header file
+		header = m.GameHudView()
+	} else {
+		header = m.HeaderView()
 	}
+
+	game_input := m.GameInputView()
+	footer := m.FooterView()
+
+	height := m.height_container
+	height -= lipgloss.Height(header)
+	height -= lipgloss.Height(game_input)
+	height -= lipgloss.Height(footer)
+
+	content_style := m.theme.Base().
+		Height(height).
+		Padding(0, 1).
+		AlignVertical(lipgloss.Center) // center all content on screen
+
+	if m.page == about_page {
+		content_style = content_style.Width(m.width_container)
+	}
+	content := m.viewport.View()
+
+	var view string
+	if m.has_scroll {
+		view = lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			content,
+			m.theme.Base().Width(1).Render(), // space between content and scrollbar
+			m.getScrollbar(),
+		)
+	} else {
+		view = m.getContent()
+	}
+
+	child := lipgloss.JoinVertical(
+		lipgloss.Center,
+		header,
+		content_style.Render(view),
+		game_input,
+		footer,
+	) 
+
+	return m.renderer.Place(
+		m.viewport_width,
+		m.viewport_height,
+		lipgloss.Center,
+		lipgloss.Center,
+		m.theme.Base().
+			MaxWidth(m.width_container).
+			MaxHeight(m.height_container).
+			Render(child),
+		) 
 }
 
 func (m model) SwitchPage(page page) model {

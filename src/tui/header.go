@@ -8,7 +8,7 @@ import (
 
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// TODO: has_header flag
-	if m.state.game_ui.game_active || m.page == settings_page {
+	if m.state.game_ui.game_active || m.page == game_over_page || m.page == settings_page {
 		return m, nil
 	}
 
@@ -30,17 +30,25 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) HeaderView() string {
-	if m.page == game_page || m.page == settings_page {
+	if m.page == game_page {
 		return ""
 	}
+	empty_header :=  "\n\n\n"
 	if m.page == game_over_page {
 		// No content, but used for top margin
-		return "\n\n\n"
+		return empty_header
 	}
 
 	bold := m.theme.TextAccent().Bold(true).Render
 	accent := m.theme.TextAccent().Render
 	base := m.theme.Base().Render
+
+	if m.page == settings_page {
+		return lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			empty_header,
+			m.theme.TextAccent().Bold(true).Render("GAME SETTINGS"))
+	}
 
 	menu := accent("m") + base(" main menu")
 	about := accent("a") + base(" about")
