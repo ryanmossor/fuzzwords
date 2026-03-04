@@ -13,7 +13,7 @@ import (
 )
 
 type SettingsState struct {
-	selected		int
+	selected int
 }
 
 func (m model) SettingsSwitch() (model, tea.Cmd) {
@@ -24,7 +24,7 @@ func (m model) SettingsSwitch() (model, tea.Cmd) {
 		{key: "↑/↓", value: "scroll"},
 		{key: "←/→", value: "change"},
 		{key: "ctrl+r", value: "reset defaults"},
-        {key: "m", value: "main menu"},
+		{key: "m", value: "main menu"},
 		{key: "enter", value: "play"},
 	}
 
@@ -45,7 +45,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 		case "+", "=", "right", "l":
 			m.changeCurrentSetting(Next)
-		case "-", "left", "h": 
+		case "-", "left", "h":
 			m.changeCurrentSetting(Prev)
 		case "ctrl+r":
 			m.game_settings_copy = game.GetDefaultSettings()
@@ -60,10 +60,10 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			if err := os.WriteFile(m.settings_path, marshaled_settings, 0644); err != nil {
-                slog.Error("Error writing settings.json", "error", err)
+				slog.Error("Error writing settings.json", "error", err)
 			}
 
-            return m.GameSwitch()
+			return m.GameSwitch()
 		case "m", "esc":
 			return m.MainMenuSwitch()
 		}
@@ -74,7 +74,8 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) SettingsView() string {
 	base := m.theme.Base().Render
-	accent := m.theme.TextAccent().Render 
+	dim := m.theme.TextExtraDim().Render
+	accent := m.theme.TextAccent().Bold(true).Render
 
 	var lines []string
 
@@ -102,9 +103,11 @@ func (m model) SettingsView() string {
 				}
 			}
 		}
-		default_text := accent("  " + default_val + "    ")
-		
+		default_text := dim("  " + default_val + "    ")
+		var display_name string
+
 		if m.state.settings.selected == i {
+			display_name = accent(setting.DisplayName)
 			setting_val_int, err := strconv.Atoi(default_val)
 			if err != nil {
 				default_text = accent("← " + default_val + " →  ")
@@ -115,9 +118,10 @@ func (m model) SettingsView() string {
 			} else {
 				default_text = accent("← " + default_val + " →  ")
 			}
+		} else {
+			display_name = dim(setting.DisplayName)
 		}
 
-		display_name := accent(setting.DisplayName)
 		row_1_space := m.width_content - lipgloss.Width(display_name) - lipgloss.Width(default_text) - 3
 
 		var content string
@@ -164,67 +168,69 @@ func (m model) SettingsView() string {
 			)
 		}
 
-		line := m.CreateBox(content, i == m.state.settings.selected)
+		// Don't apply border to final setting box
+		apply_bottom_border := i != len(m.settings_schema) - 1
+		line := m.CreateSettingsMenuItem(content, i == m.state.settings.selected, apply_bottom_border)
 		lines = append(lines, line)
-	} 
+	}
 
 	return m.theme.Base().Render(lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		lines...,
-	)) 
+	))
 }
 
 type Direction int
 const (
-    Next Direction = 1
-    Prev Direction = -1
+	Next Direction = 1
+	Prev Direction = -1
 )
 
 func (m *model) changeCurrentSetting(dir Direction) {
-    if m.state.settings.selected < 0 || m.state.settings.selected >= len(m.settings_schema) {
-        return
-    }
+	if m.state.settings.selected < 0 || m.state.settings.selected >= len(m.settings_schema) {
+		return
+	}
 
 	dir_int := int(dir)
 
-    setting := m.settings_schema[m.state.settings.selected]
-    cur_val := m.game_settings_copy.GetSetting(setting.PropName)
-    var new_val any
+	setting := m.settings_schema[m.state.settings.selected]
+	cur_val := m.game_settings_copy.GetSetting(setting.PropName)
+	var new_val any
 
-    if len(setting.ValidValues) > 0 {
-        cur_idx := -1
-        for i, opt := range setting.ValidValues {
-            if utils.ValuesEqual(opt.Value, cur_val) {
-                cur_idx = i
-                break
-            }
-        }
+	if len(setting.ValidValues) > 0 {
+		cur_idx := -1
+		for i, opt := range setting.ValidValues {
+			if utils.ValuesEqual(opt.Value, cur_val) {
+				cur_idx = i
+				break
+			}
+		}
 
-        var next_idx int
-        if setting.Type == "int" {
-            // Linear (clamp)
-            next_idx = max(cur_idx + dir_int, 0)
-            if next_idx >= len(setting.ValidValues) {
-                next_idx = len(setting.ValidValues) - 1
-            }
-        } else {
-            // Circular wrap-around
-            next_idx = (cur_idx + dir_int + len(setting.ValidValues)) % len(setting.ValidValues)
-        }
+		var next_idx int
+		if setting.Type == "int" {
+			// Linear (clamp)
+			next_idx = max(cur_idx+dir_int, 0)
+			if next_idx >= len(setting.ValidValues) {
+				next_idx = len(setting.ValidValues) - 1
+			}
+		} else {
+			// Circular wrap-around
+			next_idx = (cur_idx + dir_int + len(setting.ValidValues)) % len(setting.ValidValues)
+		}
 
-        new_val = setting.ValidValues[next_idx].Value
-    } else if setting.Type == "int" {
-        new_val = cur_val.(int) + dir_int
+		new_val = setting.ValidValues[next_idx].Value
+	} else if setting.Type == "int" {
+		new_val = cur_val.(int) + dir_int
 
-        if setting.Min != nil && new_val.(int) < *setting.Min {
-            new_val = *setting.Min
-        }
-        if setting.Max != nil && new_val.(int) > *setting.Max {
-            new_val = *setting.Max
-        }
-    } else {
-        return
-    }
+		if setting.Min != nil && new_val.(int) < *setting.Min {
+			new_val = *setting.Min
+		}
+		if setting.Max != nil && new_val.(int) > *setting.Max {
+			new_val = *setting.Max
+		}
+	} else {
+		return
+	}
 
-    m.game_settings_copy.SetSetting(setting.PropName, new_val, m.settings_schema)
+	m.game_settings_copy.SetSetting(setting.PropName, new_val, m.settings_schema)
 }

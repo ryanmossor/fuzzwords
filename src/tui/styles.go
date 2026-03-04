@@ -18,3 +18,15 @@ func (m model) CreateBox(content string, selected bool) string {
 
 	return style.PaddingLeft(1).Render(padded)
 }
+
+func (m model) CreateSettingsMenuItem(content string, is_selected, apply_bottom_border bool) string {
+	total_width := m.width_content - 2
+	padded := lipgloss.PlaceHorizontal(total_width, lipgloss.Left, content)
+	base := m.theme.Base().
+		BorderBottom(apply_bottom_border).
+		BorderForeground(m.theme.Border()).
+		BorderStyle(lipgloss.NormalBorder()).
+		Width(total_width)
+
+	return base.PaddingLeft(1).Render(padded)
+}
