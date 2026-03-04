@@ -89,6 +89,9 @@ type model struct {
 	switched			bool
     has_scroll          bool
 
+	goto_top			bool
+	goto_bottom			bool
+
 	page				page
 	viewport			viewport.Model
 	viewport_width   	int
@@ -329,8 +332,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m = m.updateViewport()
 		m.switched = false
 	}
-	cmds = append(cmds, cmd)
 
+	if m.goto_top {
+		m.viewport.GotoTop()
+		m.goto_top = false
+	} else if m.goto_bottom {
+		m.viewport.GotoBottom()
+		m.goto_bottom = false
+	}
+
+	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
 

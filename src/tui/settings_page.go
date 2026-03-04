@@ -36,12 +36,14 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down", "tab":
-			if m.state.settings.selected < len(m.settings_schema) - 1 {
-				m.state.settings.selected++
+			m.state.settings.selected = (m.state.settings.selected + 1 + len(m.settings_schema)) % len(m.settings_schema)
+			if m.state.settings.selected == 0 {
+				m.goto_top = true
 			}
 		case "k", "up", "shift+tab":
-			if m.state.settings.selected > 0 {
-				m.state.settings.selected--
+			m.state.settings.selected = (m.state.settings.selected - 1 + len(m.settings_schema)) % len(m.settings_schema)
+			if m.state.settings.selected == len(m.settings_schema) - 1 {
+				m.goto_bottom = true
 			}
 		case "+", "=", "right", "l":
 			m.changeCurrentSetting(Next)
