@@ -30,3 +30,17 @@ func (m model) CreateSettingsMenuItem(content string, is_selected, apply_bottom_
 
 	return base.PaddingLeft(1).Render(padded)
 }
+
+func (m model) TextInputBlockBorderStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		BorderForeground(m.theme.input_bg).
+		BorderStyle(lipgloss.InnerHalfBlockBorder()).
+		Width(m.text_input.CharLimit)
+}
+
+func (m model) TextInputRoundedBorderStyle(border_color lipgloss.TerminalColor) lipgloss.Style {
+	return lipgloss.NewStyle().
+		BorderForeground(border_color).
+		BorderStyle(lipgloss.RoundedBorder()).
+		Width(m.text_input.CharLimit)
+}

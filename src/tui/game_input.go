@@ -22,13 +22,18 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 
 	m.state.game_ui.game_active = true
 	m.state.game_ui.validation_msg = ""
+
+	// Reset damage animation to ensure it doesn't keep playing from previous failed turn
 	m.state.game_ui.player_damaged = false
+	m.state.game_ui.damage_anim_padding = 0
 
 	m.state.game = game.InitializeGame(m.game_settings)
 	m.state.game.NewTurn()
 
 	m.state.game_ui.start_time = time.Now()
     m.state.game_ui.timer = (30 + 1) * time.Second
+
+	m.text_input = m.initBlockTextInput()
 
 	m.footer_keymaps = []footer_keymaps{
 		{key: "esc", value: "clear input"},
@@ -44,8 +49,6 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 }
 
 func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
-	red := m.theme.TextRed().Render
-
 	switch msg := msg.(type) {
     case TurnTimerTickMsg:
         cmds := []tea.Cmd{}
@@ -62,7 +65,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             if m.state.game.Player.HealthCurrent == 0 {
                 return m.GameOverSwitch(false)
 			} else if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikesMax {
-				m.state.game_ui.validation_msg = red(
+				m.state.game_ui.validation_msg = m.theme.TextRed().Render(
 					fmt.Sprintf(
 						"Prompt %s failed. Possible solve: ",
 						strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
@@ -101,33 +104,37 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             m.text_input.Reset()
 			m.state.game_ui.validation_msg = m.state.game.ValidateAnswer()
 
-			if m.state.game.CurrentTurn.IsValid {
-				m.state.game.HandleCorrectAnswer()
-				if len(m.state.game.Player.LettersUsed) >= len(m.state.game.Alphabet) {
-					m.state.game.GrantExtraLife()
-					cmds = append(cmds, m.extraLifeAnimInitMsg())
-				}
+			if !m.state.game.CurrentTurn.IsValid {
+				break
+			}
 
-				// Reset damage animation to ensure it doesn't keep playing from previous failed turn
-				m.state.game_ui.player_damaged = false
-				m.state.game_ui.damage_anim_padding = 0
+			m.state.game.HandleCorrectAnswer()
+			if len(m.state.game.Player.LettersUsed) >= len(m.state.game.Alphabet) {
+				m.state.game.GrantExtraLife()
+				cmds = append(cmds, m.extraLifeAnimInitMsg())
+			}
 
-				// TODO: move win condition check to game_over?
-				if len(m.state.game.WordLists.Available) == 0 {
-					return m.GameOverSwitch(true)
-                } else if (m.state.game.Settings.WinCondition == enums.MaxLives && m.state.game.Player.HealthCurrent == m.state.game.Settings.HealthMax) {
-                    return m.GameOverSwitch(true)
-                }
+			// Reset damage animation to ensure it doesn't keep playing from previous failed turn
+			m.state.game_ui.player_damaged = false
+			m.state.game_ui.damage_anim_padding = 0
 
-				m.state.game.NewTurn()
+			// TODO: move win condition check to game_over?
+			if len(m.state.game.WordLists.Available) == 0 {
+				return m.GameOverSwitch(true)
+			} else if (
+				m.state.game.Settings.WinCondition == enums.MaxLives &&
+				m.state.game.Player.HealthCurrent == m.state.game.Settings.HealthMax) {
+				return m.GameOverSwitch(true)
+			}
 
-				if m.state.game_ui.timer < time.Duration(m.game_settings.TurnDurationMin) * time.Second {
-					m.state.game_ui.timer = time.Duration(m.game_settings.TurnDurationMin) * time.Second
-				}
+			m.state.game.NewTurn()
 
-				cmds = append(cmds, m.debounceInputCmd(300))
-				return m, tea.Batch(cmds...)
-            }
+			if m.state.game_ui.timer < time.Duration(m.game_settings.TurnDurationMin) * time.Second {
+				m.state.game_ui.timer = time.Duration(m.game_settings.TurnDurationMin) * time.Second
+			}
+
+			cmds = append(cmds, m.debounceInputCmd(300))
+			return m, tea.Batch(cmds...)
 		}
 	case DamageShakeAnimationMsg:
 		if m.state.game_ui.damage_anim_padding > 0 {
@@ -150,31 +157,18 @@ func (m model) GameInputView() string {
 	}
 
 	var colorized_input string
-	var border_color lipgloss.TerminalColor
-
 	if m.state.game_ui.validation_msg != "" {
 		colorized_input = m.renderValidationMsg()
-		border_color = m.getInputBorderColor()
-
-		if m.state.game_ui.player_damaged {
-			m.text_input.PromptStyle = m.theme.TextRed()
-		} else {
-			m.text_input.Reset()
-		}
 	} else {
 		colorized_input = m.colorizeInput(m.text_input.Value())
-		border_color = m.getInputBorderColor()
 	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		colorized_input,
-		"\n",
-		lipgloss.NewStyle().
-			BorderForeground(border_color).
-			BorderStyle(lipgloss.RoundedBorder()).
-			Width(50).
-			Render(m.text_input.View()),
+		"",
+		m.getStyledBlockTextInput(true),
+		"",
 	) 
 }
 
@@ -182,6 +176,7 @@ func (m model) wordInDictionary(answer string) bool {
 	return m.state.game.WordLists.FULL_MAP[strings.ToLower(answer)]
 }
 
+// Highlight prompt letters in current answer
 func (m model) colorizeInput(answer string) string {
 	accent := m.theme.TextAccent().Render
 	highlight := m.theme.TextHighlight().Render
@@ -218,7 +213,9 @@ func (m model) colorizeInput(answer string) string {
 	return sb.String()
 }
 
-func (m model) getInputBorderColor() lipgloss.TerminalColor {
+// Get accent color for input box based on HighlightInput setting, damage state, etc.
+// Style applied to border if rounded-style input box, or left accent bar if block-style input box.
+func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipgloss.TerminalColor {
 	prompt_upper := strings.ToUpper(m.state.game.CurrentTurn.Prompt)
 	answer_upper := strings.ToUpper(m.text_input.Value())
 
@@ -243,12 +240,13 @@ func (m model) getInputBorderColor() lipgloss.TerminalColor {
 		return m.theme.red
 	}
 
-	return m.theme.Border()
+	return default_color
 }
 
 func (m *model) renderValidationMsg() string {
+	// TODO: check if m.state.game.CurrentTurn.IsValid?
 	if strings.HasPrefix(m.state.game_ui.validation_msg, "✓") {
-		return m.theme.TextGreen().Render(strings.TrimSpace(m.state.game_ui.validation_msg))
+		return m.theme.TextGreen().Render(utils.RightPad(m.state.game_ui.validation_msg, 2))
 	}
 
 	var msg string
@@ -263,4 +261,69 @@ func (m *model) renderValidationMsg() string {
 	}
 
 	return m.theme.TextRed().Render(msg)
+}
+
+// Initialize text input for use with rounded borders
+func (m model) initRoundedTextInput() textinput.Model {
+	text_input := textinput.New()
+	text_input.Prompt = " > "
+	text_input.CharLimit = 40
+	text_input.Width = 40
+
+	text_input.Focus()
+
+	return text_input
+}
+
+// Get text input with rounded border styling applied
+func (m model) getStyledRoundedTextInput() string {
+	border_color := m.getInputAccentColor(m.theme.Border())
+	input := m.TextInputRoundedBorderStyle(border_color).
+		Render(m.text_input.View())
+
+	return lipgloss.JoinHorizontal(lipgloss.Center, input)
+}
+
+// Initialize text input for use with block style borders
+func (m model) initBlockTextInput() textinput.Model {
+	text_input := textinput.New()
+	text_input.Prompt = " "
+	text_input.CharLimit = 40
+	text_input.Width = text_input.CharLimit - len(text_input.Prompt) - 1
+
+	input_bg_style := lipgloss.NewStyle().Background(m.theme.input_bg)
+	text_input.TextStyle = input_bg_style
+	text_input.PromptStyle = input_bg_style.Foreground(m.theme.purple).Bold(true)
+	text_input.Cursor.TextStyle = input_bg_style
+	text_input.PlaceholderStyle = input_bg_style.Foreground(m.theme.extra_dim)
+
+	text_input.Focus()
+
+	return text_input
+}
+
+// Get text input with block border styling applied
+func (m model) getStyledBlockTextInput(accent bool) string {
+	lines := make([]string, 3)
+	lines[1] = m.TextInputBlockBorderStyle().Render(m.text_input.View())
+
+	if accent {
+		accent_color := m.getInputAccentColor(m.theme.blue)
+
+		accent_style := lipgloss.NewStyle().
+			Foreground(accent_color).
+			Width(1)
+
+		accent_view := lipgloss.JoinVertical(
+			lipgloss.Left,
+			accent_style.Render("𜺯"),
+			accent_style.Render("🮇"),
+			accent_style.Render("𜺬"),
+		)
+
+		lines[0] = accent_view
+		lines[2] = " " // padding char to offset accent
+	}
+
+	return lipgloss.JoinHorizontal(lipgloss.Center, lines...)
 }

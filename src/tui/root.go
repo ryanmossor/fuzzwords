@@ -158,23 +158,15 @@ func NewModel() tea.Model {
 		slog.Error("Error writing settings.json", "error", err)
 	}
 
-	text := textinput.New()
-	text.Placeholder = "Answer"
-	text.Focus()
-	text.Prompt = " > "
-	text.CharLimit = 40
-	text.Width = 40
-
 	renderer := lipgloss.DefaultRenderer()
+	theme := BasicTheme(renderer)
 
 	return model{
 		// debug: true,
 		debug_map: make(map[string]string),
 
 		renderer: renderer,
-		theme: BasicTheme(renderer),
-
-		text_input: text,
+		theme: theme,
 
 		footer_keymaps: []footer_keymaps{
 			{key: "q", value: "quit"},
