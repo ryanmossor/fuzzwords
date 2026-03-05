@@ -14,9 +14,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var win_msg string = "===== YOU WIN! ====="
-var game_over_msg string = "===== GAME OVER ====="
-
 func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
 
