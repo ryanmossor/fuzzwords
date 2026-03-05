@@ -120,7 +120,7 @@ type model struct {
 //go:embed game_settings_schema.json
 var game_settings_schema_json []byte
 
-func NewModel() tea.Model {
+func NewModel(debug bool) tea.Model {
 	cfg_dir, err := os.UserConfigDir()
 	if err != nil {
 		slog.Error("Config dir not found, using tmp dir to save settings instead", "error", err)
@@ -162,7 +162,7 @@ func NewModel() tea.Model {
 	theme := BasicTheme(renderer)
 
 	return model{
-		// debug: true,
+		debug: debug,
 		debug_map: make(map[string]string),
 
 		renderer: renderer,

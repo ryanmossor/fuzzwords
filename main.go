@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"fzwds/src/tui"
 	"log/slog"
@@ -41,7 +42,10 @@ func main() {
     fileHandler := slog.NewJSONHandler(log_file, opts)
     slog.SetDefault(slog.New(fileHandler))
 
-	menu := tui.NewModel()
+	debug := flag.Bool("debug", false, "Enable debug mode")
+	flag.Parse()
+
+	menu := tui.NewModel(*debug)
 	prog := tea.NewProgram(
         menu,
         tea.WithAltScreen(),
