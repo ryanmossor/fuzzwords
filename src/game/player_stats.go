@@ -35,7 +35,7 @@ func (s *PlayerStats) UpdateSolvedStats(answer string) {
 		s.LongestSolve = answer
 	}
 
-	if utils.CountUniqueLetters(answer) > len(s.MostUniqueLetters) {
+	if utils.CountUniqueLetters(answer) > utils.CountUniqueLetters(s.MostUniqueLetters) {
 		s.MostUniqueLetters = answer
 	}
 
