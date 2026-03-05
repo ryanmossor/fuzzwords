@@ -67,38 +67,44 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) GameOverView() string {
-	longest_solve := fmt.Sprintf("%s (%d)",
-		m.state.game.Player.Stats.LongestSolve,
-		len(m.state.game.Player.Stats.LongestSolve))
+	stats := m.state.game.Player.Stats
 
-	if m.state.game.Player.Stats.LongestSolve == "" {
+	var longest_solve, longest_count string
+	if stats.LongestSolve == "" {
 		longest_solve = "-"
+	} else {
+		longest_solve = fmt.Sprintf("%s", stats.LongestSolve)
+		longest_count = fmt.Sprintf("(%d)", len(stats.LongestSolve))
 	}
 
-	fastest_extra_life := fmt.Sprintf("%d turns", m.state.game.Player.Stats.FewestExtraLifeSolves)
-	if m.state.game.Player.Stats.FewestExtraLifeSolves == 0 {
+	var most_unique_solve, most_unique_count string
+	if stats.MostUniqueLetters == "" {
+		most_unique_solve = "-"
+	} else {
+		most_unique_solve = fmt.Sprintf("%s", stats.MostUniqueLetters)
+		most_unique_count = fmt.Sprintf("(%d)", utils.CountUniqueLetters(stats.MostUniqueLetters))
+	}
+
+	fastest_extra_life := fmt.Sprintf("%d turns", stats.FewestExtraLifeSolves)
+	if stats.FewestExtraLifeSolves == 0 {
 		fastest_extra_life = "-"
 	}
 
-	var solves_per_min float64 = 0
-    if m.state.game.Player.Stats.PromptsSolved > 0 {
-        solves_per_min = float64(m.state.game.Player.Stats.PromptsSolved) / (float64(m.state.game.Player.Stats.ElapsedSeconds) / 60.0)
-    }
+	solves_per_min := "0"
+    if stats.PromptsSolved > 0 {
+		spm := float64(stats.PromptsSolved) / (float64(stats.ElapsedSeconds) / 60.0)
+		solves_per_min = fmt.Sprintf("%.1f", spm)
+	}
 
-	stats := [][]string{
-		{"Time survived", utils.FormatTime(m.state.game.Player.Stats.ElapsedSeconds)},
-		{"Prompts solved", strconv.Itoa(m.state.game.Player.Stats.PromptsSolved)},
-		{"Prompts failed", strconv.Itoa(m.state.game.Player.Stats.PromptsFailed)},
-		{"Solves per minute", fmt.Sprintf("%.1f", solves_per_min)},
-		{"Average solve length", fmt.Sprintf("%.1f letters", m.state.game.Player.Stats.AverageSolveLength())},
-		{"Longest word used", longest_solve},
-		{
-			"Solve w/ most unique letters",
-			fmt.Sprintf("%s (%d)",
-				m.state.game.Player.Stats.MostUniqueLetters,
-				utils.CountUniqueLetters(m.state.game.Player.Stats.MostUniqueLetters)),
-		},
-		{"Extra lives gained", strconv.Itoa(m.state.game.Player.Stats.ExtraLivesGained)},
+	rows := [][]string{
+		{"Time survived", utils.FormatTime(stats.ElapsedSeconds)},
+		{"Prompts solved", strconv.Itoa(stats.PromptsSolved)},
+		{"Prompts failed", strconv.Itoa(stats.PromptsFailed)},
+		{"Solves per minute", solves_per_min},
+		{"Average solve length", fmt.Sprintf("%.1f letters", stats.AverageSolveLength())},
+		{"Longest word used", longest_solve, longest_count},
+		{"Most unique letters", most_unique_solve, most_unique_count},
+		{"Extra lives gained", strconv.Itoa(stats.ExtraLivesGained)},
 		{"Fastest extra life", fastest_extra_life},
 	}
 		
@@ -106,18 +112,25 @@ func (m model) GameOverView() string {
 		Border(lipgloss.HiddenBorder()).
 		BorderColumn(false).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
-		Rows(stats...).
+		Rows(rows...).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			var style lipgloss.Style
 
 			if row % 2 == 0 {
-				style = m.theme.TextAccent().Padding(0, 1)
+				style = m.theme.TextAccent()
 			} else {
-				style = m.theme.Base().Padding(0, 1)
+				style = m.theme.Base()
 			}
 
-			if col == 1 {
-				style = style.Align(lipgloss.Right).Padding(0, 1, 0, 2)
+			if col == 0 && stats.PromptsSolved > 0 {
+				// Pad 1st col to offset extra width of 3rd col (counts for longest/most unique words)
+				// 3rd col only populated if at least 1 prompt was solved
+				style = style.PaddingLeft(len(longest_count) + 1)
+			} else if col == 1 {
+				style = style.
+					Align(lipgloss.Right).
+					PaddingRight(1).
+					PaddingLeft(5)
 			}
 			return style
 		}).
