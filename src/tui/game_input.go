@@ -65,8 +65,11 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 					fmt.Sprintf(
 						"Prompt %s failed. Possible solve: ",
 						strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
-				m.state.game_ui.validation_msg += m.colorizeInput(m.state.game.CurrentTurn.SourceWord)
-
+				m.state.game_ui.validation_msg = m.highlightPromptAnswer(
+					m.state.game.CurrentTurn.Prompt,
+					m.state.game.CurrentTurn.SourceWord,
+					m.state.game.Settings.PromptMode)
+ 
 				m.text_input.Reset()
 				cmds = append(cmds, m.debounceInputCmd(500))
 
@@ -156,7 +159,10 @@ func (m model) GameInputView() string {
 	if m.state.game_ui.validation_msg != "" {
 		colorized_input = m.renderValidationMsg()
 	} else {
-		colorized_input = m.colorizeInput(m.text_input.Value())
+		colorized_input = m.highlightPromptAnswer(
+			m.state.game.CurrentTurn.Prompt,
+			m.text_input.Value(),
+			m.state.game.Settings.PromptMode)
 	}
 
 	return lipgloss.JoinVertical(
@@ -173,15 +179,15 @@ func (m model) wordInDictionary(answer string) bool {
 }
 
 // Highlight prompt letters in current answer
-func (m model) colorizeInput(answer string) string {
+func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.PromptMode) string {
 	accent := m.theme.TextAccent().Render
 	highlight := m.theme.TextHighlight().Render
 
-	prompt_upper := strings.ToUpper(m.state.game.CurrentTurn.Prompt)
+	prompt_upper := strings.ToUpper(prompt)
 	answer_upper := strings.ToUpper(answer)
 	var sb strings.Builder
 	 
-	switch m.state.game.Settings.PromptMode {
+	switch prompt_mode {
 	case enums.Fuzzy:
 		prompt_idx := 0
 		for _, c := range answer_upper {
