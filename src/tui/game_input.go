@@ -169,7 +169,7 @@ func (m model) GameInputView() string {
 		lipgloss.Center,
 		colorized_input,
 		"",
-		m.getStyledBlockTextInput(true),
+		m.getStyledBlockTextInput(),
 		"",
 	) 
 }
@@ -268,7 +268,7 @@ func (m *model) renderValidationMsg() string {
 // Initialize text input for use with rounded borders
 func (m model) initRoundedTextInput() textinput.Model {
 	text_input := textinput.New()
-	text_input.Prompt = " > "
+	text_input.Prompt = " "
 	text_input.CharLimit = 40
 	text_input.Width = 40
 
@@ -280,8 +280,7 @@ func (m model) initRoundedTextInput() textinput.Model {
 // Get text input with rounded border styling applied
 func (m model) getStyledRoundedTextInput() string {
 	border_color := m.getInputAccentColor(m.theme.Border())
-	input := m.TextInputRoundedBorderStyle(border_color).
-		Render(m.text_input.View())
+	input := m.TextInputRoundedBorderStyle(border_color).Render(m.text_input.View())
 
 	return lipgloss.JoinHorizontal(lipgloss.Center, input)
 }
@@ -289,13 +288,16 @@ func (m model) getStyledRoundedTextInput() string {
 // Initialize text input for use with block style borders
 func (m model) initBlockTextInput() textinput.Model {
 	text_input := textinput.New()
-	text_input.Prompt = " "
+	text_input.Prompt = "  "
 	text_input.CharLimit = 40
 	text_input.Width = text_input.CharLimit - len(text_input.Prompt) - 1
 
 	input_bg_style := lipgloss.NewStyle().Background(m.theme.input_bg)
+
 	text_input.TextStyle = input_bg_style
-	text_input.PromptStyle = input_bg_style.Foreground(m.theme.purple).Bold(true)
+	text_input.PromptStyle = input_bg_style.
+		Foreground(m.theme.body).
+		BorderLeftForeground(m.theme.blue)
 	text_input.Cursor.TextStyle = input_bg_style
 	text_input.PlaceholderStyle = input_bg_style.Foreground(m.theme.extra_dim)
 
@@ -305,27 +307,8 @@ func (m model) initBlockTextInput() textinput.Model {
 }
 
 // Get text input with block border styling applied
-func (m model) getStyledBlockTextInput(accent bool) string {
-	lines := make([]string, 3)
-	lines[1] = m.TextInputBlockBorderStyle().Render(m.text_input.View())
-
-	if accent {
-		accent_color := m.getInputAccentColor(m.theme.blue)
-
-		accent_style := lipgloss.NewStyle().
-			Foreground(accent_color).
-			Width(1)
-
-		accent_view := lipgloss.JoinVertical(
-			lipgloss.Left,
-			accent_style.Render("𜺯"),
-			accent_style.Render("🮇"),
-			accent_style.Render("𜺬"),
-		)
-
-		lines[0] = accent_view
-		lines[2] = " " // padding char to offset accent
-	}
-
-	return lipgloss.JoinHorizontal(lipgloss.Center, lines...)
+func (m model) getStyledBlockTextInput() string {
+	border_color := m.getInputAccentColor(m.text_input.PromptStyle.GetBorderLeftForeground())
+	return m.TextInputBlockBorderStyle(border_color).
+		Render(m.text_input.View())
 }
