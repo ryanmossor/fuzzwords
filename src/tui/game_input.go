@@ -65,7 +65,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 					fmt.Sprintf(
 						"Prompt %s failed. Possible solve: ",
 						strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
-				m.state.game_ui.validation_msg = m.highlightPromptAnswer(
+				m.state.game_ui.validation_msg += m.highlightPromptAnswer(
 					m.state.game.CurrentTurn.Prompt,
 					m.state.game.CurrentTurn.SourceWord,
 					m.state.game.Settings.PromptMode)
