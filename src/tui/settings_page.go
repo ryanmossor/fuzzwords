@@ -112,13 +112,13 @@ func (m model) SettingsView() string {
 			display_name = accent(setting.DisplayName)
 			setting_val_int, err := strconv.Atoi(default_val)
 			if err != nil {
-				default_text = accent("← " + default_val + " →  ")
+				default_text = accent("◀ " + default_val + " ▶  ")
 			} else if setting_val_int == *setting.Max {
-				default_text = accent("← " + default_val + "    ")
+				default_text = accent("◀ " + default_val + "    ")
 			} else if setting_val_int == *setting.Min {
-				default_text = accent("  " + default_val + " →  ")
+				default_text = accent("  " + default_val + " ▶  ")
 			} else {
-				default_text = accent("← " + default_val + " →  ")
+				default_text = accent("◀ " + default_val + " ▶  ")
 			}
 		} else {
 			display_name = dim(setting.DisplayName)
@@ -211,7 +211,7 @@ func (m *model) changeCurrentSetting(dir Direction) {
 		var next_idx int
 		if setting.Type == "int" {
 			// Linear (clamp)
-			next_idx = max(cur_idx+dir_int, 0)
+			next_idx = max(cur_idx + dir_int, 0)
 			if next_idx >= len(setting.ValidValues) {
 				next_idx = len(setting.ValidValues) - 1
 			}
