@@ -30,19 +30,18 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game_ui.start_time = time.Now()
     m.state.game_ui.timer = (30 + 1) * time.Second
 
-	m.text_input = m.initBlockTextInput()
-
 	m.footer_keymaps = []footer_keymaps{
 		{key: "esc", value: "clear input"},
 		{key: "ctrl+q", value: "quit"},
 	}
 
+	m.text_input = m.initBlockTextInput()
 	m.state.game_ui.input_restricted = false
-	m.text_input.Reset()
 
-	cmds := []tea.Cmd{textinput.Blink, m.setTurnTickerCmd()}
-
-	return m, tea.Batch(cmds...)
+	return m, tea.Batch(
+		textinput.Blink,
+		m.setTurnTickerCmd(),
+	)
 }
 
 func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
