@@ -120,7 +120,7 @@ type model struct {
 //go:embed game_settings_schema.json
 var game_settings_schema_json []byte
 
-func NewModel(debug bool) tea.Model {
+func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 	cfg_dir, err := os.UserConfigDir()
 	if err != nil {
 		slog.Error("Config dir not found, using tmp dir to save settings instead", "error", err)
@@ -158,15 +158,12 @@ func NewModel(debug bool) tea.Model {
 		slog.Error("Error writing settings.json", "error", err)
 	}
 
-	renderer := lipgloss.DefaultRenderer()
-	theme := BasicTheme(renderer)
-
 	return model{
 		debug: debug,
 		debug_map: make(map[string]string),
 
 		renderer: renderer,
-		theme: theme,
+		theme: BasicTheme(renderer),
 
 		footer_keymaps: []footer_keymaps{
 			{key: "q", value: "quit"},

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 func main() {
@@ -45,7 +46,7 @@ func main() {
 	debug := flag.Bool("debug", false, "Enable debug mode")
 	flag.Parse()
 
-	menu := tui.NewModel(*debug)
+	menu := tui.NewModel(lipgloss.DefaultRenderer(), *debug)
 	prog := tea.NewProgram(
         menu,
         tea.WithAltScreen(),
