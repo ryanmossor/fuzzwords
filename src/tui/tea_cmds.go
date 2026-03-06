@@ -20,6 +20,7 @@ type LogoTickMsg struct{}
 type LogoCompleteMsg struct{}
 type LogoRestartMsg struct{}
 type LogoUnhideMsg struct{}
+type LogoRainbowOffsetTickMsg struct{}
 func (m *model) initMainMenuLogoAnimCmd() tea.Cmd {
 	return tea.Tick(5 * time.Second, func(t time.Time) tea.Msg {
 		return LogoInitMsg{}

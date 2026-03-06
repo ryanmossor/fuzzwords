@@ -144,7 +144,12 @@ func (m model) MainMenuView() string {
 				}
 
 				if m.state.title.logo_anim_complete {
-					style = m.theme.TextGreen().Render
+					colors := m.theme.GetRainbowColors()
+					idx := (i - m.rainbow_offset) % len(colors)
+					if idx < 0 {
+						idx += len(colors)
+					}
+					style = colors[idx].Render
 				}
 
 				letter_arr := letters[current_title_char]

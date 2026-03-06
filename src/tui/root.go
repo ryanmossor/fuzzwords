@@ -84,6 +84,8 @@ type State struct {
 type model struct {
 	debug 				bool
 	debug_map			map[string]string
+	
+	rainbow_offset		int
 
     ready               bool
 	switched			bool
@@ -214,6 +216,7 @@ func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		m.MainMenuInit(),
 		m.PressPlayInit(),
+		m.logoRainbowOffsetTickCmd(),
 	)
 }
 
@@ -285,6 +288,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		)
 	case LogoUnhideMsg:
 		m.state.title.logo_hidden = false
+	case LogoRainbowOffsetTickMsg:
+		// m.rainbow_offset = (m.rainbow_offset + 1) % 7
+		return m, m.logoRainbowOffsetTickCmd()
 	case ExtraLifeAnimTickMsg:
 		return m, m.extraLifeAnimTickMsg()
 	case ExtraLifeAnimCompleteMsg:
