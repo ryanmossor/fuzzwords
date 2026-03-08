@@ -29,10 +29,6 @@ func (a *RainbowScrollAnim) Init() {
 	a.Offset = 0
 }
 
-func (a *RainbowScrollAnim) GetTarget() EffectTarget {
-	return a.Target
-}
-
 func (a *RainbowScrollAnim) Effect() TextEffect {
 	return func(text string) string {
 		var out strings.Builder

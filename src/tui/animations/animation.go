@@ -8,7 +8,6 @@ type Animation interface {
 	Init()
 	Update(time time.Time)
 	IsActive() bool
-	GetTarget() EffectTarget
 	Effect() TextEffect
 }
 
