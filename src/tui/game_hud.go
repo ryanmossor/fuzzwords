@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"fzwds/src/tui/animations"
 	"strings"
 	"time"
 
@@ -70,29 +71,28 @@ func (m model) GameHudView() string {
 		}).
 		Render()
 
+	if effects := m.animation_manager.EffectsFor(string(animations.ExtraLife)); len(effects) > 0 {
+		animated_alphabet := animations.ApplyTextEffects(
+			strings.Join(strings.Split(m.state.game.Alphabet, ""), " "),
+			effects...)
+
+		return lipgloss.JoinVertical(
+			lipgloss.Center,
+			m.DebugView(),
+			header,
+			animated_alphabet)
+	}
+
 	letters_remaining := []string{}
-	var colored_alphabet string
 	for _, c := range m.state.game.Alphabet {
 		letter := string(c)
-		// TODO: make this better
-		if m.state.game_ui.extra_life_anim.active {
-			colored_alphabet = m.ApplyExtraLifeFlashAnim()
-			break
-		} else if m.state.game.Player.LettersRemaining[letter] {
+		if m.state.game.Player.LettersRemaining[letter] {
 			letters_remaining = append(letters_remaining, dim(letter))
 		} else if m.state.game_ui.player_damaged {
 			letters_remaining = append(letters_remaining, red(letter))
 		} else {
 			letters_remaining = append(letters_remaining, yellow(letter))
 		}
-	}
-
-	if colored_alphabet != "" {
-		return lipgloss.JoinVertical(
-			lipgloss.Center,
-			m.DebugView(),
-			header,
-			colored_alphabet)
 	}
 
 	return lipgloss.JoinVertical(
@@ -132,20 +132,4 @@ func (m model) RenderHealthDisplay() string {
 	}
 
 	return health_display.String()
-}
-
-func (m model) ApplyExtraLifeFlashAnim() string {
-	var colors []lipgloss.Style = m.theme.GetRainbowColors()
-	colored_letters := []string{}
-
-	for i, c := range m.state.game.Alphabet {
-		color_idx := (i - m.state.game_ui.extra_life_anim.offset) % len(colors)
-		if color_idx < 0 {
-			color_idx += len(colors)
-		}
-		color := colors[color_idx]
-		colored_letters = append(colored_letters, color.Bold(true).Render(string(c)))
-	}
-
-	return strings.Join(colored_letters, " ")
 }

@@ -54,7 +54,7 @@ func (m *model) damageShakeAnimationCmd(count int) tea.Cmd {
 	}
 
 	m.state.game_ui.damage_anim_padding = count * 2
-	return tea.Tick(time.Second / time.Duration(m.anim_fps), func(t time.Time) tea.Msg {
+	return tea.Tick(time.Second / time.Duration(m.FPS), func(t time.Time) tea.Msg {
 		if m.state.game_ui.damage_anim_padding > 0 {
 			return DamageShakeAnimationMsg{}
 		}
@@ -74,31 +74,5 @@ func (m *model) setTurnTickerCmd() tea.Cmd {
 	m.state.game_ui.timer -= time.Millisecond * 100
 	return tea.Tick(time.Millisecond * 100, func(t time.Time) tea.Msg {
 		return TurnTimerTickMsg{}
-	})
-}
-
-type ExtraLifeAnimInitMsg struct{}
-type ExtraLifeAnimTickMsg struct{}
-type ExtraLifeAnimCompleteMsg struct{}
-func (m *model) extraLifeAnimInitMsg() tea.Cmd {
-	m.state.game_ui.extra_life_anim.active = true
-	return tea.Cmd(func() tea.Msg {
-		return ExtraLifeAnimTickMsg{}
-	})
-}
-
-func (m *model) extraLifeAnimTickMsg() tea.Cmd {
-	anim := &m.state.game_ui.extra_life_anim
-	anim.cur_frame += 1
-	anim.offset = (anim.offset + 1) % anim.loop_frames
-
-	if anim.cur_frame == anim.total_frames {
-		return tea.Cmd(func() tea.Msg {
-			return ExtraLifeAnimCompleteMsg{}
-		})
-	}
-
-	return tea.Tick(time.Second / time.Duration(anim.fps), func(t time.Time) tea.Msg {
-		return ExtraLifeAnimTickMsg{}
 	})
 }

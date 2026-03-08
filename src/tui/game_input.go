@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fzwds/src/enums"
 	"fzwds/src/game"
+	"fzwds/src/tui/animations"
 	"fzwds/src/utils"
 	"math/rand"
 	"strings"
@@ -38,6 +39,21 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.text_input = m.initBlockTextInput()
 	m.state.game_ui.input_restricted = false
 
+	extra_life_anim := &animations.RainbowScrollAnim {
+		BaseAnim: animations.BaseAnim {
+			FrameInterval:	time.Second / 30,
+			PrevFrame:		time.Now(),
+			Frame:			0,
+			Loop:			true,
+			Active:			false,
+			Target:			animations.ExtraLife,
+		},
+		Offset: 			0,
+		TotalFrames: 		30,
+		Colors: 			m.theme.GetRainbowColors(),
+	}
+	m.animation_manager.Register("extra_life", extra_life_anim)
+
 	return m, tea.Batch(
 		textinput.Blink,
 		m.setTurnTickerCmd(),
@@ -45,10 +61,10 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 }
 
 func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
     case TurnTimerTickMsg:
-        cmds := []tea.Cmd{}
-
 		if m.state.game_ui.timer <= 0 {
             m.state.game.HandleFailedTurn()
 			cmds = append(cmds, m.setPlayerDamagedStateCmd(), m.damageShakeAnimationCmd(8))
@@ -86,8 +102,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             return m, nil
         }
 
-		var cmds []tea.Cmd
-
         key := msg.String()
 		if key != "enter" {
 			m.state.game_ui.validation_msg = ""
@@ -110,7 +124,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.state.game.HandleCorrectAnswer()
 			if len(m.state.game.Player.LettersUsed) >= len(m.state.game.Alphabet) {
 				m.state.game.GrantExtraLife()
-				cmds = append(cmds, m.extraLifeAnimInitMsg())
+				m.animation_manager.InitAnimations("extra_life")
 			}
 
 			// Reset damage animation to ensure it doesn't keep playing from previous failed turn
@@ -138,16 +152,17 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case DamageShakeAnimationMsg:
 		if m.state.game_ui.damage_anim_padding > 0 {
 			m.state.game_ui.damage_anim_padding -= 2
-			return m, tea.Tick(time.Second / time.Duration(m.anim_fps), func(t time.Time) tea.Msg {
+			return m, tea.Tick(time.Second / time.Duration(m.FPS), func(t time.Time) tea.Msg {
 				return DamageShakeAnimationMsg{}
 			})
 		}
 	}
 
-	var cmd tea.Cmd
-	m.text_input, cmd = m.text_input.Update(msg)
+	var update_input_cmd tea.Cmd
+	m.text_input, update_input_cmd = m.text_input.Update(msg)
+	cmds = append(cmds, update_input_cmd)
 
-	return m, cmd
+	return m, tea.Batch(cmds...)
 }
 
 func (m model) GameInputView() string {

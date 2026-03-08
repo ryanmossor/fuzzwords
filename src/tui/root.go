@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fzwds/src/constants"
 	"fzwds/src/game"
+	"fzwds/src/tui/animations"
 	"fzwds/src/utils"
 	"log/slog"
 	"math"
@@ -60,8 +61,6 @@ type GameUIState struct {
 	damage_anim_padding		int
 	player_damaged			bool
 
-	extra_life_anim			Animation
-
 	input_restricted		bool
 	validation_msg			string
 }
@@ -110,12 +109,13 @@ type model struct {
 	text_input			textinput.Model
 
 	state				State
+	animation_manager	animations.AnimationManager
 	game_settings		*game.Settings
 	game_settings_copy	game.Settings
 	settings_schema		game.SettingsSchema
 	settings_path		string
 
-	anim_fps			int
+	FPS					int
 	enable_animations	bool
 }
 
@@ -179,21 +179,12 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		state: State{
 			press_play: PressPlayState{ visible: true },
 			settings: SettingsState{ selected: 0 },
-			game_ui: GameUIState{
+			game_ui: GameUIState {
 				game_active: false,
 				game_over_msg: "",
 
 				damage_anim_padding: 0,
 				player_damaged: false,
-
-				extra_life_anim: Animation {
-					active: false,
-					fps: 15,
-					cur_frame: 0,
-					loop_frames: 7,
-					total_frames: 25,
-					offset: 0,
-				},
 
 				input_restricted: false,
 				validation_msg: "",
@@ -206,9 +197,21 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 			},
 		},
 
-		anim_fps: 30,
+		FPS: 30,
 		enable_animations: true,
+		animation_manager: animations.InitAnimManager(),
 	}
+}
+
+type TickMsg struct {
+	Time	time.Time
+}
+
+// Global tick timer
+func (m model) tickCmd() tea.Cmd {
+	return tea.Every(time.Second / time.Duration(m.FPS), func(t time.Time) tea.Msg {
+		return TickMsg{t}
+	})
 }
 
 func (m model) Init() tea.Cmd {
@@ -217,11 +220,18 @@ func (m model) Init() tea.Cmd {
 		m.MainMenuInit(),
 		m.PressPlayInit(),
 		m.logoRainbowOffsetTickCmd(),
+		m.tickCmd(),
 	)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case TickMsg:
+		now := msg.Time
+
+		m.animation_manager.Update(now)
+
+		return m, m.tickCmd()
 	case tea.WindowSizeMsg:
 		m.viewport_width = msg.Width
 		m.viewport_height = msg.Height
@@ -291,11 +301,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case LogoRainbowOffsetTickMsg:
 		// m.rainbow_offset = (m.rainbow_offset + 1) % 7
 		return m, m.logoRainbowOffsetTickCmd()
-	case ExtraLifeAnimTickMsg:
-		return m, m.extraLifeAnimTickMsg()
-	case ExtraLifeAnimCompleteMsg:
-		m.state.game_ui.extra_life_anim.cur_frame = 0
-		m.state.game_ui.extra_life_anim.active = false
 	}
 
 	var cmd tea.Cmd
