@@ -65,34 +65,41 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 	switch msg := msg.(type) {
     case TurnTimerTickMsg:
-		if m.state.game_ui.timer <= 0 {
-            m.state.game.HandleFailedTurn()
-			cmds = append(cmds, m.setPlayerDamagedStateCmd(), m.damageShakeAnimationCmd(8))
+		if m.state.game_ui.timer > 0 {
+			return m, m.setTurnTickerCmd()
+		}
 
-            turn_duration_min := max(m.game_settings.TurnDurationMin, 10)
-            turn_duration_max := 30
-            turn_time := rand.Intn(turn_duration_max - turn_duration_min + 1) + turn_duration_min 
-            m.state.game_ui.timer = time.Duration(turn_time) * time.Second
+		m.state.game.HandleFailedTurn()
+		cmds = append(cmds,
+			m.setPlayerDamagedStateCmd(),
+			m.damageShakeAnimationCmd(8),
+		)
 
-            if m.state.game.Player.HealthCurrent == 0 {
-                return m.GameOverSwitch(false)
-			} else if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikes {
-				m.state.game_ui.validation_msg = m.theme.TextRed().Render(
-					fmt.Sprintf(
-						"Prompt %s failed. Possible solve: ",
-						strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
-				m.state.game_ui.validation_msg += m.highlightPromptAnswer(
-					m.state.game.CurrentTurn.Prompt,
-					m.state.game.CurrentTurn.SourceWord,
-					m.state.game.Settings.PromptMode)
- 
-				m.text_input.Reset()
-				cmds = append(cmds, m.debounceInputCmd(500))
+		turn_duration_min := max(m.game_settings.TurnDurationMin, 10)
+		turn_duration_max := 30
+		turn_time := rand.Intn(turn_duration_max - turn_duration_min + 1) + turn_duration_min 
+		m.state.game_ui.timer = time.Duration(turn_time) * time.Second
 
-                m.state.game.NewTurn()
-            } else if m.state.game.CurrentTurn.Strikes < m.state.game.Settings.PromptStrikes {
-                m.state.game_ui.validation_msg = ""
-			}
+		if m.state.game.Player.HealthCurrent == 0 {
+			return m.GameOverSwitch(false)
+		} else if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikes {
+			m.state.game_ui.validation_msg = m.theme.TextRed().Render(
+				// TODO: turn handler already sets msg to Possible solve:...
+				// If msg contains "Possible solve", split on space and colorize final word
+				fmt.Sprintf(
+					"Prompt %s failed. Possible solve: ",
+					strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
+			m.state.game_ui.validation_msg += m.highlightPromptAnswer(
+				m.state.game.CurrentTurn.Prompt,
+				m.state.game.CurrentTurn.SourceWord,
+				m.state.game.Settings.PromptMode)
+
+			m.text_input.Reset()
+			cmds = append(cmds, m.debounceInputCmd(500))
+
+			m.state.game.NewTurn()
+		} else if m.state.game.CurrentTurn.Strikes < m.state.game.Settings.PromptStrikes {
+			m.state.game_ui.validation_msg = ""
 		}
 
         cmds = append(cmds, m.setTurnTickerCmd())
