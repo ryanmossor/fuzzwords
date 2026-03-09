@@ -44,7 +44,7 @@ func (g *GameState) NewTurn() {
 		SourceWord: word,
 		Prompt: prompt,
 		Strikes: 0,
-		IsValid: true,
+		IsValid: false,
 	}
 
 	g.PreviousTurn = g.CurrentTurn
