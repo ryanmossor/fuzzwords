@@ -76,7 +76,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
             if m.state.game.Player.HealthCurrent == 0 {
                 return m.GameOverSwitch(false)
-			} else if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikesMax {
+			} else if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikes {
 				m.state.game_ui.validation_msg = m.theme.TextRed().Render(
 					fmt.Sprintf(
 						"Prompt %s failed. Possible solve: ",
@@ -90,7 +90,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				cmds = append(cmds, m.debounceInputCmd(500))
 
                 m.state.game.NewTurn()
-            } else if m.state.game.CurrentTurn.Strikes < m.state.game.Settings.PromptStrikesMax {
+            } else if m.state.game.CurrentTurn.Strikes < m.state.game.Settings.PromptStrikes {
                 m.state.game_ui.validation_msg = ""
 			}
 		}

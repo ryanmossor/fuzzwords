@@ -54,10 +54,10 @@
         "bindRule": ">="
     },
     {
-        "propName": "PromptStrikesMax",
-        "displayName": "Maximum prompt strikes",
+        "propName": "PromptStrikes",
+        "displayName": "Prompt strikes",
         "type": "int",
-        "description": "Prompt changes after this many timer expirations",
+        "description": "Prompt will change after this many timer expirations",
         "default": 2,
         "min": 1,
         "max": 10

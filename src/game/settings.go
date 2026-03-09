@@ -18,7 +18,7 @@ type Settings struct {
 	PromptLenMin			int					`json:"promptLenMin"`
 	PromptLenMax			int					`json:"promptLenMax"`
 	TurnDurationMin			int					`json:"turnDurationMin"`
-	PromptStrikesMax		int					`json:"promptStrikesMax"`
+	PromptStrikes			int					`json:"promptStrikes"`
 	// TODO: add cfg for hints after each strike?
 	// hints_enabled			bool
 	// hint_chars_per_turn		int
@@ -35,7 +35,7 @@ func GetDefaultSettings() Settings {
 		PromptLenMin: 		2,
 		PromptLenMax: 		3,
 		TurnDurationMin: 	10,
-		PromptStrikesMax:	2,
+		PromptStrikes:		2,
 	}
 }
 
@@ -59,8 +59,8 @@ func (s *Settings) GetSetting(propName string) any {
 		return s.PromptLenMax
 	case "TurnDurationMin":
 		return s.TurnDurationMin
-	case "PromptStrikesMax":
-		return s.PromptStrikesMax
+	case "PromptStrikes":
+		return s.PromptStrikes
 	}
 
 	return nil
@@ -124,9 +124,9 @@ func (s *Settings) SetSetting(propName string, value any, schema SettingsSchema)
 		if vInt, ok := utils.ParseInt(value); ok {
 			s.TurnDurationMin = vInt
 		}
-	case "PromptStrikesMax":
+	case "PromptStrikes":
 		if vInt, ok := utils.ParseInt(value); ok {
-			s.PromptStrikesMax = vInt
+			s.PromptStrikes = vInt
 		}
 	}
 
@@ -186,8 +186,8 @@ func (s *Settings) SetWinCondition(cond string, schema SettingsSchema) *Settings
 	return s
 }
 
-func (s *Settings) SetPromptStrikesMax(strikes int, schema SettingsSchema) *Settings {
-	s.SetSetting("PromptStrikesMax", strikes, schema)
+func (s *Settings) SetPromptStrikes(strikes int, schema SettingsSchema) *Settings {
+	s.SetSetting("PromptStrikes", strikes, schema)
 	return s
 }
 
@@ -204,7 +204,7 @@ func (s *Settings) ValidateSettings(schema SettingsSchema) *Settings {
 		SetPromptLenMin(s.PromptLenMin, schema).
 		SetPromptLenMax(s.PromptLenMax, schema).
 		SetPromptMode(s.PromptMode.String(), schema).
-		SetPromptStrikesMax(s.PromptStrikesMax, schema).
+		SetPromptStrikes(s.PromptStrikes, schema).
 		SetTurnDurationMin(s.TurnDurationMin, schema).
 		SetWinCondition(s.WinCondition.String(), schema)
 }

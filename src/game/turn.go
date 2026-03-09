@@ -86,7 +86,7 @@ func (g *GameState) ValidateAnswer() string {
 		"validationMsg", msg,
 		"promptMode", g.Settings.PromptMode.String())
 
-	if !is_valid && g.CurrentTurn.Strikes == g.Settings.PromptStrikesMax {
+	if !is_valid && g.CurrentTurn.Strikes == g.Settings.PromptStrikes {
 		msg = fmt.Sprintf(
 			"Prompt %s failed. Possible answer: %s",
 			strings.ToUpper(g.CurrentTurn.Prompt),

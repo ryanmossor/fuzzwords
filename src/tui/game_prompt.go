@@ -18,7 +18,7 @@ func (m model) GamePromptView() string {
 	}
 
 	strike_label := "Strikes: "
-	plain_strikes := fmt.Sprintf("%d/%d", m.state.game.CurrentTurn.Strikes, m.state.game.Settings.PromptStrikesMax)
+	plain_strikes := fmt.Sprintf("%d/%d", m.state.game.CurrentTurn.Strikes, m.state.game.Settings.PromptStrikes)
 	colored_strikes := m.theme.TextRed().Render(plain_strikes)
 	strike_counter := strike_label + colored_strikes
 	strike_counter, padding_spaces := m.applyDamageShakeAnimation(strike_counter)
