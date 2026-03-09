@@ -45,21 +45,21 @@ func (m model) DebugView() string {
 		return ""
 	}
 
-	tabs := []string{
-		// "VH " + strconv.Itoa(m.viewport_height),
-		// "VW " + strconv.Itoa(m.viewport_width),
-		// "CW " + strconv.Itoa(m.width_container),
-		"coloredStrikeLen " + m.debug_map["coloredStrikeLen"],
-		"visibleLen " + m.debug_map["visibleLen"],
-		"strikeLen " + m.debug_map["strikeLen"],
-		m.size.String(),
-	}
+	// tabs := []string{
+	// 	// "VH " + strconv.Itoa(m.viewport_height),
+	// 	// "VW " + strconv.Itoa(m.viewport_width),
+	// 	// "CW " + strconv.Itoa(m.width_container),
+	// 	"coloredStrikeLen " + m.debug_map["coloredStrikeLen"],
+	// 	"visibleLen " + m.debug_map["visibleLen"],
+	// 	"strikeLen " + m.debug_map["strikeLen"],
+	// 	m.size.String(),
+	// }
 
 	return table.New().
 		Border(lipgloss.HiddenBorder()).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
-		// Row(memStatsView()...).
-		Row(tabs...).
+		Row(memStatsView()...).
+		// Row(tabs...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			return m.theme.Base().AlignHorizontal(lipgloss.Center)
@@ -73,11 +73,12 @@ func memStatsView() []string {
 
 	var stats []string
 
-	// Print total memory allocated and still in use (in bytes)
-	// stats = append(stats, fmt.Sprintf("Total Alloc %v MiB", memStats.TotalAlloc/1024/1024))
-	stats = append(stats, fmt.Sprintf("Sys %v MiB", memStats.Sys/1024/1024))
-	stats = append(stats, fmt.Sprintf("Heap Alloc %v MiB", memStats.HeapAlloc/1024/1024))
-	stats = append(stats, fmt.Sprintf("Heap Sys %v MiB", memStats.HeapSys/1024/1024))
+	// Total memory allocated and in use
+	stats = append(stats, fmt.Sprintf("Current alloc: %v MiB", memStats.HeapAlloc / 1024 / 1024))
+	// Total heap space reserved (used and unused)
+	stats = append(stats, fmt.Sprintf("Heap reserved: %v MiB", memStats.HeapSys / 1024 / 1024))
+	// Cumulative memory requested by program
+	stats = append(stats, fmt.Sprintf("Total mem: %v MiB", memStats.Sys / 1024 / 1024))
 
 	return stats
 }
