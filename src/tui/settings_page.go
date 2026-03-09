@@ -76,7 +76,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) SettingsView() string {
 	base := m.theme.Base().Render
-	dim := m.theme.TextExtraDim().Render
+	dim := m.theme.TextDim().Render
 	accent := m.theme.TextAccent().Bold(true).Render
 
 	var lines []string

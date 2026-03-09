@@ -13,7 +13,6 @@ type theme struct {
 	body       	lipgloss.TerminalColor
 	accent     	lipgloss.TerminalColor
 	dim			lipgloss.TerminalColor
-	extra_dim	lipgloss.TerminalColor
 	lavender	lipgloss.TerminalColor
 	input_bg	lipgloss.TerminalColor
 
@@ -38,10 +37,10 @@ func BasicTheme(renderer *lipgloss.Renderer) theme {
 	base.border = lipgloss.AdaptiveColor{Dark: "#585B70", Light: "#ACB0BE"} // Surface 2
 	base.body = lipgloss.AdaptiveColor{Dark: "#A6ADC8", Light: "#6C6F85"} // Subtext 0
 	base.accent = lipgloss.AdaptiveColor{Dark: "#FFFFFF", Light: "#11181C"}
-	base.dim = lipgloss.AdaptiveColor{Dark: "#878787", Light: "#ACB0BE"} // not part of catppuccin palette
-	base.extra_dim = lipgloss.AdaptiveColor{Dark: "#6C7086", Light: "#ACB0BE"} // Overlay 0
+	base.dim = lipgloss.AdaptiveColor{Dark: "#6C7086", Light: "#ACB0BE"} // Overlay 0
 	base.lavender = lipgloss.AdaptiveColor{Dark: "#B4BEFE", Light: "#7287FD"}
-	base.input_bg = lipgloss.AdaptiveColor{Dark: "#313244", Light: "#CCD0DA"} // Surface 0
+	base.input_bg = lipgloss.AdaptiveColor{Dark: "#45475A", Light: "#CCD0DA"} // Surface 1
+	// base.input_bg = lipgloss.AdaptiveColor{Dark: "#313244", Light: "#CCD0DA"} // Surface 0
 
 	base.highlight = lipgloss.AdaptiveColor{Dark: "#74C7EC", Light: "#209FB5"}
 
@@ -126,12 +125,8 @@ func (b theme) TextDim() lipgloss.Style {
 	return b.Base().Foreground(b.dim)
 }
 
-func (b theme) TextExtraDim() lipgloss.Style {
-	return b.Base().Foreground(b.extra_dim)
-}
-
 func (b theme) Border() lipgloss.TerminalColor {
-	return b.dim
+	return b.border
 }
 
 func (b theme) GetRainbowColors() []lipgloss.Style {

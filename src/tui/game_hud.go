@@ -20,7 +20,7 @@ func (m model) GameHudView() string {
 		return ""
 	}
 
-	dim := m.theme.TextExtraDim().Render
+	dim := m.theme.TextDim().Render
 	yellow := m.theme.TextYellow().Bold(true).Render
 	red := m.theme.TextRed().Render
 

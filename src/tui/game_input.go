@@ -314,7 +314,7 @@ func (m model) initBlockTextInput() textinput.Model {
 		Foreground(m.theme.body).
 		BorderLeftForeground(m.theme.blue)
 	text_input.Cursor.TextStyle = input_bg_style
-	text_input.PlaceholderStyle = input_bg_style.Foreground(m.theme.extra_dim)
+	text_input.PlaceholderStyle = input_bg_style.Foreground(m.theme.dim)
 
 	text_input.Focus()
 
