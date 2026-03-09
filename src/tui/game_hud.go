@@ -37,20 +37,16 @@ func (m model) GameHudView() string {
         timer_display = red(timer_display)
     }
 
-	game_mode := fmt.Sprintf("Mode: %s", m.state.game.Settings.PromptMode.String())
-
 	var fields []string
 	if m.state.game_ui.player_damaged {
 		fields = []string{
-			red(health),
-			red(game_mode),
-			"Time: " + timer_display,
+			red("Health: " + health),
+			"⏳ " + timer_display,
 		}
 	} else {
 		fields = []string{
-			health,
-			game_mode,
-			"Time: " + timer_display,
+			"Health: " + health,
+			"⏳ " + timer_display,
 		}
 	}
 
@@ -68,7 +64,10 @@ func (m model) GameHudView() string {
 		Row(fields...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
-			return m.theme.Base().AlignHorizontal(lipgloss.Center)
+			if col == 0 {
+				return m.theme.Base().Align(lipgloss.Left).PaddingLeft(5)
+			}
+			return m.theme.Base().Align(lipgloss.Right).PaddingRight(5)
 		}).
 		Render()
 
@@ -113,22 +112,15 @@ func (m model) RenderHealthDisplay() string {
 
 	for i < m.state.game.Player.HealthCurrent {
 		if m.state.game_ui.player_damaged {
-			health_display.WriteString(red("█"))
+			health_display.WriteString(red("██"))
 		} else {
-			health_display.WriteString(green("█"))
-		}
-
-		if i < m.state.game.Settings.HealthMax - 1 {
-			health_display.WriteString(" ")
+			health_display.WriteString(green("██"))
 		}
 		i++
 	}
 
 	for i < m.state.game.Settings.HealthMax {
-		health_display.WriteString(base("▒"))
-		if i < m.state.game.Settings.HealthMax - 1 {
-			health_display.WriteString(" ")
-		}
+		health_display.WriteString(base("▒▒"))
 		i++
 	}
 

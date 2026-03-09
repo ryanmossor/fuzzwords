@@ -1,23 +1,34 @@
 package tui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 func (m model) FooterView() string {
 	bold := m.theme.TextAccent().Bold(true).Render
 	base := m.theme.Base().Render
+	text := m.theme.TextBody().Render
+	dim := m.theme.TextDim().Render
+	red := m.theme.TextRed().Render
 
-	var border_style lipgloss.TerminalColor
+	var footer, game_mode string
+	if m.state.game_ui.game_active {
+		game_mode = fmt.Sprintf("%s mode", m.state.game.Settings.PromptMode.String())
+	}
+	footer += game_mode
+
+	max_footer_width := max(0, m.width_container - len(game_mode) - 3)
 	if m.state.game_ui.player_damaged {
-		border_style = m.theme.red
+		footer = red(strings.Repeat("─", max_footer_width) + footer + strings.Repeat("─", 3))
 	} else {
-		border_style = m.theme.Border()
+		footer = dim(strings.Repeat("─", max_footer_width)) + text(footer) + dim(strings.Repeat("─", 3))
 	}
 
 	table := m.theme.Base().
-		Width(m.width_container).
-		BorderTop(true).
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(border_style).
+		Width(m.width_container - 5).
 		PaddingBottom(1).
 		Align(lipgloss.Center)
 
@@ -28,10 +39,10 @@ func (m model) FooterView() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
+		footer,
 		table.Render(
 			lipgloss.JoinHorizontal(
 				lipgloss.Center,
-				keymaps...,
-			),
+				keymaps...),
 		))
 } 
