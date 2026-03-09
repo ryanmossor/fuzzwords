@@ -47,7 +47,7 @@ func (m model) HeaderView() string {
 		return lipgloss.JoinHorizontal(
 			lipgloss.Center,
 			empty_header,
-			m.theme.TextAccent().Bold(true).Render("GAME SETTINGS"))
+			m.theme.TextYellow().Bold(true).Render("GAME SETTINGS"))
 	}
 
 	menu := accent("m") + base(" main menu")

@@ -23,9 +23,9 @@ func (m model) SettingsSwitch() (model, tea.Cmd) {
 	m.footer_keymaps = []footer_keymaps{
 		{key: "↑/↓", value: "scroll"},
 		{key: "←/→", value: "change"},
-		{key: "ctrl+r", value: "reset defaults"},
-		{key: "m", value: "main menu"},
 		{key: "enter", value: "play"},
+		{key: "ctrl+d", value: "defaults"},
+		{key: "m", value: "menu"},
 	}
 
 	return m, nil
@@ -49,7 +49,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.changeCurrentSetting(Next)
 		case "-", "left", "h":
 			m.changeCurrentSetting(Prev)
-		case "ctrl+r":
+		case "ctrl+d":
 			m.game_settings_copy = game.GetDefaultSettings()
 		case "enter":
 			m.game_settings = &m.game_settings_copy

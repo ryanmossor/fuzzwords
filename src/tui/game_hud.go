@@ -64,6 +64,7 @@ func (m model) GameHudView() string {
 	header := table.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(border_style).
+		BorderColumn(false).
 		Row(fields...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
