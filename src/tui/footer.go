@@ -10,21 +10,22 @@ import (
 func (m model) FooterView() string {
 	bold := m.theme.TextAccent().Bold(true).Render
 	base := m.theme.Base().Render
-	text := m.theme.TextBody().Render
 	dim := m.theme.TextDim().Render
 	red := m.theme.TextRed().Render
 
-	var footer, game_mode string
+	var footer_text string
 	if m.state.game_ui.game_active {
-		game_mode = fmt.Sprintf("%s mode", m.state.game.Settings.PromptMode.String())
+		footer_text = fmt.Sprintf("%s mode", m.state.game.Settings.PromptMode.String())
 	}
-	footer += game_mode
 
-	max_footer_width := max(0, m.width_container - len(game_mode) - 3)
+	right_pad := 3
+	max_footer_width := max(0, m.width_container - len(footer_text) - right_pad)
+	footer_line := strings.Repeat("─", max_footer_width) + footer_text + strings.Repeat("─", right_pad)
+
 	if m.state.game_ui.player_damaged {
-		footer = red(strings.Repeat("─", max_footer_width) + footer + strings.Repeat("─", 3))
+		footer_line = red(footer_line)
 	} else {
-		footer = dim(strings.Repeat("─", max_footer_width)) + text(footer) + dim(strings.Repeat("─", 3))
+		footer_line = dim(footer_line)
 	}
 
 	table := m.theme.Base().
@@ -39,10 +40,7 @@ func (m model) FooterView() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		footer,
-		table.Render(
-			lipgloss.JoinHorizontal(
-				lipgloss.Center,
-				keymaps...),
-		))
+		footer_line,
+		table.Render(lipgloss.JoinHorizontal(lipgloss.Center, keymaps...)),
+	)
 } 
