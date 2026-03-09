@@ -68,4 +68,5 @@ func ApplyTextEffects(text string, effects ...TextEffect) string {
 
 const (
 	ExtraLife EffectTarget = "extra_life"
+	TitleLogo EffectTarget = "title_logo"
 )

@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fzwds/src/constants"
+	"fzwds/src/tui/animations"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -66,9 +68,26 @@ var letters = map[byte][]string {
 	},
 }
 
-type LogoInitMsg struct{}
 func (m model) MainMenuInit() tea.Cmd {
-	return m.initMainMenuLogoAnimCmd()
+	title_logo_anim := &animations.TitleScreenLogoAnim {
+		BaseAnim: animations.BaseAnim {
+			FrameInterval:	time.Second / 30,
+			PrevFrame:		time.Now(),
+			Frame:			0,
+			Loop:			true,
+			Active:			true,
+			Target:			animations.TitleLogo,
+		},
+		Phase:				0,
+		PhaseStart:			time.Now(),
+		TypedLetters:		0,
+		ColorIdx: 		0,
+		Colors: 			m.theme.GetRainbowColors(),
+	}
+	m.animation_manager.Register(string(animations.TitleLogo), title_logo_anim)
+	m.animation_manager.InitAnimations(animations.TitleLogo)
+
+	return nil
 }
 
 func (m model) MainMenuSwitch() (model, tea.Cmd) {
@@ -76,6 +95,7 @@ func (m model) MainMenuSwitch() (model, tea.Cmd) {
 	m.footer_keymaps = []footer_keymaps{
 		{key: "q", value: "quit"},
 	}
+	m.animation_manager.InitAnimations(animations.TitleLogo)
 
 	return m, nil
 }
@@ -95,47 +115,47 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) MainMenuView() string {
-	base := m.theme.base.Render
-	highlight := m.theme.TextBlue().Render
-	yellow := m.theme.TextYellow().Render
+	yellow := m.theme.TextYellow()
 
-	HEADER_LEN := 2
-	logo := make([]string, HEADER_LEN + len(letters['f']))
-	logo[0] = "\n"
-	logo[1] = "\n"
-
-	if m.state.title.logo_hidden {
-		logo = append(logo, "\n\n\n")
-		logo = append(logo, m.PressPlayView())
-		return lipgloss.JoinVertical(
-			lipgloss.Center,
-			logo...
-		)
-	}
+	// Initialize []string of size equal to height of each "glyph".
+	// This maintains consistent vertical spacing on title screen even when no glyphs are displayed.
+	logo := make([]string, len(letters['f']))
 
 	switch m.size {
 	case large:
-		if !m.enable_animations {
-			logo[2] = yellow("  ▄▄                                          ▄▄      ")
-			logo[3] = yellow(" ██                                           ██      ")
-			logo[4] = yellow("▀██▀ ██ ██ ▀▀▀██ ▀▀▀██ ██   ██ ▄███▄ ████▄ ▄████ ▄█▀▀▀")
-			logo[5] = yellow(" ██  ██ ██   ▄█▀   ▄█▀ ██ █ ██ ██ ██ ██ ▀▀ ██ ██ ▀███▄")
-			logo[6] = yellow(" ██  ▀██▀█ ▄██▄▄ ▄██▄▄  ██▀██  ▀███▀ ██    ▀████ ▄▄▄█▀")
-		} else if !m.state.title.logo_anim_active {
-			logo[2] = yellow("  ▄▄                  ▄▄      ")
-			logo[3] = yellow(" ██                   ██      ")
-			logo[4] = yellow("▀██▀ ▀▀▀██ ██   ██ ▄████ ▄█▀▀▀")
-			logo[5] = yellow(" ██    ▄█▀ ██ █ ██ ██ ██ ▀███▄")
-			logo[6] = yellow(" ██  ▄██▄▄  ██▀██  ▀████ ▄▄▄█▀")
-		} else {
+		a, _ := m.animation_manager.Get(string(animations.TitleLogo))
+		anim, ok := a.(*animations.TitleScreenLogoAnim)
+		if !ok {
+			// Display yellow logo if animation state could not be retrieved
+			for _, ch := range constants.FULL_GAME_TITLE {
+				logo = drawGlyph(byte(ch), logo, yellow)
+			}
+
+			logo = append([]string{"\n", "\n"}, logo...) // prepend top padding
+			logo = append(logo, "\n\n\n") // append bottom padding
+			logo = append(logo, m.PressPlayView())
+
+			return lipgloss.JoinVertical(lipgloss.Center, logo...)
+		}
+
+		switch anim.Phase {
+		case animations.AbbreviatedTitlePhase:
+			for _, ch := range constants.ABBR_GAME_TITLE {
+				logo = drawGlyph(byte(ch), logo, yellow)
+			}
+		case animations.TypingFullTitlePhase, animations.FullTitlePausePhase:
+			base := m.theme.Base()
+			highlight := m.theme.TextHighlight()
+
 			prompt_idx := 0
-			for i := range m.state.title.logo_anim_idx {
-				current_title_char := constants.GAME_TITLE[i]
+			for i := range anim.TypedLetters {
+				current_title_char := constants.FULL_GAME_TITLE[i]
 
 				style := base
-				for j := prompt_idx; j < len(constants.TITLE_PROMPT); j++ {
-					c := constants.TITLE_PROMPT[j]
-					is_prompt_letter := c == current_title_char
+				for j := prompt_idx; j < len(constants.ABBR_GAME_TITLE); j++ {
+					ch := constants.ABBR_GAME_TITLE[j]
+
+					is_prompt_letter := ch == current_title_char
 					if is_prompt_letter {
 						style = highlight
 						prompt_idx++
@@ -143,33 +163,37 @@ func (m model) MainMenuView() string {
 					}
 				}
 
-				if m.state.title.logo_anim_complete {
-					colors := m.theme.GetRainbowColors()
-					idx := (i - m.rainbow_offset) % len(colors)
-					if idx < 0 {
-						idx += len(colors)
-					}
-					style = colors[idx].Render
-				}
-
-				letter_arr := letters[current_title_char]
-				for k, line := range letter_arr {
-					idx := HEADER_LEN + k
-					logo[idx] = logo[idx] + style(line) + " "
-				}
+				logo = drawGlyph(byte(current_title_char), logo, style)
 			}
+		case animations.FullTitleRainbowScrollPhase:
+			for i, ch := range constants.FULL_GAME_TITLE {
+				style_idx := (anim.ColorIdx + i + len(anim.Colors)) % len(anim.Colors)
+				style := anim.Colors[style_idx]
+				logo = drawGlyph(byte(ch), logo, style)
+			}
+		case animations.TitleResetPhase:
+			// Do nothing; logo hidden before anim restarts
 		}
 	default:
-		logo = append(logo, base(" ___ __       __   __  "))
-		logo = append(logo, base("|__   / |  | |  \\ /__` "))
-		logo = append(logo, base("|    /_ |/\\| |__/ .__/ "))
+		for _, c := range constants.ABBR_GAME_TITLE {
+			logo = drawGlyph(byte(c), logo, yellow)
+		}
 	}
 
-	logo = append(logo, "\n\n\n")
+	logo = append([]string{"\n", "\n"}, logo...) // prepend top padding
+	logo = append(logo, "\n\n\n") // append bottom padding
 	logo = append(logo, m.PressPlayView())
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		logo...
 	)
+}
+
+func drawGlyph(char byte, logo []string, style lipgloss.Style) []string {
+	char_glyph := letters[char]
+	for i, line := range char_glyph {
+		logo[i] = logo[i] + style.Render(line) + " "
+	}
+	return logo
 }

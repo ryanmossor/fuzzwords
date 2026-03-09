@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fzwds/src/constants"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -13,29 +12,6 @@ func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
 
     return tea.Tick(time.Millisecond * time.Duration(duration_ms), func(t time.Time) tea.Msg {
 		return EnableInputMsg(t)
-	})
-}
-
-type LogoTickMsg struct{}
-type LogoCompleteMsg struct{}
-type LogoRestartMsg struct{}
-type LogoUnhideMsg struct{}
-type LogoRainbowOffsetTickMsg struct{}
-func (m *model) initMainMenuLogoAnimCmd() tea.Cmd {
-	return tea.Tick(5 * time.Second, func(t time.Time) tea.Msg {
-		return LogoInitMsg{}
-	})
-}
-
-func (m *model) mainMenuLogoUpdateCmd() tea.Cmd {
-	if m.state.title.logo_anim_idx == len(constants.GAME_TITLE) {
-		return tea.Tick(1500 * time.Millisecond, func(t time.Time) tea.Msg {
-			return LogoCompleteMsg{}
-		})
-	}
-
-	return tea.Tick(250 * time.Millisecond, func(t time.Time) tea.Msg {
-		return LogoTickMsg{}
 	})
 }
 

@@ -17,13 +17,6 @@ func pressPlayFlashCmd() tea.Cmd {
 	})
 }
 
-func (m *model) logoRainbowOffsetTickCmd() tea.Cmd {
-	m.rainbow_offset = (m.rainbow_offset + 1) % 7
-	return tea.Every(time.Second / 8, func(t time.Time) tea.Msg {
-		return LogoRainbowOffsetTickMsg{}
-	})
-}
-
 func (m model) PressPlayInit() tea.Cmd {
 	return pressPlayFlashCmd()
 }

@@ -3,7 +3,6 @@ package tui
 import (
 	_ "embed"
 	"encoding/json"
-	"fzwds/src/constants"
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
 	"fzwds/src/utils"
@@ -219,7 +218,6 @@ func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		m.MainMenuInit(),
 		m.PressPlayInit(),
-		m.logoRainbowOffsetTickCmd(),
 		m.tickCmd(),
 	)
 }
@@ -270,37 +268,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		}
-	case LogoInitMsg:
-		m.state.title.logo_anim_active = true
-		return m, m.mainMenuLogoUpdateCmd()
-	case LogoTickMsg:
-		if m.state.title.logo_anim_idx < len(constants.GAME_TITLE) {
-			m.state.title.logo_anim_idx++
-			return m, m.mainMenuLogoUpdateCmd()
-		}
-	case LogoCompleteMsg:
-		m.state.title.logo_anim_complete = true
-		return m, tea.Tick(10 * time.Second, func(t time.Time) tea.Msg {
-			return LogoRestartMsg{}
-		})
-	case LogoRestartMsg:
-		m.state.title = SplashScreenState {
-			logo_anim_active: 	false,
-			logo_anim_complete: false,
-			logo_anim_idx: 		0,
-			logo_hidden:		true,
-		}
-		return m, tea.Sequence(
-			tea.Tick(750 * time.Millisecond, func(t time.Time) tea.Msg {
-				return LogoUnhideMsg{}
-			}),
-			m.initMainMenuLogoAnimCmd(),
-		)
-	case LogoUnhideMsg:
-		m.state.title.logo_hidden = false
-	case LogoRainbowOffsetTickMsg:
-		// m.rainbow_offset = (m.rainbow_offset + 1) % 7
-		return m, m.logoRainbowOffsetTickCmd()
 	}
 
 	var cmd tea.Cmd
