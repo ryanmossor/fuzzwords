@@ -78,7 +78,7 @@ func (g *GameState) ValidateAnswer() string {
 		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
 	}
 
-	slog.Debug("Answer validated", 
+	slog.Info("Answer validated",
 		"prompt", g.CurrentTurn.Prompt,
 		"sourceWord", g.CurrentTurn.SourceWord,
 		"answer", g.CurrentTurn.Answer,

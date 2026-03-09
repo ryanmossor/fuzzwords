@@ -28,8 +28,18 @@ func main() {
     }
 	defer log_file.Close()
 
+	debug := flag.Bool("debug", false, "Enable debug mode")
+	flag.Parse()
+
+	var log_level slog.Leveler
+	if *debug {
+		log_level = slog.LevelDebug
+	} else {
+		log_level = slog.LevelInfo
+	}
+
 	opts := &slog.HandlerOptions{
-		Level: slog.LevelDebug,
+		Level: log_level,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			if a.Key != slog.TimeKey {
 				return a
@@ -42,9 +52,6 @@ func main() {
 
     fileHandler := slog.NewJSONHandler(log_file, opts)
     slog.SetDefault(slog.New(fileHandler))
-
-	debug := flag.Bool("debug", false, "Enable debug mode")
-	flag.Parse()
 
 	menu := tui.NewModel(lipgloss.DefaultRenderer(), *debug)
 	prog := tea.NewProgram(
