@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (m model) GameOverSwitch(win bool) (model, tea.Cmd) {
+func (m model) GameOverSwitch(win, early_quit bool) (model, tea.Cmd) {
 	m.state.game_ui.game_active = false
 	m.state.game_ui.player_damaged = false
 	m.state.game.Player.Stats.ElapsedSeconds = int(time.Since(m.state.game_ui.start_time).Seconds())
@@ -45,11 +45,13 @@ func (m model) GameOverSwitch(win bool) (model, tea.Cmd) {
 		{key: "q", value: "quit"},
 	}
 
-	return m, tea.Batch(
-		m.debounceInputCmd(500), // briefly prevent key presses on game over screen
-		// TODO: don't send bell if player wins or quits game early
-		m.terminalBellCmd(false),
-	)
+	// Briefly prevent key presses on game over screen
+	cmds := []tea.Cmd{ m.debounceInputCmd(500) }
+	if !early_quit {
+		cmds = append(cmds, m.terminalBellCmd(false))
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {

@@ -82,7 +82,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		m.state.game_ui.timer = time.Duration(turn_time) * time.Second
 
 		if m.state.game.Player.HealthCurrent == 0 {
-			return m.GameOverSwitch(false)
+			return m.GameOverSwitch(false, false)
 		} else if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikes {
 			m.state.game_ui.validation_msg = m.theme.TextRed().Render(
 				// TODO: turn handler already sets msg to Possible solve:...
@@ -119,7 +119,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "esc":
 			m.text_input.Reset()
 		case "ctrl+q":
-			return m.GameOverSwitch(false)
+			return m.GameOverSwitch(false, true)
 		case "enter":
 			m.state.game.CurrentTurn.Answer = strings.ToLower(strings.TrimSpace(m.text_input.Value()))
             m.text_input.Reset()
@@ -141,11 +141,11 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			// TODO: move win condition check to game_over?
 			if len(m.state.game.WordLists.Available) == 0 {
-				return m.GameOverSwitch(true)
+				return m.GameOverSwitch(true, false)
 			} else if (
 				m.state.game.Settings.WinCondition == enums.MaxLives &&
 				m.state.game.Player.HealthCurrent == m.state.game.Settings.HealthMax) {
-				return m.GameOverSwitch(true)
+				return m.GameOverSwitch(true, false)
 			}
 
 			m.state.game.NewTurn()
