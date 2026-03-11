@@ -96,6 +96,8 @@ func (m model) SettingsView() string {
 	accent := m.theme.TextAccent().Bold(true).Render
 
 	var lines []string
+	// Used to add an extra blank row if selected item has no desc; prevents footer from moving while scrolling
+	pad_bottom := true
 
 	for i, setting := range m.settings_schema {
 		if setting.Disabled {
@@ -126,8 +128,9 @@ func (m model) SettingsView() string {
 		}
 		default_text := dim("  " + default_val + "    ")
 		var display_name string
+		is_selected := m.state.settings.selected == i
 
-		if m.state.settings.selected == i {
+		if is_selected {
 			display_name = accent(setting.DisplayName)
 			setting_val_int, err := strconv.Atoi(default_val)
 			if err != nil {
@@ -148,8 +151,10 @@ func (m model) SettingsView() string {
 		var content string
 		description := setting.Description
 
-		// i == selected expands desc only for selected
-		if i == m.state.settings.selected && setting.Description != "" {
+		// Show description for selected item only
+		if is_selected && setting.Description != "" {
+			pad_bottom = false // no extra padding row needed since item already expanded from desc
+
 			row_2_space := m.width_content - lipgloss.Width(description) - lipgloss.Width(sub_desc) - 5
 			var row_2 string
 
@@ -191,8 +196,12 @@ func (m model) SettingsView() string {
 
 		// Don't apply border to final setting box
 		apply_bottom_border := i != len(m.settings_schema) - 1
-		line := m.CreateSettingsMenuItem(content, i == m.state.settings.selected, apply_bottom_border)
+		line := m.CreateSettingsMenuItem(content, is_selected, apply_bottom_border)
 		lines = append(lines, line)
+	}
+
+	if pad_bottom {
+		lines = append(lines, "")
 	}
 
 	return m.theme.Base().Render(lipgloss.JoinVertical(
