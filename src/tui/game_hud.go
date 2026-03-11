@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"fzwds/src/game"
 	"fzwds/src/tui/animations"
 	"strings"
 	"time"
@@ -103,26 +104,44 @@ func (m model) GameHudView() string {
 }
 
 func (m model) RenderHealthDisplay() string {
-	base := m.theme.Base().Render
-	green := m.theme.TextGreen().Render
-	red := m.theme.TextRed().Render
+	health_icons := strings.Split(m.game_settings.HealthDisplay, ";")
+	if len(health_icons) != 2 {
+		health_icons = strings.Split(game.GetDefaultSettings().HealthDisplay, ";")
+	}
+	health_icon_full := health_icons[0]
+	health_icon_empty := health_icons[1]
 
-	var health_display strings.Builder
+	var full_style, bracket_style lipgloss.Style
+	if m.state.game_ui.player_damaged {
+		full_style = m.theme.TextRed()
+		bracket_style = m.theme.TextRed()
+	} else {
+		full_style = m.theme.TextGreen()
+		bracket_style = m.theme.Base()
+	}
+
+	var sb strings.Builder
+	if strings.HasPrefix(health_icon_full, "#") {
+		sb.WriteString(bracket_style.Render("["))
+	}
+
 	i := 0
-
 	for i < m.state.game.Player.HealthCurrent {
 		if m.state.game_ui.player_damaged {
-			health_display.WriteString(red("██"))
+			sb.WriteString(full_style.Render(health_icon_full))
 		} else {
-			health_display.WriteString(green("██"))
+			sb.WriteString(full_style.Render(health_icon_full))
 		}
 		i++
 	}
 
 	for i < m.state.game.Settings.HealthMax {
-		health_display.WriteString(base("▒▒"))
+		sb.WriteString(m.theme.Base().Render(health_icon_empty))
 		i++
 	}
 
-	return health_display.String()
+	if strings.HasPrefix(health_icon_full, "#") {
+		sb.WriteString(bracket_style.Render("]"))
+	}
+	return strings.TrimSpace(sb.String())
 }

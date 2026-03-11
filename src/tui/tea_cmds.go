@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -51,4 +53,15 @@ func (m *model) setTurnTickerCmd() tea.Cmd {
 	return tea.Tick(time.Millisecond * 100, func(t time.Time) tea.Msg {
 		return TurnTimerTickMsg{}
 	})
+}
+
+func (m model) terminalBellCmd(force bool) tea.Cmd {
+	if force || m.game_settings.BellEnabled {
+		return func() tea.Msg {
+			// Send BEL character
+			fmt.Fprint(os.Stdout, "\a")
+			return nil
+		}
+	}
+	return nil
 }

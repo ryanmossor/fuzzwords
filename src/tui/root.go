@@ -41,15 +41,6 @@ type footer_keymaps struct {
 	value	string
 }
 
-type Animation struct {
-	active			bool
-	fps				int
-	cur_frame		int
-	loop_frames		int
-	total_frames	int
-	offset			int // TODO: feels hacky, would like a better solution
-}
-
 type GameUIState struct {
 	start_time				time.Time
 	timer 					time.Duration

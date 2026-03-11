@@ -19,6 +19,8 @@ type Settings struct {
 	PromptLenMax			int					`json:"promptLenMax"`
 	TurnDurationMin			int					`json:"turnDurationMin"`
 	PromptStrikes			int					`json:"promptStrikes"`
+	HealthDisplay			string				`json:"healthDisplay"`
+	BellEnabled				bool				`json:"bellEnabled"`
 	// TODO: add cfg for hints after each strike?
 	// hints_enabled			bool
 	// hint_chars_per_turn		int
@@ -36,6 +38,8 @@ func GetDefaultSettings() Settings {
 		PromptLenMax: 		3,
 		TurnDurationMin: 	10,
 		PromptStrikes:		2,
+		HealthDisplay:		"● ;◯ ",
+		BellEnabled:		false,
 	}
 }
 
@@ -61,6 +65,10 @@ func (s *Settings) GetSetting(propName string) any {
 		return s.TurnDurationMin
 	case "PromptStrikes":
 		return s.PromptStrikes
+	case "HealthDisplay":
+		return s.HealthDisplay
+	case "BellEnabled":
+		return s.BellEnabled
 	}
 
 	return nil
@@ -127,6 +135,14 @@ func (s *Settings) SetSetting(propName string, value any, schema SettingsSchema)
 	case "PromptStrikes":
 		if vInt, ok := utils.ParseInt(value); ok {
 			s.PromptStrikes = vInt
+		}
+	case "HealthDisplay":
+		if vStr, ok := value.(string); ok {
+			s.HealthDisplay = vStr
+		}
+	case "BellEnabled":
+		if vbool, ok := value.(bool); ok {
+			s.BellEnabled = vbool
 		}
 	}
 
@@ -196,6 +212,16 @@ func (s *Settings) SetTurnDurationMin(duration int, schema SettingsSchema) *Sett
 	return s
 }
 
+func (s *Settings) SetHealthDisplay(display string, schema SettingsSchema) *Settings {
+	s.SetSetting("HealthDisplay", display, schema)
+	return s
+}
+
+func (s *Settings) SetBellEnabled(enabled bool, schema SettingsSchema) *Settings {
+	s.SetSetting("BellEnabled", enabled, schema)
+	return s
+}
+
 func (s *Settings) ValidateSettings(schema SettingsSchema) *Settings {
 	return s.
 		SetAlphabet(s.Alphabet.String(), schema).
@@ -206,7 +232,9 @@ func (s *Settings) ValidateSettings(schema SettingsSchema) *Settings {
 		SetPromptMode(s.PromptMode.String(), schema).
 		SetPromptStrikes(s.PromptStrikes, schema).
 		SetTurnDurationMin(s.TurnDurationMin, schema).
-		SetWinCondition(s.WinCondition.String(), schema)
+		SetWinCondition(s.WinCondition.String(), schema).
+		SetHealthDisplay(s.HealthDisplay, schema).
+		SetBellEnabled(s.BellEnabled, schema)
 }
 
 func ValidateSettingValue(schema_item SettingsSchemaItem, value any) bool {

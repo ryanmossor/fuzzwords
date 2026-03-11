@@ -32,6 +32,8 @@ func (m model) SettingsSwitch() (model, tea.Cmd) {
 }
 
 func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -46,9 +48,23 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.goto_bottom = true
 			}
 		case "+", "=", "right", "l":
+			setting := m.settings_schema[m.state.settings.selected]
+			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.game_settings_copy.BellEnabled
+
 			m.changeCurrentSetting(Next)
+
+			if is_bell_being_enabled {
+				cmds = append(cmds, m.terminalBellCmd(true))
+			}
 		case "-", "left", "h":
+			setting := m.settings_schema[m.state.settings.selected]
+			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.game_settings_copy.BellEnabled
+
 			m.changeCurrentSetting(Prev)
+
+			if is_bell_being_enabled {
+				cmds = append(cmds, m.terminalBellCmd(true))
+			}
 		case "ctrl+d":
 			m.game_settings_copy = game.GetDefaultSettings()
 		case "enter":
@@ -71,7 +87,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m model) SettingsView() string {
@@ -101,6 +117,9 @@ func (m model) SettingsView() string {
 			for _, val := range setting.ValidValues {
 				if utils.ValuesEqual(val.Value, current_val) {
 					sub_desc = val.Description
+					if val.DisplayText != "" {
+						default_val = val.DisplayText
+					}
 					break
 				}
 			}

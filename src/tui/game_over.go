@@ -45,8 +45,11 @@ func (m model) GameOverSwitch(win bool) (model, tea.Cmd) {
 		{key: "q", value: "quit"},
 	}
 
-	// Briefly prevent key presses on game over screen
-	return m, m.debounceInputCmd(500)
+	return m, tea.Batch(
+		m.debounceInputCmd(500), // briefly prevent key presses on game over screen
+		// TODO: don't send bell if player wins or quits game early
+		m.terminalBellCmd(false),
+	)
 }
 
 func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {

@@ -2,7 +2,8 @@ package game
 
 type ValidValue struct {
 	Value			any		`json:"value"`
-	Description		string 	`json:"description"`
+	DisplayText		string 	`json:"displayText"`
+	Description		string 	`json:"description,omitempty"`
 }
 
 type SettingsSchemaItem struct {

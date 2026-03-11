@@ -73,6 +73,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		cmds = append(cmds,
 			m.setPlayerDamagedStateCmd(),
 			m.damageShakeAnimationCmd(8),
+			m.terminalBellCmd(false),
 		)
 
 		turn_duration_min := max(m.game_settings.TurnDurationMin, 10)

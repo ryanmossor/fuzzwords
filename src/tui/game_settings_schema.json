@@ -1,103 +1,177 @@
 [
-    {
-        "propName": "Alphabet",
-        "displayName": "Alphabet",
-        "type": "enum",
-        "description": "Use all letters to earn an extra life",
-        "default": "easy",
-        "validValues": [
-            { "value": "easy", "description": "J/K/Q/V/X/Z removed" },
-            { "value": "medium", "description": "X and Z removed" },
-            { "value": "full", "description": "All letters" }
-        ]
-    },
-    {
-        "propName": "WinCondition",
-        "displayName": "Win condition",
-        "type": "enum",
-        "description": "n/a",
-        "default": "endless",
-        "validValues": [
-            { "value": "endless", "description": "Play until you run out of lives" },
-            { "value": "max lives", "description": "Play until you reach the maximum number of lives" }
-        ]
-    },
-    {
-        "propName": "PromptMode",
-        "displayName": "Prompt mode",
-        "type": "enum",
-        "description": "n/a",
-        "default": "fuzzy",
-        "validValues": [
-            { "value": "fuzzy", "description": "Non-consecutive prompt matching" },
-            { "value": "classic", "description": "Consecutive prompt matching" }
-        ]
-    },
-    {
-        "propName": "PromptLenMin",
-        "displayName": "Minimum prompt length",
-        "type": "int",
-        "default": 2,
-        "min": 2,
-        "max": 5,
-        "bindTo": "PromptLenMax",
-        "bindRule": "<="
-    },
-    {
-        "propName": "PromptLenMax",
-        "displayName": "Maximum prompt length",
-        "type": "int",
-        "default": 3,
-        "min": 2,
-        "max": 5,
-        "bindTo": "PromptLenMin",
-        "bindRule": ">="
-    },
-    {
-        "propName": "PromptStrikes",
-        "displayName": "Prompt strikes",
-        "type": "int",
-        "description": "Prompt will change after this many timer expirations",
-        "default": 2,
-        "min": 1,
-        "max": 10
-    },
-    {
-        "propName": "TurnDurationMin",
-        "displayName": "Minimum turn duration",
-        "type": "int",
-        "description": "Allow at least this many seconds per turn (lower = harder)",
-        "default": 10,
-        "min": 5,
-        "max": 30,
-        "validValues": [
-            { "value": 5 },
-            { "value": 10 },
-            { "value": 15 },
-            { "value": 20 },
-            { "value": 30 }
-        ]
-    },
-    {
-        "propName": "HealthInitial",
-        "displayName": "Initial health",
-        "type": "int",
-        "description": "Starting number of lives",
-        "default": 2,
-        "min": 1,
-        "max": 10,
-        "bindTo": "HealthMax",
-        "bindRule": "<="
-    },
-    {
-        "propName": "HealthMax",
-        "displayName": "Max health",
-        "type": "int",
-        "description": "Maxmimum lives that can be earned",
-        "default": 3,
-        "min": 1,
-        "max": 10,
-        "bindTo": "HealthInitial",
-        "bindRule": ">="
-    }
+  {
+    "propName": "Alphabet",
+    "displayName": "Alphabet",
+    "type": "enum",
+    "description": "Use all letters to earn an extra life",
+    "default": "easy",
+    "validValues": [
+      {
+        "value": "easy",
+        "description": "J/K/Q/V/X/Z removed"
+      },
+      {
+        "value": "medium",
+        "description": "X and Z removed"
+      },
+      {
+        "value": "full",
+        "description": "All letters"
+      }
+    ]
+  },
+  {
+    "propName": "WinCondition",
+    "displayName": "Win condition",
+    "type": "enum",
+    "description": "n/a",
+    "default": "endless",
+    "validValues": [
+      {
+        "value": "endless",
+        "description": "Play until you run out of lives"
+      },
+      {
+        "value": "max lives",
+        "description": "Play until you reach the maximum number of lives"
+      }
+    ]
+  },
+  {
+    "propName": "PromptMode",
+    "displayName": "Prompt mode",
+    "type": "enum",
+    "description": "n/a",
+    "default": "fuzzy",
+    "validValues": [
+      {
+        "value": "fuzzy",
+        "description": "Non-consecutive prompt matching"
+      },
+      {
+        "value": "classic",
+        "description": "Consecutive prompt matching"
+      }
+    ]
+  },
+  {
+    "propName": "PromptLenMin",
+    "displayName": "Minimum prompt length",
+    "type": "int",
+    "default": 2,
+    "min": 2,
+    "max": 5,
+    "bindTo": "PromptLenMax",
+    "bindRule": "<="
+  },
+  {
+    "propName": "PromptLenMax",
+    "displayName": "Maximum prompt length",
+    "type": "int",
+    "default": 3,
+    "min": 2,
+    "max": 5,
+    "bindTo": "PromptLenMin",
+    "bindRule": ">="
+  },
+  {
+    "propName": "PromptStrikes",
+    "displayName": "Prompt strikes",
+    "type": "int",
+    "description": "Prompt will change after this many timer expirations",
+    "default": 2,
+    "min": 1,
+    "max": 10
+  },
+  {
+    "propName": "TurnDurationMin",
+    "displayName": "Minimum turn duration",
+    "type": "int",
+    "description": "Allow at least this many seconds per turn (lower = harder)",
+    "default": 10,
+    "min": 5,
+    "max": 30,
+    "validValues": [
+      { "value": 5 },
+      { "value": 10 },
+      { "value": 15 },
+      { "value": 20 },
+      { "value": 30 }
+    ]
+  },
+  {
+    "propName": "HealthInitial",
+    "displayName": "Initial health",
+    "type": "int",
+    "description": "Starting number of lives",
+    "default": 2,
+    "min": 1,
+    "max": 10,
+    "bindTo": "HealthMax",
+    "bindRule": "<="
+  },
+  {
+    "propName": "HealthMax",
+    "displayName": "Max health",
+    "type": "int",
+    "description": "Maxmimum lives that can be earned",
+    "default": 3,
+    "min": 1,
+    "max": 10,
+    "bindTo": "HealthInitial",
+    "bindRule": ">="
+  },
+  {
+    "propName": "HealthDisplay",
+    "displayName": "Health bar style",
+    "type": "string",
+    "default": "● ;◯ ",
+    "validValues": [
+      {
+        "value": "██;▒▒",
+        "displayText": "████████▒▒"
+      },
+      {
+        "value": "█ ;▒ ",
+        "displayText": "█ █ █ █ ▒"
+      },
+      {
+        "value": "◼ ;◻ ",
+        "displayText": "◼◼◼◼◻"
+      },
+      {
+        "value": "▰;▱",
+        "displayText": "▰▰▰▰▱"
+      },
+      {
+        "value": "● ;◯ ",
+        "displayText": "● ● ● ● ◯"
+      },
+      {
+        "value": "##;  ",
+        "displayText": "[########  ]"
+      },
+      {
+        "value": "❤️;🤍",
+        "displayText": "❤️❤️❤️❤️🤍"
+      }
+    ]
+  },
+  {
+    "propName": "BellEnabled",
+    "displayName": "Damage sound",
+    "type": "bool",
+    "description": "Trigger terminal bell on failed turn",
+    "default": false,
+    "validValues": [
+      {
+        "value": true,
+        "displayText": "on"
+      },
+      {
+        "value": false,
+        "displayText": "off"
+      }
+    ]
+  }
 ]
