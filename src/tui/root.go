@@ -55,19 +55,11 @@ type GameUIState struct {
 	validation_msg			string
 }
 
-type SplashScreenState struct {
-	logo_anim_active	bool
-	logo_anim_complete	bool
-	logo_anim_idx		int
-	logo_hidden			bool
-}
-
 type State struct {
 	game				game.GameState
 	game_ui				GameUIState
 	press_play			PressPlayState
 	settings			SettingsState
-	title				SplashScreenState
 }
 
 type model struct {
@@ -178,12 +170,6 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 
 				input_restricted: false,
 				validation_msg: "",
-			},
-			title: SplashScreenState {
-				logo_anim_active: 	false,
-				logo_anim_complete: false,
-				logo_anim_idx: 		0,
-				logo_hidden: 		false,
 			},
 		},
 
