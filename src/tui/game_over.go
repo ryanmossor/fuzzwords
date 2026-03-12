@@ -47,7 +47,7 @@ func (m model) GameOverSwitch(win, early_quit bool) (model, tea.Cmd) {
 
 	// Briefly prevent key presses on game over screen
 	cmds := []tea.Cmd{ m.debounceInputCmd(500) }
-	if !early_quit {
+	if !early_quit && !win {
 		cmds = append(cmds, m.terminalBellCmd(false))
 	}
 
