@@ -85,8 +85,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m.GameOverSwitch(false, false)
 		} else if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikes {
 			m.state.game_ui.validation_msg = m.theme.TextRed().Render(
-				// TODO: turn handler already sets msg to Possible solve:...
-				// If msg contains "Possible solve", split on space and colorize final word
 				fmt.Sprintf(
 					"Prompt %s failed. Possible solve: ",
 					strings.ToUpper(m.state.game.CurrentTurn.Prompt)))

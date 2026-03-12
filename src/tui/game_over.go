@@ -25,7 +25,7 @@ func (m model) GameOverSwitch(win, early_quit bool) (model, tea.Cmd) {
         m.state.game_ui.game_over_msg = green.Render("===== YOU WIN! =====")
     } else {
 		m.state.game_ui.validation_msg = red.Render(fmt.Sprintf(
-			"Possible answer for final prompt %s: ",
+			"Possible solve for final prompt %s: ",
 			strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
 
 		m.state.game_ui.validation_msg += m.highlightPromptAnswer(
