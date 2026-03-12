@@ -7,14 +7,9 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 )
-
-func (m model) GameHudUpdate(msg tea.Msg) (model, tea.Cmd) {
-	return m, nil
-}
 
 func (m model) GameHudView() string {
 	if !m.state.game_ui.game_active {
