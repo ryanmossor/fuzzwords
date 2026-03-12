@@ -26,7 +26,7 @@ func (m model) GameHudView() string {
 
     var timer_display string
 	if m.state.game_ui.timer >= 10 * time.Second {
-        timer_display = fmt.Sprintf("%.0fs", m.state.game_ui.timer.Seconds())
+        timer_display = fmt.Sprintf(" %.0fs", m.state.game_ui.timer.Seconds())
 	} else {
         timer_display = fmt.Sprintf("%.1fs", m.state.game_ui.timer.Seconds())
     }
@@ -39,7 +39,7 @@ func (m model) GameHudView() string {
 	if m.state.game_ui.player_damaged {
 		fields = []string{
 			red(health),
-			"⏳ " + timer_display,
+			red("⏳ " + timer_display),
 		}
 	} else {
 		fields = []string{

@@ -33,7 +33,7 @@ func (m model) GameOverSwitch(win, early_quit bool) (model, tea.Cmd) {
 			m.state.game.CurrentTurn.SourceWord,
 			m.state.game.Settings.PromptMode)
 
-        m.state.game_ui.game_over_msg = red.Bold(true).Render("===== GAME OVER =====")
+        m.state.game_ui.game_over_msg = red.Bold(true).Render("☠️ GAME OVER ☠️")
     }
 
 	m = m.SwitchPage(game_over_page)
