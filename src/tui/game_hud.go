@@ -21,10 +21,7 @@ func (m model) GameHudView() string {
 		return ""
 	}
 
-	dim := m.theme.TextDim().Render
-	yellow := m.theme.TextYellow().Bold(true).Render
 	red := m.theme.TextRed().Render
-
 	health := m.RenderHealthDisplay()
 
     var timer_display string
@@ -41,12 +38,12 @@ func (m model) GameHudView() string {
 	var fields []string
 	if m.state.game_ui.player_damaged {
 		fields = []string{
-			red("Health: " + health),
+			red(health),
 			"⏳ " + timer_display,
 		}
 	} else {
 		fields = []string{
-			"Health: " + health,
+			health,
 			"⏳ " + timer_display,
 		}
 	}
@@ -66,41 +63,41 @@ func (m model) GameHudView() string {
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			if col == 0 {
-				return m.theme.Base().Align(lipgloss.Left).PaddingLeft(5)
+				return m.theme.Base().Align(lipgloss.Left).PaddingLeft(7)
 			}
-			return m.theme.Base().Align(lipgloss.Right).PaddingRight(5)
+			return m.theme.Base().Align(lipgloss.Right).PaddingRight(7)
 		}).
 		Render()
 
-	if effects := m.animation_manager.EffectsFor(string(animations.ExtraLife)); len(effects) > 0 {
-		animated_alphabet := animations.ApplyTextEffects(
-			strings.Join(strings.Split(m.state.game.Alphabet, ""), " "),
-			effects...)
-
-		return lipgloss.JoinVertical(
-			lipgloss.Center,
-			m.DebugView(),
-			header,
-			animated_alphabet)
-	}
-
-	letters_remaining := []string{}
-	for _, c := range m.state.game.Alphabet {
-		letter := string(c)
-		if m.state.game.Player.LettersRemaining[letter] {
-			letters_remaining = append(letters_remaining, dim(letter))
-		} else if m.state.game_ui.player_damaged {
-			letters_remaining = append(letters_remaining, red(letter))
-		} else {
-			letters_remaining = append(letters_remaining, yellow(letter))
-		}
+	letters, changed := m.animation_manager.ApplyAnimations(
+		string(animations.ExtraLife),
+		strings.Join(strings.Split(m.state.game.Alphabet, ""), " "))
+	if !changed {
+		letters = m.colorRemainingLetters(m.state.game.Alphabet)
 	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		m.DebugView(),
 		header,
-		strings.Join(letters_remaining, " "))
+		letters)
+}
+
+func (m model) colorRemainingLetters(alphabet string) string {
+	out := []string{}
+	for _, c := range alphabet {
+		letter := string(c)
+
+		if m.state.game.Player.LettersRemaining[letter] {
+			out = append(out, m.theme.TextDim().Render(letter))
+		} else if m.state.game_ui.player_damaged {
+			out = append(out, m.theme.TextRed().Bold(true).Render(letter))
+		} else {
+			out = append(out, m.theme.TextYellow().Bold(true).Render(letter))
+		}
+	}
+
+	return strings.Join(out, " ")
 }
 
 func (m model) RenderHealthDisplay() string {

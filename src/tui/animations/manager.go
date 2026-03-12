@@ -45,25 +45,17 @@ func (m *AnimationManager) Update(now time.Time) {
 }
 
 type EffectTarget string
-func (m *AnimationManager) EffectsFor(target string) []TextEffect {
-    effects := []TextEffect{}
-	slog.Debug("EffectsFor", "target", target)
+func (m *AnimationManager) ApplyAnimations(target, text string) (string, bool) {
+	out := text
+	changed := false
     for key, a := range m.Animations {
         if strings.HasPrefix(key, target) && a.IsActive() {
-            effects = append(effects, a.Effect())
+			slog.Debug("Applying text effect", "target", target, "text", text)
+			out = a.Effect(out)
+			changed = true
         }
     }
-    return effects
-}
-
-type TextEffect func(string) string
-func ApplyTextEffects(text string, effects ...TextEffect) string {
-	slog.Debug("Applying text effects", "text", text, "effectsLen", len(effects))
-	out := text
-	for _, e := range effects {
-		out = e(out)
-	}
-	return out
+    return out, changed
 }
 
 const (

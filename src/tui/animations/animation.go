@@ -8,7 +8,7 @@ type Animation interface {
 	Init()
 	Update(time time.Time)
 	IsActive() bool
-	Effect() TextEffect
+	Effect(string) string
 }
 
 type BaseAnim struct {

@@ -29,21 +29,19 @@ func (a *RainbowScrollAnim) Init() {
 	a.Offset = 0
 }
 
-func (a *RainbowScrollAnim) Effect() TextEffect {
-	return func(text string) string {
-		var out strings.Builder
+func (a *RainbowScrollAnim) Effect(text string) string {
+	var out strings.Builder
 
-		i := 0
-		for _, c := range text {
-			if string(c) == " " {
-				out.WriteString(string(c))
-				continue
-			}
-			style := a.Colors[(i + a.Offset) % len(a.Colors)]
-			out.WriteString(style.Bold(true).Render(string(c)))
-			i++
+	i := 0
+	for _, c := range text {
+		if string(c) == " " {
+			out.WriteString(string(c))
+			continue
 		}
-
-		return out.String()
+		style := a.Colors[(i + a.Offset) % len(a.Colors)]
+		out.WriteString(style.Bold(true).Render(string(c)))
+		i++
 	}
+
+	return out.String()
 }

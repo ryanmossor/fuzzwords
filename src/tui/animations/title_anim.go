@@ -89,10 +89,8 @@ func (a *TitleScreenLogoAnim) nextStep(now time.Time, frame_interval time.Durati
 	a.PrevFrame = now
 }
 
-func (a *TitleScreenLogoAnim) Effect() TextEffect {
+func (a *TitleScreenLogoAnim) Effect(text string) string {
 	// Maybe not the cleanest solution, but because title screen anim is more
 	// complicated, effects/coloring are delegated to title screen view.
-	return func(text string) string {
-		return text
-	}
+	return text
 }
