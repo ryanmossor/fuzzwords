@@ -290,14 +290,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	var header string
-	if m.page == game_page {
-		// TODO: move this to header file
-		header = m.GameHudView()
-	} else {
-		header = m.HeaderView()
-	}
-
+	header := m.HeaderView()
 	game_input := m.GameInputView()
 	footer := m.FooterView()
 
@@ -312,7 +305,10 @@ func (m model) View() string {
 		AlignVertical(lipgloss.Center) // center all content on screen
 
 	if m.page == about_page {
-		content_style = content_style.Width(m.width_container)
+		content_style = content_style.
+			Width(m.width_container).
+			AlignVertical(lipgloss.Top).
+			PaddingTop(1)
 	}
 	content := m.viewport.View()
 

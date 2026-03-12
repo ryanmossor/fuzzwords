@@ -31,7 +31,7 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) HeaderView() string {
 	if m.page == game_page {
-		return ""
+		return m.GameHudView()
 	}
 	empty_header :=  "\n\n\n"
 	if m.page == game_over_page {
@@ -47,7 +47,7 @@ func (m model) HeaderView() string {
 		return lipgloss.JoinHorizontal(
 			lipgloss.Center,
 			empty_header,
-			m.theme.TextYellow().Bold(true).Render("GAME SETTINGS"))
+			m.theme.TextYellow().Bold(true).Render("Game Settings"))
 	}
 
 	menu := accent("m") + base(" main menu")
