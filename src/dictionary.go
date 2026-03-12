@@ -1,5 +1,10 @@
 package fzwds
 
+import (
+	"fzwds/src/utils"
+)
+
+var EnglishDictionaryMap = utils.ArrToMap(EnglishDictionary)
 var EnglishDictionary = []string{
 	"aa",
 	"aah",

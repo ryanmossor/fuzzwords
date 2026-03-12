@@ -17,15 +17,14 @@ type GameState struct {
 }
 
 func InitializeGame(settings *Settings) GameState {
-	word_list := fzwds.EnglishDictionary
-    word_lists := WordLists{
-        FULL_MAP: utils.ArrToMap(word_list),
-        Available: utils.FilterWordList(word_list, settings.PromptLenMin),
+    word_lists := WordLists {
+		FULL_MAP: fzwds.EnglishDictionaryMap,
+		Available: utils.FilterWordList(fzwds.EnglishDictionary, settings.PromptLenMin),
         Used: make(map[string]bool),
     }
 	alphabet := enums.Alphabets[settings.Alphabet]
 
-	return GameState{
+	return GameState {
 		Alphabet: alphabet,
 		Settings: *settings,
 		WordLists: word_lists,
