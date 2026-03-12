@@ -91,6 +91,11 @@ func (m model) MainMenuInit() tea.Cmd {
 }
 
 func (m model) MainMenuSwitch() (model, tea.Cmd) {
+	// Don't switch if already here; prevents title anim reload
+	if m.page == splash_page {
+		return m, nil
+	}
+
 	m = m.SwitchPage(splash_page)
 	m.footer_keymaps = []footer_keymaps{
 		{key: "q", value: "quit"},
