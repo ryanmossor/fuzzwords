@@ -20,7 +20,7 @@ func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
 type TogglePlayerDamagedMsg struct{}
 func (m *model) setPlayerDamagedStateCmd() tea.Cmd {
 	m.state.game_ui.player_damaged = true
-    return tea.Tick(time.Millisecond * time.Duration(250), func(t time.Time) tea.Msg {
+    return tea.Tick(time.Millisecond * time.Duration(400), func(t time.Time) tea.Msg {
 		return TogglePlayerDamagedMsg{}
 	})
 }
