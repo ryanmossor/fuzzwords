@@ -15,10 +15,12 @@ func (m model) FooterView() string {
 
 	var footer_text string
 	if m.state.game_ui.game_active {
-		footer_text = fmt.Sprintf("%s mode", m.state.game.Settings.PromptMode.String())
+		footer_text = fmt.Sprintf("%s/%s",
+			m.state.game.Settings.PromptMode.String(),
+			m.state.game.Settings.WinCondition.String())
 	}
 
-	right_pad := 3
+	right_pad := 2
 	max_footer_width := max(0, m.width_container - len(footer_text) - right_pad)
 	footer_line := strings.Repeat("─", max_footer_width) + footer_text + strings.Repeat("─", right_pad)
 

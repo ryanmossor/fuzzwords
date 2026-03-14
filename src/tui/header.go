@@ -30,13 +30,8 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) HeaderView() string {
-	if m.page == game_page {
+	if m.page == game_page || m.page == game_over_page {
 		return m.GameHudView()
-	}
-	empty_header :=  "\n\n\n"
-	if m.page == game_over_page {
-		// No content, but used for top margin
-		return empty_header
 	}
 
 	bold := m.theme.TextAccent().Bold(true).Render
@@ -44,10 +39,15 @@ func (m model) HeaderView() string {
 	base := m.theme.Base().Render
 
 	if m.page == settings_page {
-		return lipgloss.JoinHorizontal(
+		settings_header := m.theme.Base().
+			Margin(1).
+			AlignHorizontal(lipgloss.Center).
+			Render(m.theme.TextYellow().Bold(true).Render("Game Settings"))
+
+		return lipgloss.JoinVertical(
 			lipgloss.Center,
-			empty_header,
-			m.theme.TextYellow().Bold(true).Render("Game Settings"))
+			m.DebugView(),
+			settings_header)
 	}
 
 	menu := accent("m") + base(" main menu")
