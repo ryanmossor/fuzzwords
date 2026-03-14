@@ -65,7 +65,7 @@ func (m model) renderTopBar() string {
         timer_display = fmt.Sprintf("⏳ %.1fs", m.state.game_ui.timer.Seconds())
     }
 
-    if m.state.game_ui.timer < (5 * time.Second) || m.state.game_ui.player_damaged {
+    if m.state.game_ui.game_active && (m.state.game_ui.timer < (5 * time.Second) || m.state.game_ui.player_damaged) {
 		// TODO: pulsing yellow/orange/red anim when below 5s; red 0.0 on damaged
         timer_display = red(timer_display)
     }
