@@ -41,24 +41,15 @@ func (m model) renderHealthDisplay() string {
 		sb.WriteString(bracket_style.Render("["))
 	}
 
-	i := 0
-	for i < m.state.game.Player.HealthCurrent {
-		if m.state.game_ui.player_damaged {
-			sb.WriteString(full_style.Render(health_icon_full))
-		} else {
-			sb.WriteString(full_style.Render(health_icon_full))
-		}
-		i++
-	}
-
-	for i < m.state.game.Settings.HealthMax {
-		sb.WriteString(m.theme.Base().Render(health_icon_empty))
-		i++
-	}
+	health_cur := m.state.game.Player.HealthCurrent
+	health_max := m.state.game.Settings.HealthMax
+	sb.WriteString(full_style.Render(strings.Repeat(health_icon_full, health_cur)))
+	sb.WriteString(full_style.Render(strings.Repeat(health_icon_empty, health_max - health_cur)))
 
 	if strings.HasPrefix(health_icon_full, "#") {
 		sb.WriteString(bracket_style.Render("]"))
 	}
+
 	return strings.TrimSpace(sb.String())
 }
 
