@@ -83,6 +83,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			return m.GameSwitch()
 		case "m", "esc":
+			m.game_settings_copy = *m.game_settings
 			return m.MainMenuSwitch()
 		}
 	}
