@@ -439,9 +439,9 @@ func (m model) getScrollbar() string {
 // Apply spacing to string to produce a shaking animation.
 // The first return value is the padded string.
 // The second return value is the number of padding spaces applied.
-func (m model) applyDamageShakeAnimation(str string) (string, int) {
+func (m model) applyDamageShakeAnimation(str string) string {
 	if m.state.game_ui.damage_anim_padding <= 0 {
-		return str, 0
+		return str
 	}
 
 	result := str
@@ -453,5 +453,5 @@ func (m model) applyDamageShakeAnimation(str string) (string, int) {
 		result = utils.LeftPad(result, padding_spaces)
 	}
 
-	return result, padding_spaces
+	return result
 }

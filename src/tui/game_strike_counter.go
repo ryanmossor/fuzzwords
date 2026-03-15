@@ -7,10 +7,10 @@ func (m model) GameStrikeCounterView() string {
 		return ""
 	}
 
-	strike_count := "Strikes: " + m.theme.TextRed().Render(fmt.Sprintf("%d/%d",
+	strike_counter := "Strikes: " + m.theme.TextRed().Render(fmt.Sprintf("%d/%d",
 		m.state.game.CurrentTurn.Strikes,
 		m.state.game.Settings.PromptStrikes))
-	strike_count, _ = m.applyDamageShakeAnimation(strike_count)
+	strike_counter = m.applyDamageShakeAnimation(strike_counter)
 
-	return strike_count
+	return strike_counter
 }

@@ -90,9 +90,10 @@ func (m *model) renderValidationMsg() string {
 	if !m.state.game_ui.game_active {
 		msg = m.state.game_ui.validation_msg
 	} else {
-		msg, _ = m.applyDamageShakeAnimation(m.state.game_ui.validation_msg)
-		// Add padding to msg if necessary to prevent input box from shaking
-		if len(utils.StripANSICodes(msg)) % 2 == 1 {
+		msg = m.applyDamageShakeAnimation(m.state.game_ui.validation_msg)
+
+		// Input box will shake if msg and input width are not both even/odd
+		if len(utils.StripANSICodes(msg)) % 2 != m.text_input.CharLimit % 2 {
 			msg = utils.RightPad(msg, 1)
 		}
 	}
