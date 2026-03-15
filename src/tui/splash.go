@@ -3,7 +3,6 @@ package tui
 import (
 	"fzwds/src/constants"
 	"fzwds/src/tui/animations"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -69,22 +68,8 @@ var letters = map[byte][]string {
 }
 
 func (m model) MainMenuInit() tea.Cmd {
-	title_logo_anim := &animations.TitleScreenLogoAnim {
-		BaseAnim: animations.BaseAnim {
-			FrameInterval:	time.Second / 30,
-			PrevFrame:		time.Now(),
-			Frame:			0,
-			Loop:			true,
-			Active:			true,
-			Target:			animations.TitleLogo,
-		},
-		Phase:				0,
-		PhaseStart:			time.Now(),
-		TypedLetters:		0,
-		ColorIdx: 		0,
-		Colors: 			m.theme.GetRainbowColors(),
-	}
-	m.animation_manager.Register(string(animations.TitleLogo), title_logo_anim)
+	title_logo_anim := animations.NewTitleScreenLogoAnim(m.theme.GetRainbowColors())
+	m.animation_manager.Register(title_logo_anim)
 	m.animation_manager.InitAnimations(animations.TitleLogo)
 
 	return nil
@@ -128,7 +113,7 @@ func (m model) MainMenuView() string {
 
 	switch m.size {
 	case large:
-		a, _ := m.animation_manager.Get(string(animations.TitleLogo))
+		a, _ := m.animation_manager.Get(animations.TitleLogo)
 		anim, ok := a.(*animations.TitleScreenLogoAnim)
 		if !ok {
 			// Display yellow logo if animation state could not be retrieved

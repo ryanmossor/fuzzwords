@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"fzwds/src/tui/animations"
 	"fzwds/src/utils"
 	"strconv"
 	"strings"
@@ -17,15 +18,17 @@ func (m model) GameOverSwitch(win, early_quit bool) (model, tea.Cmd) {
 	m.state.game_ui.player_damaged = false
 	m.state.game.Player.Stats.ElapsedSeconds = int(time.Since(m.state.game_ui.start_time).Seconds())
 
-	red := m.theme.TextRed()
-	green := m.theme.TextGreen().Bold(true)
-
     if win {
         m.state.game_ui.validation_msg = ""
-        m.state.game_ui.game_over_msg = green.Render("===== YOU WIN! =====")
+        m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
+
+		win_anim := animations.NewRainbowScrollAnim(animations.GameOverWin, 0, true, m.theme.GetRainbowColors())
+		m.animation_manager.Register(win_anim)
+		m.animation_manager.InitAnimations(animations.GameOverWin)
 	} else {
 		m.state.game.Player.HealthCurrent = 0
 
+		red := m.theme.TextRed()
 		m.state.game_ui.validation_msg = red.Render(fmt.Sprintf(
 			"Possible solve for final prompt %s: ",
 			strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
@@ -64,12 +67,16 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		switch msg.String() {
 		case "m":
+			m.animation_manager.DeactivateAnimations(animations.GameOverWin)
 			return m.MainMenuSwitch()
 		case "s":
+			m.animation_manager.DeactivateAnimations(animations.GameOverWin)
 			return m.SettingsSwitch()
 		case "enter":
+			m.animation_manager.DeactivateAnimations(animations.GameOverWin)
 			return m.GameSwitch()
 		case "q":
+			m.animation_manager.DeactivateAnimations(animations.GameOverWin)
 			return m, tea.Quit
 		}
 	}
@@ -148,10 +155,13 @@ func (m model) GameOverView() string {
 		Render()
 
     validation_msg := m.renderValidationMsg()
+	game_over_msg, _ := m.animation_manager.ApplyAnimations(
+		string(animations.GameOverWin),
+		m.state.game_ui.game_over_msg)
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		m.state.game_ui.game_over_msg,
+		game_over_msg,
 		"",
 		stats_table,
 		"",

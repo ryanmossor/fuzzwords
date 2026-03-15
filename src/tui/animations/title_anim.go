@@ -26,6 +26,24 @@ type TitleScreenLogoAnim struct {
 	ColorIdx		int
 }
 
+func NewTitleScreenLogoAnim(colors []lipgloss.Style) *TitleScreenLogoAnim {
+	return &TitleScreenLogoAnim {
+		BaseAnim: BaseAnim {
+			FrameInterval:	time.Second / 30,
+			PrevFrame:		time.Now(),
+			Frame:			0,
+			Loop:			true,
+			Active:			true,
+			Target:			TitleLogo,
+		},
+		Phase:				0,
+		PhaseStart:			time.Now(),
+		TypedLetters:		0,
+		ColorIdx: 			0,
+		Colors: 			colors,
+	}
+}
+
 func (a *TitleScreenLogoAnim) Init() {
 	a.BaseAnim.Init()
 	a.FrameInterval = time.Second * 5
@@ -89,8 +107,7 @@ func (a *TitleScreenLogoAnim) nextPhase(now time.Time, frame_interval time.Durat
 	a.PrevFrame = now
 }
 
-func (a *TitleScreenLogoAnim) Effect(text string) string {
-	// Maybe not the cleanest solution, but because title screen anim is more
-	// complicated, effects/coloring are delegated to title screen view.
+func (a *TitleScreenLogoAnim) ApplyEffect(text string) string {
+	// Because title screen anim is more complicated, effects/coloring are delegated to title screen view
 	return text
 }

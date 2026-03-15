@@ -5,7 +5,6 @@ import (
 	"fzwds/src/enums"
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
-	"fzwds/src/utils"
 	"math/rand"
 	"strings"
 	"time"
@@ -67,7 +66,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game.NewTurn()
 
 	m.state.game_ui.start_time = time.Now()
-    m.state.game_ui.timer = (3 + 1) * time.Second
+    m.state.game_ui.timer = (30 + 1) * time.Second
 
 	m.footer_keymaps = []footer_keymaps{
 		{key: "esc", value: "clear input"},
@@ -77,46 +76,14 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.text_input = m.initBlockTextInput()
 	m.state.game_ui.input_restricted = false
 
-	extra_life_anim := &animations.RainbowScrollAnim {
-		BaseAnim: animations.BaseAnim {
-			FrameInterval:	time.Second / 20,
-			PrevFrame:		time.Now(),
-			Frame:			0,
-			Loop:			true,
-			Active:			false,
-			Target:			animations.ExtraLife,
-		},
-		Offset: 			0,
-		TotalFrames: 		10,
-		Colors: 			m.theme.GetRainbowColors(),
-	}
-	m.animation_manager.Register(string(animations.ExtraLife), extra_life_anim)
+	extra_life_anim := animations.NewRainbowScrollAnim(animations.ExtraLife, 30, false, m.theme.GetRainbowColors())
+	m.animation_manager.Register(extra_life_anim)
 
-	validation_msg_dmg_anim := &animations.DamageShakeAnim {
-		BaseAnim: animations.BaseAnim {
-			FrameInterval:	time.Second / time.Duration(m.FPS),
-			PrevFrame:		time.Now(),
-			Frame:			0,
-			Loop:			false,
-			Active:			false,
-			Target:			animations.ValidationMessage,
-		},
-		Frames: 			utils.FillDescending(8, 0),
-	}
-	m.animation_manager.Register(string(animations.ValidationMessage), validation_msg_dmg_anim)
+	validation_msg_dmg_anim := animations.NewDamageShakeAnim(animations.ValidationMessage, 8)
+	m.animation_manager.Register(validation_msg_dmg_anim)
 
-	strike_dmg_anim := &animations.DamageShakeAnim {
-		BaseAnim: animations.BaseAnim {
-			FrameInterval:	time.Second / time.Duration(m.FPS),
-			PrevFrame:		time.Now(),
-			Frame:			0,
-			Loop:			false,
-			Active:			false,
-			Target:			animations.StrikeCounter,
-		},
-		Frames: 			utils.FillDescending(8, 0),
-	}
-	m.animation_manager.Register(string(animations.StrikeCounter), strike_dmg_anim)
+	strike_dmg_anim := animations.NewDamageShakeAnim(animations.StrikeCounter, 6)
+	m.animation_manager.Register(strike_dmg_anim)
 
 	return m, tea.Batch(
 		textinput.Blink,
@@ -174,7 +141,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             return m, nil
         }
 
-
         key := msg.String()
 		if key != "enter" {
 			m.state.game_ui.validation_msg = ""
@@ -187,6 +153,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "ctrl+q":
 			return m.GameOverSwitch(false, true)
 		case "enter":
+			// TODO pass answer to ValidateAnswer
 			m.state.game.CurrentTurn.Answer = strings.ToLower(strings.TrimSpace(m.text_input.Value()))
             m.text_input.Reset()
 			m.state.game_ui.validation_msg = m.state.game.ValidateAnswer()
@@ -205,7 +172,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.animation_manager.DeactivateAnimations(animations.ValidationMessage)
 			m.state.game_ui.player_damaged = false
 
-			// TODO: move win condition check to game_over?
 			if len(m.state.game.WordLists.Available) == 0 {
 				return m.GameOverSwitch(true, false)
 			} else if (

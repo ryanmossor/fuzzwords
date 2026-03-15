@@ -7,28 +7,28 @@ import (
 )
 
 type AnimationManager struct {
-	animations map[string]Animation
+	animations map[EffectTarget]Animation
 }
 
 func InitAnimManager() AnimationManager {
 	return AnimationManager {
-		animations: make(map[string]Animation),
+		animations: make(map[EffectTarget]Animation),
 	}
 }
 
-func (m *AnimationManager) Get(key string) (Animation, bool) {
+func (m *AnimationManager) Get(key EffectTarget) (Animation, bool) {
 	anim, ok := m.animations[key]
 	return anim, ok
 }
 
-func (m *AnimationManager) Register(key string, val Animation) {
-	m.animations[key] = val
-	slog.Debug("Registered animation", "animations", m.animations)
+func (m *AnimationManager) Register(anim Animation) {
+	m.animations[anim.target()] = anim
+	slog.Debug("Registered animation", "target", anim.target(), "animations", m.animations)
 }
 
 func (m *AnimationManager) InitAnimations(target_prefix EffectTarget) {
 	for key, anim := range m.animations {
-		if strings.HasPrefix(key, string(target_prefix)) {
+		if strings.HasPrefix(string(key), string(target_prefix)) {
 			slog.Debug("Initializing animation for target",
 				"targetPrefix", target_prefix,
 				"anim", anim)
@@ -39,9 +39,9 @@ func (m *AnimationManager) InitAnimations(target_prefix EffectTarget) {
 
 func (m *AnimationManager) DeactivateAnimations(target_prefix EffectTarget) {
 	for key, anim := range m.animations {
-		if strings.HasPrefix(key, string(target_prefix)) && anim.IsActive() {
+		if strings.HasPrefix(string(key), string(target_prefix)) && anim.IsActive() {
 			slog.Debug("Deactivating animations", "key", key)
-			anim.Deactivate()
+			anim.deactivate()
 		}
 	}
 }
@@ -59,9 +59,9 @@ func (m *AnimationManager) ApplyAnimations(target, text string) (string, bool) {
 	out := text
 	changed := false
     for key, a := range m.animations {
-        if strings.HasPrefix(key, target) && a.IsActive() {
+        if strings.HasPrefix(string(key), target) && a.IsActive() {
 			slog.Debug("Applying text effect", "target", target, "text", text)
-			out = a.Effect(out)
+			out = a.ApplyEffect(out)
 			changed = true
         }
     }
@@ -74,4 +74,5 @@ const (
 	StrikeCounter 		EffectTarget = "strike_counter"
 	TitleLogo 			EffectTarget = "title_logo"
 	ValidationMessage 	EffectTarget = "validation_message"
+	GameOverWin		 	EffectTarget = "game_over_win"
 )

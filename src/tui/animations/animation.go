@@ -7,10 +7,12 @@ import (
 type Animation interface {
 	Init()
 	Update(time time.Time)
-	Activate()
-	Deactivate()
 	IsActive() bool
-	Effect(string) string
+	ApplyEffect(string) string
+
+	activate()
+	deactivate()
+	target() EffectTarget
 }
 
 type BaseAnim struct {
@@ -50,10 +52,14 @@ func (a *BaseAnim) IsActive() bool {
 	return a.Active
 }
 
-func (a *BaseAnim) Activate() {
+func (a *BaseAnim) activate() {
 	a.Active = true
 }
 
-func (a *BaseAnim) Deactivate() {
+func (a *BaseAnim) deactivate() {
 	a.Active = false
+}
+
+func (a *BaseAnim) target() EffectTarget {
+	return a.Target
 }
