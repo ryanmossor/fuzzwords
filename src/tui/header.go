@@ -39,15 +39,10 @@ func (m model) HeaderView() string {
 	base := m.theme.Base().Render
 
 	if m.page == settings_page {
-		settings_header := m.theme.Base().
-			Margin(1).
+		return m.theme.Base().
+			Border(lipgloss.HiddenBorder()).
 			AlignHorizontal(lipgloss.Center).
 			Render(m.theme.TextYellow().Bold(true).Render("Game Settings"))
-
-		return lipgloss.JoinVertical(
-			lipgloss.Center,
-			m.DebugView(),
-			settings_header)
 	}
 
 	menu := accent("m") + base(" main menu")
@@ -69,7 +64,7 @@ func (m model) HeaderView() string {
 		stats,
 	}
 		
-	header := table.New().
+	return table.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
 		Row(tabs...).
@@ -78,10 +73,4 @@ func (m model) HeaderView() string {
 			return m.theme.Base().Padding(0, 1).AlignHorizontal(lipgloss.Center)
 		}).
 		Render()
-
-	return lipgloss.JoinVertical(
-		lipgloss.Center,
-		m.DebugView(),
-		header,
-	)
 }

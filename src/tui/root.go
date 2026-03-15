@@ -7,7 +7,6 @@ import (
 	"fzwds/src/tui/animations"
 	"fzwds/src/utils"
 	"log/slog"
-	"math"
 	"os"
 	"path/filepath"
 	"time"
@@ -216,25 +215,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.size = undersized
 			m.width_container = m.viewport_width
 			m.height_container = m.viewport_height
-		case m.viewport_width < 40:
+		case m.viewport_width < 50:
 			m.size = small
 			m.width_container = m.viewport_width
 			m.height_container = m.viewport_height
-		case m.viewport_width < 70:
+		case m.viewport_width < 80:
 			m.size = medium
-			m.width_container = 40
-			m.height_container = int(math.Min(float64(msg.Height), 30))
+			m.width_container = 50
+			m.height_container = min(msg.Height, 30)
 		default:
 			m.size = large
-			m.width_container = 70
-			m.height_container = int(math.Min(float64(msg.Height), 30))
+			m.width_container = 80
+			m.height_container = min(msg.Height, 30)
 		}
 
 		m.width_content = m.width_container - 4
 		m = m.updateViewport()
 	case PressPlayTickMsg:
 		m, cmd := m.PressPlayUpdate(msg)
-        // m.viewport.SetContent(m.getContent())
 		return m, cmd
 	case EnableInputMsg:
 		m.state.game_ui.input_restricted = false
@@ -291,14 +289,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	header := m.HeaderView()
-	game_input := m.GameInputView()
 	footer := m.FooterView()
 
-	height := m.height_container
-	height -= lipgloss.Height(header)
-	height -= lipgloss.Height(game_input)
-	height -= lipgloss.Height(footer)
-
+	height := m.height_container - lipgloss.Height(header) - lipgloss.Height(footer)
 	content_style := m.theme.Base().
 		Height(height).
 		Padding(0, 1).
@@ -326,9 +319,9 @@ func (m model) View() string {
 
 	child := lipgloss.JoinVertical(
 		lipgloss.Center,
+		m.DebugView(),
 		header,
 		content_style.Render(view),
-		game_input,
 		footer,
 	) 
 
@@ -338,8 +331,8 @@ func (m model) View() string {
 		lipgloss.Center,
 		lipgloss.Center,
 		m.theme.Base().
-			MaxWidth(m.width_container).
-			MaxHeight(m.height_container).
+			MaxWidth(m.viewport_width).
+			MaxHeight(m.viewport_height).
 			Render(child),
 		) 
 }
@@ -363,8 +356,7 @@ func (m model) getContent() string {
 	case stats_page:
 		page = m.StatsView()
 	case game_page:
-		// TODO: possible to return game hud, prompt, and input as single page?
-		page = m.GamePromptView()
+		page = m.GameView()
 	case game_over_page:
 		page = m.GameOverView()
 	}
@@ -395,7 +387,11 @@ func (m model) updateViewport() model {
 		m.viewport.GotoTop()
     }
 
-	m.has_scroll = m.viewport.VisibleLineCount() < m.viewport.TotalLineCount()
+	if m.page == game_page {
+		m.has_scroll = false
+	} else {
+		m.has_scroll = m.viewport.VisibleLineCount() < m.viewport.TotalLineCount()
+	}
 
 	// if m.has_scroll {
 	// 	m.width_content = m.width_container - 4
@@ -424,20 +420,20 @@ func (m model) getScrollbar() string {
 		scrollbar_pos = 0
 	}
 
-    bar := m.theme.Base().
+	bar := m.theme.Base().
 		Height(scrollbar_height).
 		Width(1).
 		Background(m.theme.Accent()).
 		Render()
 
 	style := m.theme.Base().Width(1).Height(viewport_height)
-    return style.Render(
-        lipgloss.PlaceVertical(
-            viewport_height,
-            lipgloss.Position(scrollbar_pos),
-            bar,
-        ),
-    )
+	return style.Render(
+		lipgloss.PlaceVertical(
+			viewport_height,
+			lipgloss.Position(scrollbar_pos),
+			bar,
+		),
+	)
 }
 
 // Apply spacing to string to produce a shaking animation.
@@ -450,13 +446,10 @@ func (m model) applyDamageShakeAnimation(str string) (string, int) {
 
 	result := str
 
-	pad := m.state.game_ui.damage_anim_padding / 2
-	var padding_spaces int
-	if pad % 2 == 0 {
-		padding_spaces = pad
+	padding_spaces := m.state.game_ui.damage_anim_padding / 2
+	if padding_spaces % 2 == 0 {
 		result = utils.RightPad(result, padding_spaces)
 	} else {
-		padding_spaces = m.state.game_ui.damage_anim_padding
 		result = utils.LeftPad(result, padding_spaces)
 	}
 

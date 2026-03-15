@@ -96,9 +96,6 @@ func (m model) SettingsView() string {
 	accent := m.theme.TextAccent().Bold(true).Render
 
 	var lines []string
-	// Used to add an extra blank row if selected item has no desc; prevents footer from moving while scrolling
-	pad_bottom := true
-
 	for i, setting := range m.settings_schema {
 		if setting.Disabled {
 			continue
@@ -153,8 +150,6 @@ func (m model) SettingsView() string {
 
 		// Show description for selected item only
 		if is_selected && setting.Description != "" {
-			pad_bottom = false // no extra padding row needed since item already expanded from desc
-
 			row_2_space := m.width_content - lipgloss.Width(description) - lipgloss.Width(sub_desc) - 5
 			var row_2 string
 
@@ -200,14 +195,7 @@ func (m model) SettingsView() string {
 		lines = append(lines, line)
 	}
 
-	if pad_bottom {
-		lines = append(lines, "")
-	}
-
-	return m.theme.Base().Render(lipgloss.JoinVertical(
-		lipgloss.Center,
-		lines...,
-	))
+	return lipgloss.JoinVertical(lipgloss.Center, lines...)
 }
 
 type Direction int

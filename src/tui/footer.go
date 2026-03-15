@@ -20,7 +20,7 @@ func (m model) FooterView() string {
 			m.state.game.Settings.WinCondition.String())
 	}
 
-	right_pad := 2
+	right_pad := 3
 	max_footer_width := max(0, m.width_container - len(footer_text) - right_pad)
 	footer_line := strings.Repeat("─", max_footer_width) + footer_text + strings.Repeat("─", right_pad)
 
@@ -31,7 +31,7 @@ func (m model) FooterView() string {
 	}
 
 	table := m.theme.Base().
-		Width(m.width_container - 5).
+		Width(m.width_container).
 		PaddingBottom(1).
 		Align(lipgloss.Center)
 

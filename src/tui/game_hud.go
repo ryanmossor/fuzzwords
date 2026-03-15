@@ -14,7 +14,6 @@ import (
 func (m model) GameHudView() string {
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		m.DebugView(),
 		m.renderTopBar(),
 		m.renderRemainingLetters())
 }
@@ -92,9 +91,9 @@ func (m model) renderTopBar() string {
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			if col == 0 {
-				return m.theme.Base().Align(lipgloss.Left).PaddingLeft(7)
+				return m.theme.Base().Align(lipgloss.Left).PaddingLeft(8)
 			}
-			return m.theme.Base().Align(lipgloss.Right).PaddingRight(7)
+			return m.theme.Base().Align(lipgloss.Right).PaddingRight(8)
 		}).
 		Render()
 

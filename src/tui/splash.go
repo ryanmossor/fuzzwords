@@ -185,8 +185,8 @@ func (m model) MainMenuView() string {
 		}
 	}
 
-	logo = append([]string{"\n", "\n"}, logo...) // prepend top padding
-	logo = append(logo, "\n\n\n") // append bottom padding
+	logo = append([]string{"\n\n\n\n"}, logo...) // prepend top padding
+	logo = append(logo, "\n\n\n\n") // append bottom padding
 	logo = append(logo, m.PressPlayView())
 
 	return lipgloss.JoinVertical(

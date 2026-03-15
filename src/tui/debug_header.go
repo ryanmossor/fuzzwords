@@ -57,9 +57,9 @@ func (m model) DebugView() string {
 
 	return table.New().
 		Border(lipgloss.HiddenBorder()).
-		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
-		Row(memStatsView()...).
+		BorderBottom(false).
 		// Row(tabs...).
+		Row(memStatsView()...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			return m.theme.Base().AlignHorizontal(lipgloss.Center)
