@@ -53,25 +53,25 @@ func (a *TitleScreenLogoAnim) Update(now time.Time) {
 	case AbbreviatedTitlePhase:
 		// Wait 5 seconds on abbreviated logo
 		if now.After(a.PhaseStart.Add(5 * time.Second)) {
-			a.nextStep(now, time.Millisecond * 250)
+			a.nextPhase(now, time.Millisecond * 250)
 		}
 	case TypingFullTitlePhase:
 		// "Typing" effect; display additional char of full title every 250ms by incrementing TypedLetters
 		if a.TypedLetters >= len(constants.FULL_GAME_TITLE) {
-			a.nextStep(now, time.Millisecond * 1500)
+			a.nextPhase(now, time.Millisecond * 1500)
 		} else {
 			a.TypedLetters++
 		}
 	case FullTitlePausePhase:
 		// Wait 1.5s on fully typed logo
 		if now.After(a.PhaseStart.Add(time.Millisecond * 1500)) {
-			a.nextStep(now, time.Second / 12)
+			a.nextPhase(now, time.Second / 12)
 		}
 	case FullTitleRainbowScrollPhase:
 		// Apply rainbow scroll effect to full logo for 10s
 		a.ColorIdx = (a.ColorIdx - 1 + len(a.Colors)) % len(a.Colors)
 		if now.After(a.PhaseStart.Add(10 * time.Second)) {
-			a.nextStep(now, time.Millisecond * 750)
+			a.nextPhase(now, time.Millisecond * 750)
 		}
 	case TitleResetPhase:
 		// Reset to first phase to repeat animation
@@ -81,7 +81,7 @@ func (a *TitleScreenLogoAnim) Update(now time.Time) {
 	}
 }
 
-func (a *TitleScreenLogoAnim) nextStep(now time.Time, frame_interval time.Duration) {
+func (a *TitleScreenLogoAnim) nextPhase(now time.Time, frame_interval time.Duration) {
 	a.FrameInterval = frame_interval
 	a.Frame = 0
 	a.Phase++
