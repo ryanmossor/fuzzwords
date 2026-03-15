@@ -128,7 +128,7 @@ func (m model) GetRoundedInputView() string {
 func (m model) initBlockTextInput() textinput.Model {
 	text_input := textinput.New()
 	text_input.Prompt = "  "
-	text_input.CharLimit = 50
+	text_input.CharLimit = 40
 	text_input.Width = text_input.CharLimit - len(text_input.Prompt) - 1
 
 	input_bg_style := lipgloss.NewStyle().Background(m.theme.input_bg)
