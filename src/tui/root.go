@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
-	"fzwds/src/utils"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -47,7 +46,6 @@ type GameUIState struct {
 	game_active				bool
 	game_over_msg			string
 
-	damage_anim_padding		int
 	player_damaged			bool
 
 	input_restricted		bool
@@ -164,7 +162,6 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 				game_active: false,
 				game_over_msg: "",
 
-				damage_anim_padding: 0,
 				player_damaged: false,
 
 				input_restricted: false,
@@ -434,24 +431,4 @@ func (m model) getScrollbar() string {
 			bar,
 		),
 	)
-}
-
-// Apply spacing to string to produce a shaking animation.
-// The first return value is the padded string.
-// The second return value is the number of padding spaces applied.
-func (m model) applyDamageShakeAnimation(str string) string {
-	if m.state.game_ui.damage_anim_padding <= 0 {
-		return str
-	}
-
-	result := str
-
-	padding_spaces := m.state.game_ui.damage_anim_padding / 2
-	if padding_spaces % 2 == 0 {
-		result = utils.RightPad(result, padding_spaces)
-	} else {
-		result = utils.LeftPad(result, padding_spaces)
-	}
-
-	return result
 }

@@ -25,21 +25,6 @@ func (m *model) setPlayerDamagedStateCmd() tea.Cmd {
 	})
 }
 
-type DamageShakeAnimationMsg struct{}
-func (m *model) damageShakeAnimationCmd(count int) tea.Cmd {
-	if !m.enable_animations {
-		return nil
-	}
-
-	m.state.game_ui.damage_anim_padding = count * 2
-	return tea.Tick(time.Second / time.Duration(m.FPS), func(t time.Time) tea.Msg {
-		if m.state.game_ui.damage_anim_padding > 0 {
-			return DamageShakeAnimationMsg{}
-		}
-		return nil
-	})
-}
-
 type TurnTimerTickMsg struct{}
 func (m *model) setTurnTickerCmd() tea.Cmd {
 	if m.state.game_ui.timer > time.Second * 10 {

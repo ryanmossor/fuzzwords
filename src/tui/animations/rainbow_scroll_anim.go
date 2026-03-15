@@ -15,10 +15,11 @@ type RainbowScrollAnim struct {
 }
 
 func (a *RainbowScrollAnim) Update(now time.Time) {
-	if a.AdvanceFrame(now) {
-		a.Offset = (a.Offset - 1 + len(a.Colors)) % len(a.Colors)
+	if !a.AdvanceFrame(now) {
+		return
 	}
 
+	a.Offset = (a.Offset - 1 + len(a.Colors)) % len(a.Colors)
 	if a.Frame >= a.TotalFrames {
 		a.Active = false
 	}

@@ -7,6 +7,8 @@ import (
 type Animation interface {
 	Init()
 	Update(time time.Time)
+	Activate()
+	Deactivate()
 	IsActive() bool
 	Effect(string) string
 }
@@ -46,4 +48,12 @@ func (a *BaseAnim) Init() {
 
 func (a *BaseAnim) IsActive() bool {
 	return a.Active
+}
+
+func (a *BaseAnim) Activate() {
+	a.Active = true
+}
+
+func (a *BaseAnim) Deactivate() {
+	a.Active = false
 }

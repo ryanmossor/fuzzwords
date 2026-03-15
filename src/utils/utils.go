@@ -180,3 +180,11 @@ var ansiRegex = regexp.MustCompile(`\x1B\[[0-9;]*[mJK]`)
 func StripANSICodes(s string) string {
 	return ansiRegex.ReplaceAllString(s, "")
 }
+
+func FillDescending(max, min int) []int {
+	var out []int
+	for i := max; i > min; i-- {
+		out = append(out, i)
+	}
+	return out
+}

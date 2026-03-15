@@ -23,6 +23,7 @@ func (m *AnimationManager) Get(key string) (Animation, bool) {
 
 func (m *AnimationManager) Register(key string, val Animation) {
 	m.animations[key] = val
+	slog.Debug("Registered animation", "animations", m.animations)
 }
 
 func (m *AnimationManager) InitAnimations(target_prefix EffectTarget) {
@@ -36,13 +37,24 @@ func (m *AnimationManager) InitAnimations(target_prefix EffectTarget) {
 	}
 }
 
+func (m *AnimationManager) DeactivateAnimations(target_prefix EffectTarget) {
+	for key, anim := range m.animations {
+		if strings.HasPrefix(key, string(target_prefix)) && anim.IsActive() {
+			slog.Debug("Deactivating animations", "key", key)
+			anim.Deactivate()
+		}
+	}
+}
+
 func (m *AnimationManager) Update(now time.Time) {
 	for _, a := range m.animations {
 		a.Update(now)
 	}
 }
 
-type EffectTarget string
+// Apply all active animations for target to provided input text.
+// First return value is output string with all active animations applied.
+// Second return value is bool indicating whether input string was changed.
 func (m *AnimationManager) ApplyAnimations(target, text string) (string, bool) {
 	out := text
 	changed := false
@@ -56,7 +68,10 @@ func (m *AnimationManager) ApplyAnimations(target, text string) (string, bool) {
     return out, changed
 }
 
+type EffectTarget string
 const (
-	ExtraLife EffectTarget = "extra_life"
-	TitleLogo EffectTarget = "title_logo"
+	ExtraLife 			EffectTarget = "extra_life"
+	StrikeCounter 		EffectTarget = "strike_counter"
+	TitleLogo 			EffectTarget = "title_logo"
+	ValidationMessage 	EffectTarget = "validation_message"
 )

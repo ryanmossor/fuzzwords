@@ -5,6 +5,7 @@ import (
 	"fzwds/src/enums"
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
+	"fzwds/src/utils"
 	"math/rand"
 	"strings"
 	"time"
@@ -61,13 +62,12 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 
 	// Reset damage animation to ensure it doesn't keep playing from previous failed turn
 	m.state.game_ui.player_damaged = false
-	m.state.game_ui.damage_anim_padding = 0
 
 	m.state.game = game.InitializeGame(m.game_settings)
 	m.state.game.NewTurn()
 
 	m.state.game_ui.start_time = time.Now()
-    m.state.game_ui.timer = (30 + 1) * time.Second
+    m.state.game_ui.timer = (3 + 1) * time.Second
 
 	m.footer_keymaps = []footer_keymaps{
 		{key: "esc", value: "clear input"},
@@ -87,10 +87,36 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 			Target:			animations.ExtraLife,
 		},
 		Offset: 			0,
-		TotalFrames: 		30,
+		TotalFrames: 		10,
 		Colors: 			m.theme.GetRainbowColors(),
 	}
-	m.animation_manager.Register("extra_life", extra_life_anim)
+	m.animation_manager.Register(string(animations.ExtraLife), extra_life_anim)
+
+	validation_msg_dmg_anim := &animations.DamageShakeAnim {
+		BaseAnim: animations.BaseAnim {
+			FrameInterval:	time.Second / time.Duration(m.FPS),
+			PrevFrame:		time.Now(),
+			Frame:			0,
+			Loop:			false,
+			Active:			false,
+			Target:			animations.ValidationMessage,
+		},
+		Frames: 			utils.FillDescending(8, 0),
+	}
+	m.animation_manager.Register(string(animations.ValidationMessage), validation_msg_dmg_anim)
+
+	strike_dmg_anim := &animations.DamageShakeAnim {
+		BaseAnim: animations.BaseAnim {
+			FrameInterval:	time.Second / time.Duration(m.FPS),
+			PrevFrame:		time.Now(),
+			Frame:			0,
+			Loop:			false,
+			Active:			false,
+			Target:			animations.StrikeCounter,
+		},
+		Frames: 			utils.FillDescending(8, 0),
+	}
+	m.animation_manager.Register(string(animations.StrikeCounter), strike_dmg_anim)
 
 	return m, tea.Batch(
 		textinput.Blink,
@@ -110,7 +136,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		m.state.game.HandleFailedTurn()
 		cmds = append(cmds,
 			m.setPlayerDamagedStateCmd(),
-			m.damageShakeAnimationCmd(8),
 			m.terminalBellCmd(false),
 		)
 
@@ -131,12 +156,15 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.state.game.CurrentTurn.SourceWord,
 				m.state.game.Settings.PromptMode)
 
+			m.animation_manager.InitAnimations(animations.ValidationMessage)
+
 			m.text_input.Reset()
 			cmds = append(cmds, m.debounceInputCmd(500))
 
 			m.state.game.NewTurn()
 		} else if m.state.game.CurrentTurn.Strikes < m.state.game.Settings.PromptStrikes {
 			m.state.game_ui.validation_msg = ""
+			m.animation_manager.InitAnimations(animations.StrikeCounter)
 		}
 
         cmds = append(cmds, m.setTurnTickerCmd())
@@ -146,10 +174,12 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             return m, nil
         }
 
+
         key := msg.String()
 		if key != "enter" {
 			m.state.game_ui.validation_msg = ""
 		}
+		m.animation_manager.DeactivateAnimations(animations.ValidationMessage)
 
 		switch key {
 		case "esc":
@@ -168,12 +198,12 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.state.game.HandleCorrectAnswer()
 			if len(m.state.game.Player.LettersUsed) >= len(m.state.game.Alphabet) {
 				m.state.game.GrantExtraLife()
-				m.animation_manager.InitAnimations("extra_life")
+				m.animation_manager.InitAnimations(animations.ExtraLife)
 			}
 
 			// Reset damage animation to ensure it doesn't keep playing from previous failed turn
+			m.animation_manager.DeactivateAnimations(animations.ValidationMessage)
 			m.state.game_ui.player_damaged = false
-			m.state.game_ui.damage_anim_padding = 0
 
 			// TODO: move win condition check to game_over?
 			if len(m.state.game.WordLists.Available) == 0 {
@@ -192,13 +222,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			cmds = append(cmds, m.debounceInputCmd(300))
 			return m, tea.Batch(cmds...)
-		}
-	case DamageShakeAnimationMsg:
-		if m.state.game_ui.damage_anim_padding > 0 {
-			m.state.game_ui.damage_anim_padding -= 2
-			return m, tea.Tick(time.Second / time.Duration(m.FPS), func(t time.Time) tea.Msg {
-				return DamageShakeAnimationMsg{}
-			})
 		}
 	}
 
