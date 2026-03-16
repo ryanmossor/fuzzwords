@@ -21,17 +21,17 @@ func (m *AnimationManager) Get(key EffectTarget) (Animation, bool) {
 	return anim, ok
 }
 
-func (m *AnimationManager) Register(anim Animation) {
-	m.animations[anim.target()] = anim
-	slog.Debug("Registered animation", "target", anim.target(), "animations", m.animations)
+func (m *AnimationManager) Register(anims ...Animation) {
+	for _, a := range anims {
+		m.animations[a.target()] = a
+		slog.Debug("Registered animation", "target", a.target(), "animations", m.animations)
+	}
 }
 
 func (m *AnimationManager) InitAnimations(target_prefix EffectTarget) {
 	for key, anim := range m.animations {
 		if strings.HasPrefix(string(key), string(target_prefix)) {
-			slog.Debug("Initializing animation for target",
-				"targetPrefix", target_prefix,
-				"anim", anim)
+			slog.Debug("Initializing animation for target", "targetPrefix", target_prefix, "anim", anim)
 			anim.Init()
 		}
 	}

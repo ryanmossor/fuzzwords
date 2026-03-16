@@ -68,27 +68,13 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game_ui.start_time = time.Now()
     m.state.game_ui.timer = (30 + 1) * time.Second
 
-	m.footer_keymaps = []footer_keymaps{
+	m.footer_keymaps = []FooterKeymap{
 		{key: "esc", value: "clear input"},
 		{key: "ctrl+q", value: "quit"},
 	}
 
 	m.text_input = m.initBlockTextInput()
 	m.state.game_ui.input_restricted = false
-
-	extra_life_anim := animations.NewRainbowScrollAnim(
-		animations.ExtraLife,
-		30,
-		false,
-		m.theme.GetRainbowColors(),
-	)
-	m.animation_manager.Register(extra_life_anim)
-
-	validation_msg_dmg_anim := animations.NewDamageShakeAnim(animations.ValidationMessage, 8)
-	m.animation_manager.Register(validation_msg_dmg_anim)
-
-	strike_dmg_anim := animations.NewDamageShakeAnim(animations.StrikeCounter, 6)
-	m.animation_manager.Register(strike_dmg_anim)
 
 	return m, tea.Batch(
 		textinput.Blink,

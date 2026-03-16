@@ -34,7 +34,7 @@ const (
 	large
 )
 
-type footer_keymaps struct {
+type FooterKeymap struct {
 	key		string
 	value	string
 }
@@ -83,7 +83,7 @@ type model struct {
 	renderer        	*lipgloss.Renderer
 	theme 				theme
 	size				size
-	footer_keymaps		[]footer_keymaps
+	footer_keymaps		[]FooterKeymap
 
 	text_input			textinput.Model
 
@@ -139,14 +139,36 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		slog.Error("Error writing settings.json", "error", err)
 	}
 
+	theme := BasicTheme(renderer)
+
+	title_logo_anim := animations.NewTitleScreenLogoAnim(theme.GetRainbowColors())
+	extra_life_anim := animations.NewRainbowScrollAnim(
+		animations.ExtraLife,
+		30,
+		false,
+		theme.GetRainbowColors(),
+	)
+	validation_msg_dmg_anim := animations.NewDamageShakeAnim(animations.ValidationMessage, 8)
+	strike_dmg_anim := animations.NewDamageShakeAnim(animations.StrikeCounter, 6)
+	win_anim := animations.NewRainbowScrollAnim(animations.GameOverWin, 0, true, theme.GetRainbowColors())
+
+	anim_manager := animations.InitAnimManager()
+	anim_manager.Register(
+		title_logo_anim,
+		extra_life_anim,
+		validation_msg_dmg_anim,
+		strike_dmg_anim,
+		win_anim,
+	)
+
 	return model{
 		debug: debug,
 		debug_map: make(map[string]string),
 
 		renderer: renderer,
-		theme: BasicTheme(renderer),
+		theme: theme,
 
-		footer_keymaps: []footer_keymaps{
+		footer_keymaps: []FooterKeymap {
 			{key: "q", value: "quit"},
 		},
 
@@ -155,9 +177,9 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		settings_schema: game_settings_schema_parsed,
 		settings_path: settings_file_path,
 
-		state: State{
-			press_play: PressPlayState{ visible: true },
-			settings: SettingsState{ selected: 0 },
+		state: State {
+			press_play: PressPlayState { visible: true },
+			settings: SettingsState { selected: 0 },
 			game_ui: GameUIState {
 				game_active: false,
 				game_over_msg: "",
@@ -171,7 +193,7 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 
 		FPS: 30,
 		enable_animations: true,
-		animation_manager: animations.InitAnimManager(),
+		animation_manager: anim_manager,
 	}
 }
 
@@ -203,6 +225,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.animation_manager.Update(now)
 
 		return m, m.tickCmd()
+
 	case tea.WindowSizeMsg:
 		m.viewport_width = msg.Width
 		m.viewport_height = msg.Height
@@ -212,14 +235,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.size = undersized
 			m.width_container = m.viewport_width
 			m.height_container = m.viewport_height
+
 		case m.viewport_width < 50:
 			m.size = small
 			m.width_container = m.viewport_width
 			m.height_container = m.viewport_height
+
 		case m.viewport_width < 80:
 			m.size = medium
 			m.width_container = 50
 			m.height_container = min(msg.Height, 30)
+
 		default:
 			m.size = large
 			m.width_container = 80
@@ -228,13 +254,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.width_content = m.width_container - 4
 		m = m.updateViewport()
+
 	case PressPlayTickMsg:
 		m, cmd := m.PressPlayUpdate(msg)
 		return m, cmd
+
 	case EnableInputMsg:
 		m.state.game_ui.input_restricted = false
+
 	case TogglePlayerDamagedMsg:
 		m.state.game_ui.player_damaged = false
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":

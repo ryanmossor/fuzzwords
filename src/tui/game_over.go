@@ -21,9 +21,6 @@ func (m model) GameOverSwitch(win, early_quit bool) (model, tea.Cmd) {
     if win {
         m.state.game_ui.validation_msg = ""
         m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
-
-		win_anim := animations.NewRainbowScrollAnim(animations.GameOverWin, 0, true, m.theme.GetRainbowColors())
-		m.animation_manager.Register(win_anim)
 		m.animation_manager.InitAnimations(animations.GameOverWin)
 	} else {
 		m.state.game.Player.HealthCurrent = 0
@@ -42,7 +39,7 @@ func (m model) GameOverSwitch(win, early_quit bool) (model, tea.Cmd) {
 
 	m = m.SwitchPage(game_over_page)
 
-	m.footer_keymaps = []footer_keymaps{
+	m.footer_keymaps = []FooterKeymap{
 		{key: "m", value: "main menu"},
         {key: "s", value: "change settings"},
 		{key: "enter", value: "new game"},

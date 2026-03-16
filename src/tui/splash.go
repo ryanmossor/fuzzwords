@@ -68,10 +68,7 @@ var letters = map[byte][]string {
 }
 
 func (m model) MainMenuInit() tea.Cmd {
-	title_logo_anim := animations.NewTitleScreenLogoAnim(m.theme.GetRainbowColors())
-	m.animation_manager.Register(title_logo_anim)
 	m.animation_manager.InitAnimations(animations.TitleLogo)
-
 	return nil
 }
 
@@ -82,7 +79,7 @@ func (m model) MainMenuSwitch() (model, tea.Cmd) {
 	}
 
 	m = m.SwitchPage(splash_page)
-	m.footer_keymaps = []footer_keymaps{
+	m.footer_keymaps = []FooterKeymap{
 		{key: "q", value: "quit"},
 	}
 	m.animation_manager.InitAnimations(animations.TitleLogo)
@@ -133,6 +130,7 @@ func (m model) MainMenuView() string {
 			for _, ch := range constants.ABBR_GAME_TITLE {
 				logo = drawGlyph(byte(ch), logo, yellow)
 			}
+
 		case animations.TypingFullTitlePhase, animations.FullTitlePausePhase:
 			base := m.theme.Base()
 			highlight := m.theme.TextHighlight()
@@ -155,15 +153,18 @@ func (m model) MainMenuView() string {
 
 				logo = drawGlyph(byte(current_title_char), logo, style)
 			}
+
 		case animations.FullTitleRainbowScrollPhase:
 			for i, ch := range constants.FULL_GAME_TITLE {
 				style_idx := (anim.ColorIdx + i + len(anim.Colors)) % len(anim.Colors)
 				style := anim.Colors[style_idx]
 				logo = drawGlyph(byte(ch), logo, style)
 			}
+
 		case animations.TitleResetPhase:
 			// Do nothing; logo hidden before anim restarts
 		}
+
 	default:
 		for _, c := range constants.ABBR_GAME_TITLE {
 			logo = drawGlyph(byte(c), logo, yellow)

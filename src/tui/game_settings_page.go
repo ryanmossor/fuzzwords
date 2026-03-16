@@ -20,7 +20,7 @@ func (m model) SettingsSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(settings_page)
 	m.state.settings.selected = 0
 
-	m.footer_keymaps = []footer_keymaps{
+	m.footer_keymaps = []FooterKeymap{
 		{key: "↑/↓", value: "scroll"},
 		{key: "←/→", value: "change"},
 		{key: "enter", value: "play"},
@@ -42,11 +42,13 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if m.state.settings.selected == 0 {
 				m.goto_top = true
 			}
+
 		case "k", "up", "shift+tab":
 			m.state.settings.selected = (m.state.settings.selected - 1 + len(m.settings_schema)) % len(m.settings_schema)
 			if m.state.settings.selected == len(m.settings_schema) - 1 {
 				m.goto_bottom = true
 			}
+
 		case "+", "=", "right", "l":
 			setting := m.settings_schema[m.state.settings.selected]
 			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.game_settings_copy.BellEnabled
@@ -56,6 +58,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if is_bell_being_enabled {
 				cmds = append(cmds, m.terminalBellCmd(true))
 			}
+
 		case "-", "left", "h":
 			setting := m.settings_schema[m.state.settings.selected]
 			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.game_settings_copy.BellEnabled
@@ -65,8 +68,10 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if is_bell_being_enabled {
 				cmds = append(cmds, m.terminalBellCmd(true))
 			}
+
 		case "ctrl+d":
 			m.game_settings_copy = game.GetDefaultSettings()
+
 		case "enter":
 			m.game_settings = &m.game_settings_copy
 
@@ -82,6 +87,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			return m.GameSwitch()
+
 		case "m", "esc":
 			m.game_settings_copy = *m.game_settings
 			return m.MainMenuSwitch()
