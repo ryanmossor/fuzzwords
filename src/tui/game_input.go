@@ -82,21 +82,21 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 }
 
 func (m *model) renderValidationMsg() string {
-	// TODO: check if m.state.game.CurrentTurn.IsValid?
 	if strings.HasPrefix(m.state.game_ui.validation_msg, "✓") {
 		return m.theme.TextGreen().Render(utils.RightPad(m.state.game_ui.validation_msg, 2))
 	}
 
 	var msg string
-	if !m.state.game_ui.game_active {
-		msg = m.state.game_ui.validation_msg
-	} else {
-		msg, _ = m.animation_manager.ApplyAnimations(
-			string(animations.ValidationMessage),
-			m.state.game_ui.validation_msg)
+	msg, _ = m.anim_mgr.ApplyAnimations(
+		string(animations.ValidationMessage),
+		m.state.game_ui.validation_msg)
 
-		// Input box will shake if msg and input width are not both even/odd
-		if len(utils.StripANSICodes(msg)) % 2 != m.text_input.CharLimit % 2 {
+	// Prevent input box from shaking by ensuring msg and input width are both even/odd
+	raw_str := utils.StripANSICodes(msg)
+	if len(raw_str) % 2 != m.text_input.CharLimit % 2 {
+		if raw_str[0] == ' ' {
+			msg = utils.LeftPad(msg, 1)
+		} else {
 			msg = utils.RightPad(msg, 1)
 		}
 	}

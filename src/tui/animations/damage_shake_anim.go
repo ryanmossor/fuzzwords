@@ -5,37 +5,38 @@ import (
 	"time"
 )
 
-type DamageShakeAnim struct {
-	BaseAnim
-	Frames		[]int
+type damageShakeAnim struct {
+	baseAnim
+	frames		[]int
 }
 
-func NewDamageShakeAnim(target EffectTarget, max_amplitude int) *DamageShakeAnim {
-	return &DamageShakeAnim {
-		BaseAnim: BaseAnim {
-			FrameInterval:	time.Second / 30,
-			PrevFrame:		time.Now(),
-			Frame:			0,
-			Loop:			false,
-			Active:			false,
-			Target:			target,
+func NewDamageShakeAnim(target effectTarget, max_amplitude int) *damageShakeAnim {
+	return &damageShakeAnim {
+		baseAnim: baseAnim {
+			// Higher than global tick rate, guarantees frame advance every tick to ensure smooth motion
+			frameInterval:	time.Second / 60,
+			prevFrame:		time.Now(),
+			frame:			0,
+			loop:			false,
+			active:			false,
+			target:			target,
 		},
-		Frames: 			utils.FillDescending(max_amplitude, 0),
+		frames: 			utils.FillDescending(max_amplitude, 0),
 	}
 }
 
-func (a *DamageShakeAnim) Update(now time.Time) {
-	if !a.AdvanceFrame(now) {
+func (a *damageShakeAnim) update(now time.Time) {
+	if !a.advanceFrame(now) {
 		return
 	}
 
-	if a.Frame >= len(a.Frames) {
-		a.Active = false
+	if a.frame >= len(a.frames) {
+		a.active = false
 	}
 }
 
-func (a *DamageShakeAnim) ApplyEffect(text string) string {
-	padding := a.Frames[a.Frame]
+func (a *damageShakeAnim) applyAnimation(text string) string {
+	padding := a.frames[a.frame]
 	if padding % 2 == 0 {
 		return utils.RightPad(text, padding)
 	}

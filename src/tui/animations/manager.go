@@ -7,48 +7,48 @@ import (
 )
 
 type AnimationManager struct {
-	animations map[EffectTarget]Animation
+	animations map[effectTarget]animation
 }
 
-func InitAnimManager() AnimationManager {
+func NewAnimationManager() AnimationManager {
 	return AnimationManager {
-		animations: make(map[EffectTarget]Animation),
+		animations: make(map[effectTarget]animation),
 	}
 }
 
-func (m *AnimationManager) Get(key EffectTarget) (Animation, bool) {
+func (m *AnimationManager) Get(key effectTarget) (animation, bool) {
 	anim, ok := m.animations[key]
 	return anim, ok
 }
 
-func (m *AnimationManager) Register(anims ...Animation) {
+func (m *AnimationManager) Register(anims ...animation) {
 	for _, a := range anims {
-		m.animations[a.target()] = a
-		slog.Debug("Registered animation", "target", a.target(), "animations", m.animations)
+		m.animations[a.getTarget()] = a
+		slog.Debug("Registered animation", "target", a.getTarget())
 	}
 }
 
-func (m *AnimationManager) InitAnimations(target_prefix EffectTarget) {
-	for key, anim := range m.animations {
+func (m *AnimationManager) InitAnimations(target_prefix effectTarget) {
+	for key, a := range m.animations {
 		if strings.HasPrefix(string(key), string(target_prefix)) {
-			slog.Debug("Initializing animation for target", "targetPrefix", target_prefix, "anim", anim)
-			anim.Init()
+			slog.Debug("Initializing animation for target", "targetPrefix", target_prefix, "anim", a)
+			a.init()
 		}
 	}
 }
 
-func (m *AnimationManager) DeactivateAnimations(target_prefix EffectTarget) {
-	for key, anim := range m.animations {
-		if strings.HasPrefix(string(key), string(target_prefix)) && anim.IsActive() {
+func (m *AnimationManager) DeactivateAnimations(target_prefix effectTarget) {
+	for key, a := range m.animations {
+		if strings.HasPrefix(string(key), string(target_prefix)) && a.isActive() {
 			slog.Debug("Deactivating animations", "key", key)
-			anim.deactivate()
+			a.deactivate()
 		}
 	}
 }
 
 func (m *AnimationManager) Update(now time.Time) {
 	for _, a := range m.animations {
-		a.Update(now)
+		a.update(now)
 	}
 }
 
@@ -59,20 +59,19 @@ func (m *AnimationManager) ApplyAnimations(target, text string) (string, bool) {
 	out := text
 	changed := false
     for key, a := range m.animations {
-        if strings.HasPrefix(string(key), target) && a.IsActive() {
-			slog.Debug("Applying text effect", "target", target, "text", text)
-			out = a.ApplyEffect(out)
+        if strings.HasPrefix(string(key), target) && a.isActive() {
+			out = a.applyAnimation(out)
 			changed = true
         }
     }
     return out, changed
 }
 
-type EffectTarget string
+type effectTarget string
 const (
-	ExtraLife 			EffectTarget = "extra_life"
-	StrikeCounter 		EffectTarget = "strike_counter"
-	TitleLogo 			EffectTarget = "title_logo"
-	ValidationMessage 	EffectTarget = "validation_message"
-	GameOverWin		 	EffectTarget = "game_over_win"
+	ExtraLife 			effectTarget = "extra_life"
+	GameOverWin		 	effectTarget = "game_over_win"
+	StrikeCounter 		effectTarget = "strike_counter"
+	TitleLogo 			effectTarget = "title_logo"
+	ValidationMessage 	effectTarget = "validation_message"
 )

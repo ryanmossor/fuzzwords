@@ -108,7 +108,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		if m.state.game.CurrentTurn.Strikes < m.state.game.Settings.PromptStrikes {
 			m.state.game_ui.validation_msg = ""
-			m.animation_manager.InitAnimations(animations.StrikeCounter)
+			m.anim_mgr.InitAnimations(animations.StrikeCounter)
 		}
 
 		if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikes {
@@ -121,7 +121,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.state.game.CurrentTurn.PossibleAnswer,
 				m.state.game.Settings.PromptMode)
 
-			m.animation_manager.InitAnimations(animations.ValidationMessage)
+			m.anim_mgr.InitAnimations(animations.ValidationMessage)
 
 			m.text_input.Reset()
 			cmds = append(cmds, m.debounceInputCmd(500))
@@ -141,7 +141,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		if key != "enter" {
 			m.state.game_ui.validation_msg = ""
 		}
-		m.animation_manager.DeactivateAnimations(animations.ValidationMessage)
+		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 
 		switch key {
 		case "esc":
@@ -163,11 +163,11 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.state.game.HandleCorrectAnswer(answer)
 			if len(m.state.game.Player.LettersUsed) >= len(m.state.game.Alphabet) {
 				m.state.game.GrantExtraLife()
-				m.animation_manager.InitAnimations(animations.ExtraLife)
+				m.anim_mgr.InitAnimations(animations.ExtraLife)
 			}
 
 			// Reset damage animation to ensure it doesn't keep playing from previous failed turn
-			m.animation_manager.DeactivateAnimations(animations.ValidationMessage)
+			m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 			m.state.game_ui.player_damaged = false
 
 			if len(m.state.game.WordLists.Available) == 0 {

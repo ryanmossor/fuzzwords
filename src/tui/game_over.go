@@ -21,7 +21,7 @@ func (m model) GameOverSwitch(win, early_quit bool) (model, tea.Cmd) {
     if win {
         m.state.game_ui.validation_msg = ""
         m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
-		m.animation_manager.InitAnimations(animations.GameOverWin)
+		m.anim_mgr.InitAnimations(animations.GameOverWin)
 	} else {
 		m.state.game.Player.HealthCurrent = 0
 
@@ -64,16 +64,16 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		switch msg.String() {
 		case "m":
-			m.animation_manager.DeactivateAnimations(animations.GameOverWin)
+			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.MainMenuSwitch()
 		case "s":
-			m.animation_manager.DeactivateAnimations(animations.GameOverWin)
+			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.SettingsSwitch()
 		case "enter":
-			m.animation_manager.DeactivateAnimations(animations.GameOverWin)
+			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.GameSwitch()
 		case "q":
-			m.animation_manager.DeactivateAnimations(animations.GameOverWin)
+			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m, tea.Quit
 		}
 	}
@@ -151,8 +151,7 @@ func (m model) GameOverView() string {
 		}).
 		Render()
 
-    validation_msg := m.renderValidationMsg()
-	game_over_msg, _ := m.animation_manager.ApplyAnimations(
+	game_over_msg, _ := m.anim_mgr.ApplyAnimations(
 		string(animations.GameOverWin),
 		m.state.game_ui.game_over_msg)
 
@@ -162,6 +161,6 @@ func (m model) GameOverView() string {
 		"",
 		stats_table,
 		"",
-        validation_msg,
+        m.state.game_ui.validation_msg,
 	)
 }

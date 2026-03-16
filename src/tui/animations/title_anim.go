@@ -8,13 +8,13 @@ import (
 )
 
 type TitleScreenLogoAnim struct {
-	BaseAnim
+	baseAnim
 
 	// Indicates currently active phase of animation
 	Phase 			TitleScreenLogoPhase
 
 	// Timestamp at which the current phase began
-	PhaseStart		time.Time
+	phaseStart		time.Time
 
 	// Index specifying how many glyphs of the full title logo have been "typed"
 	TypedLetters	int
@@ -28,28 +28,28 @@ type TitleScreenLogoAnim struct {
 
 func NewTitleScreenLogoAnim(colors []lipgloss.Style) *TitleScreenLogoAnim {
 	return &TitleScreenLogoAnim {
-		BaseAnim: BaseAnim {
-			FrameInterval:	time.Second / 30,
-			PrevFrame:		time.Now(),
-			Frame:			0,
-			Loop:			true,
-			Active:			true,
-			Target:			TitleLogo,
+		baseAnim: baseAnim {
+			frameInterval:	time.Second / 30,
+			prevFrame:		time.Now(),
+			frame:			0,
+			loop:			true,
+			active:			true,
+			target:			TitleLogo,
 		},
 		Phase:				0,
-		PhaseStart:			time.Now(),
+		phaseStart:			time.Now(),
 		TypedLetters:		0,
 		ColorIdx: 			0,
 		Colors: 			colors,
 	}
 }
 
-func (a *TitleScreenLogoAnim) Init() {
-	a.BaseAnim.Init()
-	a.FrameInterval = time.Second * 5
+func (a *TitleScreenLogoAnim) init() {
+	a.baseAnim.init()
+	a.frameInterval = time.Second * 5
 	a.ColorIdx = 0
 	a.Phase = 0
-	a.PhaseStart = time.Now()
+	a.phaseStart = time.Now()
 	a.TypedLetters = 0
 }
 
@@ -62,15 +62,15 @@ const (
 	TitleResetPhase
 )
 
-func (a *TitleScreenLogoAnim) Update(now time.Time) {
-	if !a.AdvanceFrame(now) {
+func (a *TitleScreenLogoAnim) update(now time.Time) {
+	if !a.advanceFrame(now) {
 		return
 	}
 
 	switch a.Phase {
 	case AbbreviatedTitlePhase:
 		// Wait 5 seconds on abbreviated logo
-		if now.After(a.PhaseStart.Add(5 * time.Second)) {
+		if now.After(a.phaseStart.Add(5 * time.Second)) {
 			a.nextPhase(now, time.Millisecond * 250)
 		}
 	case TypingFullTitlePhase:
@@ -82,32 +82,32 @@ func (a *TitleScreenLogoAnim) Update(now time.Time) {
 		}
 	case FullTitlePausePhase:
 		// Wait 1.5s on fully typed logo
-		if now.After(a.PhaseStart.Add(time.Millisecond * 1500)) {
+		if now.After(a.phaseStart.Add(time.Millisecond * 1500)) {
 			a.nextPhase(now, time.Second / 12)
 		}
 	case FullTitleRainbowScrollPhase:
 		// Apply rainbow scroll effect to full logo for 10s
 		a.ColorIdx = (a.ColorIdx - 1 + len(a.Colors)) % len(a.Colors)
-		if now.After(a.PhaseStart.Add(10 * time.Second)) {
+		if now.After(a.phaseStart.Add(10 * time.Second)) {
 			a.nextPhase(now, time.Millisecond * 750)
 		}
 	case TitleResetPhase:
 		// Reset to first phase to repeat animation
-		if now.After(a.PhaseStart.Add(a.FrameInterval)) {
-			a.Init()
+		if now.After(a.phaseStart.Add(a.frameInterval)) {
+			a.init()
 		}
 	}
 }
 
 func (a *TitleScreenLogoAnim) nextPhase(now time.Time, frame_interval time.Duration) {
-	a.FrameInterval = frame_interval
-	a.Frame = 0
+	a.frameInterval = frame_interval
+	a.frame = 0
 	a.Phase++
-	a.PhaseStart = now
-	a.PrevFrame = now
+	a.phaseStart = now
+	a.prevFrame = now
 }
 
-func (a *TitleScreenLogoAnim) ApplyEffect(text string) string {
+func (a *TitleScreenLogoAnim) applyAnimation(text string) string {
 	// Because title screen anim is more complicated, effects/coloring are delegated to title screen view
 	return text
 }

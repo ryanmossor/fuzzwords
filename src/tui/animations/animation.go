@@ -4,62 +4,64 @@ import (
 	"time"
 )
 
-type Animation interface {
-	Init()
-	Update(time time.Time)
-	IsActive() bool
-	ApplyEffect(string) string
+type animation interface {
+	init()
 
 	activate()
 	deactivate()
-	target() EffectTarget
+	isActive() bool
+
+	update(time time.Time)
+	applyAnimation(string) string
+
+	getTarget() effectTarget
 }
 
-type BaseAnim struct {
-	FrameInterval	time.Duration
-	PrevFrame     	time.Time
-	Frame			int
+type baseAnim struct {
+	frameInterval	time.Duration
+	prevFrame     	time.Time
+	frame			int
 
-	Loop 			bool // move to derived types?
-	Active 			bool
+	loop 			bool // move to derived types?
+	active 			bool
 
-	Target			EffectTarget
+	target			effectTarget
 }
 
 // If time since PrevFrame is >= FrameInterval, increment Frame and update time of PrevFrame to now.
 // Returns true if frame advanced, false otherwise.
-func (a *BaseAnim) AdvanceFrame(now time.Time) bool {
-	if !a.Active {
+func (a *baseAnim) advanceFrame(now time.Time) bool {
+	if !a.active {
 		return false
 	}
 
-	if now.Sub(a.PrevFrame) >= a.FrameInterval {
-		a.Frame++
-		a.PrevFrame = now
+	if now.Sub(a.prevFrame) >= a.frameInterval {
+		a.frame++
+		a.prevFrame = now
 		return true
 	}
 
 	return false
 }
 
-func (a *BaseAnim) Init() {
-	a.Active = true
-	a.Frame = 0
-	a.PrevFrame = time.Time{}
+func (a *baseAnim) init() {
+	a.active = true
+	a.frame = 0
+	a.prevFrame = time.Time{}
 }
 
-func (a *BaseAnim) IsActive() bool {
-	return a.Active
+func (a *baseAnim) isActive() bool {
+	return a.active
 }
 
-func (a *BaseAnim) activate() {
-	a.Active = true
+func (a *baseAnim) activate() {
+	a.active = true
 }
 
-func (a *BaseAnim) deactivate() {
-	a.Active = false
+func (a *baseAnim) deactivate() {
+	a.active = false
 }
 
-func (a *BaseAnim) target() EffectTarget {
-	return a.Target
+func (a *baseAnim) getTarget() effectTarget {
+	return a.target
 }

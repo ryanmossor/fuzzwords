@@ -88,7 +88,6 @@ type model struct {
 	text_input			textinput.Model
 
 	state				State
-	animation_manager	animations.AnimationManager
 	game_settings		*game.Settings
 	game_settings_copy	game.Settings
 	settings_schema		game.SettingsSchema
@@ -96,6 +95,7 @@ type model struct {
 
 	FPS					int
 	enable_animations	bool
+	anim_mgr			animations.AnimationManager
 }
 
 //go:embed game_settings_schema.json
@@ -148,12 +148,12 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		false,
 		theme.GetRainbowColors(),
 	)
-	validation_msg_dmg_anim := animations.NewDamageShakeAnim(animations.ValidationMessage, 8)
-	strike_dmg_anim := animations.NewDamageShakeAnim(animations.StrikeCounter, 6)
+	validation_msg_dmg_anim := animations.NewDamageShakeAnim(animations.ValidationMessage, 10)
+	strike_dmg_anim := animations.NewDamageShakeAnim(animations.StrikeCounter, 8)
 	win_anim := animations.NewRainbowScrollAnim(animations.GameOverWin, 0, true, theme.GetRainbowColors())
 
-	anim_manager := animations.InitAnimManager()
-	anim_manager.Register(
+	mgr := animations.NewAnimationManager()
+	mgr.Register(
 		title_logo_anim,
 		extra_life_anim,
 		validation_msg_dmg_anim,
@@ -193,7 +193,7 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 
 		FPS: 30,
 		enable_animations: true,
-		animation_manager: anim_manager,
+		anim_mgr: mgr,
 	}
 }
 
@@ -203,7 +203,7 @@ type TickMsg struct {
 
 // Global tick timer
 func (m model) tickCmd() tea.Cmd {
-	return tea.Every(time.Second / time.Duration(m.FPS), func(t time.Time) tea.Msg {
+	return tea.Tick(time.Second / time.Duration(m.FPS), func(t time.Time) tea.Msg {
 		return TickMsg{t}
 	})
 }
@@ -222,7 +222,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case TickMsg:
 		now := msg.Time
 
-		m.animation_manager.Update(now)
+		m.anim_mgr.Update(now)
 
 		return m, m.tickCmd()
 

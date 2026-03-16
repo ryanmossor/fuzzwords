@@ -68,7 +68,7 @@ var letters = map[byte][]string {
 }
 
 func (m model) MainMenuInit() tea.Cmd {
-	m.animation_manager.InitAnimations(animations.TitleLogo)
+	m.anim_mgr.InitAnimations(animations.TitleLogo)
 	return nil
 }
 
@@ -82,7 +82,7 @@ func (m model) MainMenuSwitch() (model, tea.Cmd) {
 	m.footer_keymaps = []FooterKeymap{
 		{key: "q", value: "quit"},
 	}
-	m.animation_manager.InitAnimations(animations.TitleLogo)
+	m.anim_mgr.InitAnimations(animations.TitleLogo)
 
 	return m, nil
 }
@@ -110,7 +110,7 @@ func (m model) MainMenuView() string {
 
 	switch m.size {
 	case large:
-		a, _ := m.animation_manager.Get(animations.TitleLogo)
+		a, _ := m.anim_mgr.Get(animations.TitleLogo)
 		anim, ok := a.(*animations.TitleScreenLogoAnim)
 		if !ok {
 			// Display yellow logo if animation state could not be retrieved
