@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fzwds/src/game"
-	"fzwds/src/tui/animations"
+	anim "fzwds/src/tui/animations"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -97,7 +97,7 @@ type model struct {
 
 	FPS					int
 	animations_enabled	bool
-	anim_mgr			animations.AnimationManager
+	anim_mgr			anim.AnimationManager
 }
 
 //go:embed game_settings_schema.json
@@ -143,18 +143,13 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 
 	theme := BasicTheme(renderer)
 
-	title_logo_anim := animations.NewTitleScreenLogoAnim(theme.GetRainbowColors())
-	extra_life_anim := animations.NewRainbowScrollAnim(
-		animations.ExtraLife,
-		30,
-		false,
-		theme.GetRainbowColors(),
-	)
-	validation_msg_dmg_anim := animations.NewDamageShakeAnim(animations.ValidationMessage, 10)
-	strike_dmg_anim := animations.NewDamageShakeAnim(animations.StrikeCounter, 8)
-	win_anim := animations.NewRainbowScrollAnim(animations.GameOverWin, 0, true, theme.GetRainbowColors())
+	title_logo_anim := anim.NewTitleScreenLogoAnim(theme.GetRainbowColors())
+	extra_life_anim := anim.NewRainbowScrollAnim(anim.ExtraLife, 30, false, theme.GetRainbowColors())
+	validation_msg_dmg_anim := anim.NewDamageShakeAnim(anim.ValidationMessage, 10)
+	strike_dmg_anim := anim.NewDamageShakeAnim(anim.StrikeCounter, 8)
+	win_anim := anim.NewRainbowScrollAnim(anim.GameOverWin, 0, true, theme.GetRainbowColors())
 
-	mgr := animations.NewAnimationManager()
+	mgr := anim.NewAnimationManager()
 	mgr.Register(
 		title_logo_anim,
 		extra_life_anim,
