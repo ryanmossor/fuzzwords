@@ -118,7 +118,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 					strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
 			m.state.game_ui.validation_msg += m.highlightPromptAnswer(
 				m.state.game.CurrentTurn.Prompt,
-				m.state.game.CurrentTurn.SourceWord,
+				m.state.game.CurrentTurn.PossibleAnswer,
 				m.state.game.Settings.PromptMode)
 
 			m.animation_manager.InitAnimations(animations.ValidationMessage)

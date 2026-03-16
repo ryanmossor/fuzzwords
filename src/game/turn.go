@@ -11,9 +11,10 @@ import (
 )
 
 type Turn struct {
-	SourceWord 	string
-	Prompt 	   	string
-	Strikes	   	int
+	SourceWord 		string
+	PossibleAnswer	string
+	Prompt 	   		string
+	Strikes	   		int
 }
 
 // TODO: ensure next prompt is different from previous if previous prompt was failed
@@ -39,6 +40,7 @@ func (g *GameState) NewTurn() {
 
 	next_turn := Turn{ 
 		SourceWord: word,
+		PossibleAnswer: g.getShortPossibleAnswer(prompt),
 		Prompt: prompt,
 		Strikes: 0,
 	}
@@ -77,6 +79,7 @@ func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 	slog.Info("Answer validated",
 		"prompt", g.CurrentTurn.Prompt,
 		"sourceWord", g.CurrentTurn.SourceWord,
+		"possibleAnswer", g.CurrentTurn.PossibleAnswer,
 		"answer", answer,
 		"isValid", is_valid,
 		"validationMsg", msg,
@@ -89,4 +92,41 @@ func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 	}
 
 	return is_valid, msg
+}
+
+func (g *GameState) getShortPossibleAnswer(prompt string) string {
+	is_valid_word := g.WordLists.FULL_MAP[prompt]
+	has_been_used := g.WordLists.Used[prompt]
+	if is_valid_word && !has_been_used {
+		return prompt
+	}
+
+	possible_answer := strings.Repeat("a", 50)
+	for _, word := range g.WordLists.Available {
+		if len(word) < len(prompt) || len(word) > len(possible_answer) {
+			continue
+		}
+
+		is_match := false
+		if g.Settings.PromptMode == enums.Fuzzy {
+			is_match = utils.IsFuzzyMatch(word, prompt)
+		} else {
+			is_match = strings.Contains(word, prompt)
+		}
+
+		if !is_match {
+			continue
+		}
+
+		if len(word) < len(possible_answer) {
+			possible_answer = word
+		}
+
+		// Accept a word up to 2 chars longer than length of prompt
+		if len(possible_answer) <= len(prompt) + 2 {
+			break
+		}
+	}
+
+	return possible_answer
 }
