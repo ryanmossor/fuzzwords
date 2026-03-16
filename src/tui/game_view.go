@@ -76,7 +76,12 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.text_input = m.initBlockTextInput()
 	m.state.game_ui.input_restricted = false
 
-	extra_life_anim := animations.NewRainbowScrollAnim(animations.ExtraLife, 30, false, m.theme.GetRainbowColors())
+	extra_life_anim := animations.NewRainbowScrollAnim(
+		animations.ExtraLife,
+		30,
+		false,
+		m.theme.GetRainbowColors(),
+	)
 	m.animation_manager.Register(extra_life_anim)
 
 	validation_msg_dmg_anim := animations.NewDamageShakeAnim(animations.ValidationMessage, 8)
@@ -113,7 +118,14 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		if m.state.game.Player.HealthCurrent == 0 {
 			return m.GameOverSwitch(false, false)
-		} else if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikes {
+		}
+
+		if m.state.game.CurrentTurn.Strikes < m.state.game.Settings.PromptStrikes {
+			m.state.game_ui.validation_msg = ""
+			m.animation_manager.InitAnimations(animations.StrikeCounter)
+		}
+
+		if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikes {
 			m.state.game_ui.validation_msg = m.theme.TextRed().Render(
 				fmt.Sprintf(
 					"Prompt %s failed. Possible solve: ",
@@ -129,13 +141,11 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			cmds = append(cmds, m.debounceInputCmd(500))
 
 			m.state.game.NewTurn()
-		} else if m.state.game.CurrentTurn.Strikes < m.state.game.Settings.PromptStrikes {
-			m.state.game_ui.validation_msg = ""
-			m.animation_manager.InitAnimations(animations.StrikeCounter)
 		}
 
         cmds = append(cmds, m.setTurnTickerCmd())
         return m, tea.Batch(cmds...)
+
 	case tea.KeyMsg:
         if m.state.game_ui.input_restricted {
             return m, nil
@@ -150,19 +160,21 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		switch key {
 		case "esc":
 			m.text_input.Reset()
+
 		case "ctrl+q":
 			return m.GameOverSwitch(false, true)
-		case "enter":
-			// TODO pass answer to ValidateAnswer
-			m.state.game.CurrentTurn.Answer = strings.ToLower(strings.TrimSpace(m.text_input.Value()))
-            m.text_input.Reset()
-			m.state.game_ui.validation_msg = m.state.game.ValidateAnswer()
 
-			if !m.state.game.CurrentTurn.IsValid {
+		case "enter":
+			answer := strings.ToLower(strings.TrimSpace(m.text_input.Value()))
+            m.text_input.Reset()
+
+			var is_valid bool
+			is_valid, m.state.game_ui.validation_msg = m.state.game.ValidateAnswer(answer)
+			if !is_valid {
 				break
 			}
 
-			m.state.game.HandleCorrectAnswer()
+			m.state.game.HandleCorrectAnswer(answer)
 			if len(m.state.game.Player.LettersUsed) >= len(m.state.game.Alphabet) {
 				m.state.game.GrantExtraLife()
 				m.animation_manager.InitAnimations(animations.ExtraLife)
@@ -174,8 +186,9 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			if len(m.state.game.WordLists.Available) == 0 {
 				return m.GameOverSwitch(true, false)
-			} else if (
-				m.state.game.Settings.WinCondition == enums.MaxLives &&
+			}
+
+			if (m.state.game.Settings.WinCondition == enums.MaxLives &&
 				m.state.game.Player.HealthCurrent == m.state.game.Settings.HealthMax) {
 				return m.GameOverSwitch(true, false)
 			}

@@ -14,9 +14,6 @@ type Turn struct {
 	SourceWord 	string
 	Prompt 	   	string
 	Strikes	   	int
-
-	Answer     	string
-	IsValid		bool
 }
 
 // TODO: ensure next prompt is different from previous if previous prompt was failed
@@ -44,36 +41,35 @@ func (g *GameState) NewTurn() {
 		SourceWord: word,
 		Prompt: prompt,
 		Strikes: 0,
-		IsValid: false,
 	}
 
 	g.PreviousTurn = g.CurrentTurn
 	g.CurrentTurn = next_turn
 }
 
-func (g *GameState) ValidateAnswer() string {
+func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 	is_valid := true
-	answer_upper := strings.ToUpper(g.CurrentTurn.Answer)
+	answer_upper := strings.ToUpper(answer)
 	msg := fmt.Sprintf("✓ %s", answer_upper)
 
-	if len(g.CurrentTurn.Answer) == 0 {
+	if len(answer) == 0 {
 		is_valid = false
 		msg = "No answer given"
 	}
 
-	if is_valid && !g.WordLists.FULL_MAP[g.CurrentTurn.Answer] {
+	if is_valid && !g.WordLists.FULL_MAP[answer] {
 		is_valid = false
 		msg = fmt.Sprintf("Invalid word: %s", answer_upper)
 	}
 
-	fuzzy_match := g.Settings.PromptMode == enums.Fuzzy && utils.IsFuzzyMatch(g.CurrentTurn.Answer, g.CurrentTurn.Prompt)
-	classic_match := g.Settings.PromptMode == enums.Classic && strings.Contains(g.CurrentTurn.Answer, g.CurrentTurn.Prompt)
+	fuzzy_match := g.Settings.PromptMode == enums.Fuzzy && utils.IsFuzzyMatch(answer, g.CurrentTurn.Prompt)
+	classic_match := g.Settings.PromptMode == enums.Classic && strings.Contains(answer, g.CurrentTurn.Prompt)
 	if is_valid && !(fuzzy_match || classic_match) {
 		is_valid = false
 		msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
 	}
 	
-	if is_valid && g.WordLists.Used[g.CurrentTurn.Answer] {
+	if is_valid && g.WordLists.Used[answer] {
 		is_valid = false
 		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
 	}
@@ -81,18 +77,16 @@ func (g *GameState) ValidateAnswer() string {
 	slog.Info("Answer validated",
 		"prompt", g.CurrentTurn.Prompt,
 		"sourceWord", g.CurrentTurn.SourceWord,
-		"answer", g.CurrentTurn.Answer,
+		"answer", answer,
 		"isValid", is_valid,
 		"validationMsg", msg,
 		"promptMode", g.Settings.PromptMode.String())
 
-	g.CurrentTurn.IsValid = is_valid
-
 	if is_valid {
-		word_idx, _ := slices.BinarySearch(g.WordLists.Available, g.CurrentTurn.Answer)
+		word_idx, _ := slices.BinarySearch(g.WordLists.Available, answer)
 		g.WordLists.Available = utils.Remove(g.WordLists.Available, word_idx)
-		g.WordLists.Used[g.CurrentTurn.Answer] = true
+		g.WordLists.Used[answer] = true
 	}
 
-	return msg
+	return is_valid, msg
 }

@@ -24,10 +24,10 @@ func InitializePlayer(cfg *Settings, alphabet string) Player {
 	return player
 }
 
-func (g *GameState) HandleCorrectAnswer() {
+func (g *GameState) HandleCorrectAnswer(answer string) {
 	g.Player.TurnsSinceLastExtraLife++
 
-	for _, c := range strings.ToUpper(g.CurrentTurn.Answer) {
+	for _, c := range strings.ToUpper(answer) {
 		ch := string(c)
 
 		if strings.Contains(g.Alphabet, ch) && !slices.Contains(g.Player.LettersUsed, ch) {
@@ -38,7 +38,7 @@ func (g *GameState) HandleCorrectAnswer() {
 	}
 
 	slices.Sort(g.Player.LettersUsed)
-	g.Player.Stats.UpdateSolvedStats(g.CurrentTurn.Answer)
+	g.Player.Stats.UpdateSolvedStats(answer)
 }
 
 func (g *GameState) GrantExtraLife() {
