@@ -8,7 +8,9 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
+	"unicode/utf8"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -94,7 +96,7 @@ type model struct {
 	settings_path		string
 
 	FPS					int
-	enable_animations	bool
+	animations_enabled	bool
 	anim_mgr			animations.AnimationManager
 }
 
@@ -192,7 +194,7 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		},
 
 		FPS: 30,
-		enable_animations: true,
+		animations_enabled: true,
 		anim_mgr: mgr,
 	}
 }
@@ -222,7 +224,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case TickMsg:
 		now := msg.Time
 
-		m.anim_mgr.Update(now)
+		if m.animations_enabled {
+			m.anim_mgr.Update(now)
+		}
 
 		return m, m.tickCmd()
 
@@ -352,7 +356,7 @@ func (m model) View() string {
 		footer,
 	) 
 
-	return m.renderer.Place(
+	v := m.renderer.Place(
 		m.viewport_width,
 		m.viewport_height,
 		lipgloss.Center,
@@ -362,6 +366,13 @@ func (m model) View() string {
 			MaxHeight(m.viewport_height).
 			Render(child),
 		) 
+
+	if m.debug {
+		m.debug_map["viewSize"] = strconv.Itoa(len(v))
+		m.debug_map["runeCount"] = strconv.Itoa(utf8.RuneCountInString(v))
+	}
+
+	return v
 }
 
 func (m model) SwitchPage(page page) model {

@@ -55,7 +55,11 @@ func (m *AnimationManager) Update(now time.Time) {
 // Apply all active animations for target to provided input text.
 // First return value is output string with all active animations applied.
 // Second return value is bool indicating whether input string was changed.
-func (m *AnimationManager) ApplyAnimations(target, text string) (string, bool) {
+func (m *AnimationManager) ApplyAnimations(target, text string, animations_enabled bool) (string, bool) {
+	if !animations_enabled {
+		return text, false
+	}
+
 	out := text
 	changed := false
     for key, a := range m.animations {

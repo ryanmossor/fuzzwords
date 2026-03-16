@@ -107,7 +107,8 @@ func (m model) renderRemainingLetters() string {
 
 	letters, changed := m.anim_mgr.ApplyAnimations(
 		string(animations.ExtraLife),
-		strings.Join(strings.Split(m.state.game.Alphabet, ""), " "))
+		strings.Join(strings.Split(m.state.game.Alphabet, ""), " "),
+		m.animations_enabled)
 	if changed {
 		return letters
 	}

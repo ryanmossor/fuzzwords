@@ -151,9 +151,13 @@ func (m model) GameOverView() string {
 		}).
 		Render()
 
-	game_over_msg, _ := m.anim_mgr.ApplyAnimations(
+	game_over_msg, changed := m.anim_mgr.ApplyAnimations(
 		string(animations.GameOverWin),
-		m.state.game_ui.game_over_msg)
+		m.state.game_ui.game_over_msg,
+		m.animations_enabled)
+	if !changed {
+		game_over_msg = m.theme.TextGreen().Bold(true).Render(game_over_msg)
+	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
