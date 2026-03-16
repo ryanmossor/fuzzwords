@@ -43,7 +43,7 @@ func (m model) renderHealthDisplay() string {
 	health_cur := m.state.game.Player.HealthCurrent
 	health_max := m.state.game.Settings.HealthMax
 	sb.WriteString(full_style.Render(strings.Repeat(health_icon_full, health_cur)))
-	sb.WriteString(full_style.Render(strings.Repeat(health_icon_empty, health_max - health_cur)))
+	sb.WriteString(m.theme.Base().Render(strings.Repeat(health_icon_empty, health_max - health_cur)))
 
 	if strings.HasPrefix(health_icon_full, "#") {
 		sb.WriteString(bracket_style.Render("]"))
