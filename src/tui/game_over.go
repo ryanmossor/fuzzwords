@@ -73,7 +73,6 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.GameSwitch()
 		case "q":
-			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m, tea.Quit
 		}
 	}
