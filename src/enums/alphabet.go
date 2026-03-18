@@ -8,32 +8,28 @@ import (
 
 type Alphabet int 
 const (
-	DebugAlphabet Alphabet = iota
-	EasyAlphabet
-	MediumAlphabet
-	FullAlphabet
+	AlphabetEasy Alphabet = iota
+	AlphabetMedium
+	AlphabetFull
 )
 
 var (
 	AlphabetName = map[int]string{
-		0: "debug",
-		1: "easy",
-		2: "medium",
-		3: "full",
+		0: "easy",
+		1: "medium",
+		2: "full",
 	}
 
 	AlphabetValue = map[string]int{
-		"debug": 0,
-		"easy": 1,
-		"medium": 2,
-		"full": 3,
+		"easy": 0,
+		"medium": 1,
+		"full": 2,
 	}
 
 	Alphabets = map[Alphabet]string{
-		DebugAlphabet: "ABC",
-		EasyAlphabet: "ABCDEFGHILMNOPRSTUWY", // J, K, Q, V, X, Z removed
-		MediumAlphabet: "ABCDEFGHIJKLMNOPQRSTUVWY", // X and Z removed
-		FullAlphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+		AlphabetEasy: "ABCDEFGHILMNOPRSTUWY", // J, K, Q, V, X, Z removed
+		AlphabetMedium: "ABCDEFGHIJKLMNOPQRSTUVWY", // X and Z removed
+		AlphabetFull: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
 	}
 )
 

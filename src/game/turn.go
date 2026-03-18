@@ -26,9 +26,9 @@ func (g *GameState) NewTurn() {
 	prompt_len := rand.Intn(g.Settings.PromptLenMax - g.Settings.PromptLenMin + 1) + g.Settings.PromptLenMin 
 
 	switch g.Settings.PromptMode {
-	case enums.Fuzzy:
+	case enums.PromptModeFuzzy:
 		prompt = utils.CreateFuzzyPrompt(word, prompt_len)
-	case enums.Classic:
+	case enums.PromptModeClassic:
 		if len(word) <= g.Settings.PromptLenMax {
 			prompt = word
 		} else {
@@ -64,8 +64,8 @@ func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 		msg = fmt.Sprintf("Invalid word: %s", answer_upper)
 	}
 
-	fuzzy_match := g.Settings.PromptMode == enums.Fuzzy && utils.IsFuzzyMatch(answer, g.CurrentTurn.Prompt)
-	classic_match := g.Settings.PromptMode == enums.Classic && strings.Contains(answer, g.CurrentTurn.Prompt)
+	fuzzy_match := g.Settings.PromptMode == enums.PromptModeFuzzy && utils.IsFuzzyMatch(answer, g.CurrentTurn.Prompt)
+	classic_match := g.Settings.PromptMode == enums.PromptModeClassic && strings.Contains(answer, g.CurrentTurn.Prompt)
 	if is_valid && !(fuzzy_match || classic_match) {
 		is_valid = false
 		msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
@@ -108,7 +108,7 @@ func (g *GameState) getShortPossibleAnswer(prompt, source_word string) string {
 		}
 
 		is_match := false
-		if g.Settings.PromptMode == enums.Fuzzy {
+		if g.Settings.PromptMode == enums.PromptModeFuzzy {
 			is_match = utils.IsFuzzyMatch(word, prompt)
 		} else {
 			is_match = strings.Contains(word, prompt)

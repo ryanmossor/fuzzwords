@@ -107,16 +107,14 @@ func (m model) GameOverView() string {
 		fastest_extra_life = "-"
 	}
 
-	elapsed_seconds := m.state.game.GameEnd.Sub(m.state.game.GameStart).Seconds()
-
 	solves_per_min := "0"
     if stats.PromptsSolved > 0 {
-		spm := float64(stats.PromptsSolved) / (float64(elapsed_seconds) / 60.0)
+		spm := float64(stats.PromptsSolved) / (float64(stats.TimeSurvived) / 60.0)
 		solves_per_min = fmt.Sprintf("%.1f", spm)
 	}
 
-	rows := [][]string{
-		{"Time survived", utils.FormatTime(int(elapsed_seconds))},
+	rows := [][]string {
+		{"Time survived", utils.FormatTime(stats.TimeSurvived)},
 		{"Prompts solved", strconv.Itoa(stats.PromptsSolved)},
 		{"Prompts failed", strconv.Itoa(stats.PromptsFailed)},
 		{"Solves per minute", solves_per_min},

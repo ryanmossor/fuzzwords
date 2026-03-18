@@ -24,7 +24,7 @@ func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.Pr
 	var sb strings.Builder
 	 
 	switch prompt_mode {
-	case enums.Fuzzy:
+	case enums.PromptModeFuzzy:
 		prompt_idx := 0
 		for _, c := range answer_upper {
 			curr_char := string(c)
@@ -36,7 +36,7 @@ func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.Pr
 				sb.WriteString(accent(curr_char))
 			}
 		}
-	case enums.Classic:
+	case enums.PromptModeClassic:
 		if !strings.Contains(answer_upper, prompt_upper) {
 			sb.WriteString(accent(answer_upper))
 			return sb.String()
@@ -59,9 +59,9 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 
 	is_match := false
 	switch m.state.game.Settings.PromptMode {
-	case enums.Fuzzy:
+	case enums.PromptModeFuzzy:
 		is_match = utils.IsFuzzyMatch(answer_upper, prompt_upper)
-	case enums.Classic:
+	case enums.PromptModeClassic:
 		is_match = strings.Contains(answer_upper, prompt_upper)
 	}
 

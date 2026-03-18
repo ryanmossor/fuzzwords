@@ -32,9 +32,9 @@ func (m model) AboutView() string {
 			"a word containing those letters in ") + accent("consecutive order") + base("."),
 		"",
 		yellow_bold(" - Example: ") +
-		m.highlightPromptAnswer("RWO", "OVERWORK", enums.Classic) +
+		m.highlightPromptAnswer("RWO", "OVERWORK", enums.PromptModeClassic) +
 		base(" solves the prompt ") + accent("RWO") + base(", but ") + 
-		m.highlightPromptAnswer("RWO", "REWROTE", enums.Classic) +
+		m.highlightPromptAnswer("RWO", "REWROTE", enums.PromptModeClassic) +
 		base(" does not"),
 		"",
 		base("Fuzzwords allows for ") + accent("\"fuzzy\" matching") +
@@ -42,9 +42,9 @@ func (m model) AboutView() string {
 			"as in the prompt, but they do not need to be consecutive."),
 		"",
 		yellow_bold(" - Example: ") +
-		m.highlightPromptAnswer("RWO", "OVERWORK", enums.Fuzzy) +
+		m.highlightPromptAnswer("RWO", "OVERWORK", enums.PromptModeFuzzy) +
 		base(" and ") +
-		m.highlightPromptAnswer("RWO", "REWROTE", enums.Fuzzy) +
+		m.highlightPromptAnswer("RWO", "REWROTE", enums.PromptModeFuzzy) +
 		base(" both solve the prompt ") + accent("RWO"),
 
 		// TODO: rules on extra lives, game modes (endless/max lives), etc

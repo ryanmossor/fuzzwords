@@ -28,9 +28,9 @@ type Settings struct {
 
 func GetDefaultSettings() Settings {
 	return Settings{
-		Alphabet: 			enums.EasyAlphabet,
-		PromptMode: 		enums.Fuzzy,
-		WinCondition: 		enums.Endless,
+		Alphabet: 			enums.AlphabetEasy,
+		PromptMode: 		enums.PromptModeFuzzy,
+		WinCondition: 		enums.WinConditionEndless,
 		HealthInitial: 		2,
 		HealthMax: 			3,
 		HighlightInput: 	false,

@@ -8,22 +8,19 @@ import (
 
 type WinCondition int
 const (
-	Endless WinCondition = iota
-	MaxLives
-	Debug
+	WinConditionEndless WinCondition = iota
+	WinConditionMaxLives
 )
 
 var (
 	WinCondName = map[int]string{
 		0: "endless",
 		1: "max lives",
-		2: "debug",
 	}
 
 	WinCondValue = map[string]int{
 		"endless": 0,
 		"max lives": 1,
-		"debug": 2,
 	}
 )
 

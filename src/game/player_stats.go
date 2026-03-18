@@ -8,7 +8,7 @@ import (
 
 type PlayerStats struct {
 	PromptsSolved 			int
-	PromptsFailed			int // TODO: store list of failed?
+	PromptsFailed			int
 	CurrentStreak			int
 	LongestStreak			int
 	ExtraLivesGained		int
@@ -17,12 +17,12 @@ type PlayerStats struct {
 	MostUniqueLetters		string
 	LetterCounts			map[string]int
 	SolveLengths			[]int
-	ElapsedSeconds			int
+	TimeSurvived			int
 }
 
 func InitializePlayerStats() PlayerStats {
 	letter_counts := make(map[string]int)
-	for _, c := range enums.Alphabets[enums.FullAlphabet] {
+	for _, c := range enums.Alphabets[enums.AlphabetFull] {
 		letter_counts[string(c)] = 0
 	}
 

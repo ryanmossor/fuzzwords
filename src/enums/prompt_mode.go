@@ -8,8 +8,8 @@ import (
 
 type PromptMode int
 const (
-	Fuzzy PromptMode = iota
-	Classic
+	PromptModeFuzzy PromptMode = iota
+	PromptModeClassic
 )
 
 var (

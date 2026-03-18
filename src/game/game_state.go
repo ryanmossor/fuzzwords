@@ -44,6 +44,7 @@ func (g *GameState) StartGame() {
 func (g *GameState) EndGame(won bool) {
 	g.GameEnd = time.Now()
 	g.GameActive = false
+	g.Player.Stats.TimeSurvived = int(g.GameEnd.Sub(g.GameStart).Seconds())
 	if !won {
 		g.Player.HealthCurrent = 0
 	}
@@ -52,7 +53,8 @@ func (g *GameState) EndGame(won bool) {
 func (g *GameState) IsGameOver() bool {
 	player_dead := g.Player.HealthCurrent == 0
 	all_words_used := len(g.WordLists.Available) == 0
-	max_lives_win := g.Settings.WinCondition == enums.MaxLives && g.Player.HealthCurrent == g.Settings.HealthMax
+	max_lives_win := g.Settings.WinCondition == enums.WinConditionMaxLives &&
+					 g.Player.HealthCurrent == g.Settings.HealthMax
 
 	if player_dead || all_words_used || max_lives_win {
 		return true
