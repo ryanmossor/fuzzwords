@@ -56,7 +56,7 @@ func (m model) renderTopBar() string {
 	red := m.theme.TextRed().Render
 
     var timer_display string
-	if m.state.game_ui.player_damaged || !m.state.game_ui.game_active {
+	if m.state.game_ui.player_damaged || !m.state.game.GameActive {
 		timer_display = "⌛️ 0.0s"
 	} else if m.state.game_ui.timer >= 10 * time.Second {
         timer_display = fmt.Sprintf("⏳  %.0fs", m.state.game_ui.timer.Seconds())
@@ -64,7 +64,7 @@ func (m model) renderTopBar() string {
         timer_display = fmt.Sprintf("⏳ %.1fs", m.state.game_ui.timer.Seconds())
     }
 
-    if m.state.game_ui.game_active && (m.state.game_ui.timer < (5 * time.Second) || m.state.game_ui.player_damaged) {
+    if m.state.game.GameActive && (m.state.game_ui.timer < (5 * time.Second) || m.state.game_ui.player_damaged) {
 		// TODO: pulsing yellow/orange/red anim when below 5s; red 0.0 on damaged
         timer_display = red(timer_display)
     }
@@ -101,7 +101,7 @@ func (m model) renderTopBar() string {
 }
 
 func (m model) renderRemainingLetters() string {
-	if !m.state.game_ui.game_active {
+	if !m.state.game.GameActive {
 		return ""
 	}
 

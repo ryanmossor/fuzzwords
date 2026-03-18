@@ -42,10 +42,8 @@ type FooterKeymap struct {
 }
 
 type GameUIState struct {
-	start_time				time.Time
 	timer 					time.Duration
 
-	game_active				bool
 	game_over_msg			string
 
 	player_damaged			bool
@@ -178,7 +176,6 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 			press_play: PressPlayState { visible: true },
 			settings: SettingsState { selected: 0 },
 			game_ui: GameUIState {
-				game_active: false,
 				game_over_msg: "",
 
 				player_damaged: false,

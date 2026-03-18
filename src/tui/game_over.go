@@ -6,25 +6,21 @@ import (
 	"fzwds/src/utils"
 	"strconv"
 	"strings"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (m model) GameOverSwitch(win, early_quit bool) (model, tea.Cmd) {
-	m.state.game_ui.game_active = false
+func (m model) GameOverSwitch(won, early_quit bool) (model, tea.Cmd) {
+	m.state.game.EndGame(won)
 	m.state.game_ui.player_damaged = false
-	m.state.game.Player.Stats.ElapsedSeconds = int(time.Since(m.state.game_ui.start_time).Seconds())
 
-    if win {
+    if won {
         m.state.game_ui.validation_msg = ""
         m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
 	} else {
-		m.state.game.Player.HealthCurrent = 0
-
 		red := m.theme.TextRed()
 		m.state.game_ui.validation_msg = red.Render(fmt.Sprintf(
 			"Possible solve for final prompt %s: ",
@@ -48,7 +44,7 @@ func (m model) GameOverSwitch(win, early_quit bool) (model, tea.Cmd) {
 
 	// Briefly prevent key presses on game over screen
 	cmds := []tea.Cmd{ m.debounceInputCmd(500) }
-	if !early_quit && !win {
+	if !early_quit && !won {
 		cmds = append(cmds, m.terminalBellCmd(false))
 	}
 
@@ -111,18 +107,20 @@ func (m model) GameOverView() string {
 		fastest_extra_life = "-"
 	}
 
+	elapsed_seconds := m.state.game.GameEnd.Sub(m.state.game.GameStart).Seconds()
+
 	solves_per_min := "0"
     if stats.PromptsSolved > 0 {
-		spm := float64(stats.PromptsSolved) / (float64(stats.ElapsedSeconds) / 60.0)
+		spm := float64(stats.PromptsSolved) / (float64(elapsed_seconds) / 60.0)
 		solves_per_min = fmt.Sprintf("%.1f", spm)
 	}
 
 	rows := [][]string{
-		{"Time survived", utils.FormatTime(stats.ElapsedSeconds)},
+		{"Time survived", utils.FormatTime(int(elapsed_seconds))},
 		{"Prompts solved", strconv.Itoa(stats.PromptsSolved)},
 		{"Prompts failed", strconv.Itoa(stats.PromptsFailed)},
-		{"Longest streak", longest_streak},
 		{"Solves per minute", solves_per_min},
+		{"Longest streak", longest_streak},
 		{"Average solve length", fmt.Sprintf("%.1f letters", stats.AverageSolveLength())},
 		{"Longest word used", longest_solve, longest_count},
 		{"Most unique letters", most_unique_solve, most_unique_count},

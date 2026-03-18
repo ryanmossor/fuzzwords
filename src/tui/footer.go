@@ -14,7 +14,7 @@ func (m model) FooterView() string {
 	red := m.theme.TextRed().Render
 
 	var footer_text string
-	if m.state.game_ui.game_active {
+	if m.state.game.GameActive {
 		footer_text = fmt.Sprintf("%s/%s",
 			m.state.game.Settings.PromptMode.String(),
 			m.state.game.Settings.WinCondition.String())

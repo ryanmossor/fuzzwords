@@ -130,3 +130,13 @@ func (g *GameState) getShortPossibleAnswer(prompt, source_word string) string {
 
 	return possible_answer
 }
+
+func (g *GameState) GetTurnFailureMessage() string {
+	if g.CurrentTurn.Strikes == g.Settings.PromptStrikes {
+		return fmt.Sprintf(
+			"Prompt %s failed. Possible solve: {solve}",
+			strings.ToUpper(g.CurrentTurn.Prompt))
+	}
+
+	return ""
+}

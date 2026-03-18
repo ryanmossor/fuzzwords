@@ -1,8 +1,6 @@
 package tui
 
 import (
-	"fmt"
-	"fzwds/src/enums"
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
 	"math/rand"
@@ -56,16 +54,15 @@ func (m model) GameView() string {
 func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
 
-	m.state.game_ui.game_active = true
 	m.state.game_ui.validation_msg = ""
 
 	// Reset damage animation to ensure it doesn't keep playing from previous failed turn
 	m.state.game_ui.player_damaged = false
 
 	m.state.game = game.InitializeGame(m.game_settings)
+	m.state.game.StartGame()
 	m.state.game.NewTurn()
 
-	m.state.game_ui.start_time = time.Now()
     m.state.game_ui.timer = (30 + 1) * time.Second
 
 	m.footer_keymaps = []FooterKeymap{
@@ -97,29 +94,27 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.terminalBellCmd(false),
 		)
 
+		// TODO: move turn timer logic to game state and call timer.Update from main Update bubbletea func
 		turn_duration_min := max(m.game_settings.TurnDurationMin, 10)
 		turn_duration_max := 30
 		turn_time := rand.Intn(turn_duration_max - turn_duration_min + 1) + turn_duration_min 
 		m.state.game_ui.timer = time.Duration(turn_time) * time.Second
 
-		if m.state.game.Player.HealthCurrent == 0 {
+		if m.state.game.IsGameOver() {
 			return m.GameOverSwitch(false, false)
 		}
 
-		if m.state.game.CurrentTurn.Strikes < m.state.game.Settings.PromptStrikes {
-			m.state.game_ui.validation_msg = ""
+		turn_failure_msg := m.state.game.GetTurnFailureMessage()
+		if turn_failure_msg == "" {
 			m.anim_mgr.InitAnimations(animations.StrikeCounter)
-		}
-
-		if m.state.game.CurrentTurn.Strikes == m.state.game.Settings.PromptStrikes {
-			m.state.game_ui.validation_msg = m.theme.TextRed().Render(
-				fmt.Sprintf(
-					"Prompt %s failed. Possible solve: ",
-					strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
-			m.state.game_ui.validation_msg += m.highlightPromptAnswer(
+		} else {
+			// Strike limit reached, show failure message and start new turn
+			possible_solve := m.highlightPromptAnswer(
 				m.state.game.CurrentTurn.Prompt,
 				m.state.game.CurrentTurn.PossibleAnswer,
 				m.state.game.Settings.PromptMode)
+			updated_msg := strings.ReplaceAll(turn_failure_msg, "{solve}", possible_solve)
+			turn_failure_msg = m.theme.TextRed().Render(updated_msg)
 
 			m.anim_mgr.InitAnimations(animations.ValidationMessage)
 
@@ -128,6 +123,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			m.state.game.NewTurn()
 		}
+		m.state.game_ui.validation_msg = turn_failure_msg
 
         cmds = append(cmds, m.setTurnTickerCmd())
         return m, tea.Batch(cmds...)
@@ -161,8 +157,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			m.state.game.HandleCorrectAnswer(answer)
-			if len(m.state.game.Player.LettersUsed) >= len(m.state.game.Alphabet) {
-				m.state.game.GrantExtraLife()
+			if m.state.game.ShouldGrantExtraLife() {
 				m.anim_mgr.InitAnimations(animations.ExtraLife)
 			}
 
@@ -170,17 +165,14 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 			m.state.game_ui.player_damaged = false
 
-			if len(m.state.game.WordLists.Available) == 0 {
-				return m.GameOverSwitch(true, false)
-			}
-
-			if (m.state.game.Settings.WinCondition == enums.MaxLives &&
-				m.state.game.Player.HealthCurrent == m.state.game.Settings.HealthMax) {
+			// Check if win condition met (no more available words, max lives)
+			if m.state.game.IsGameOver() {
 				return m.GameOverSwitch(true, false)
 			}
 
 			m.state.game.NewTurn()
 
+			// TODO; move timer logic into game state
 			if m.state.game_ui.timer < time.Duration(m.game_settings.TurnDurationMin) * time.Second {
 				m.state.game_ui.timer = time.Duration(m.game_settings.TurnDurationMin) * time.Second
 			}
