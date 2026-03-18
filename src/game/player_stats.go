@@ -9,6 +9,8 @@ import (
 type PlayerStats struct {
 	PromptsSolved 			int
 	PromptsFailed			int // TODO: store list of failed?
+	CurrentStreak			int
+	LongestStreak			int
 	ExtraLivesGained		int
 	FewestExtraLifeSolves	int
 	LongestSolve			string
@@ -29,6 +31,12 @@ func InitializePlayerStats() PlayerStats {
 
 func (s *PlayerStats) UpdateSolvedStats(answer string) {
 	s.PromptsSolved++
+
+	s.CurrentStreak++
+	if s.CurrentStreak > s.LongestStreak {
+		s.LongestStreak = s.CurrentStreak
+	}
+
 	s.SolveLengths = append(s.SolveLengths, len(answer))
 
 	if len(answer) > len(s.LongestSolve) {
@@ -46,6 +54,7 @@ func (s *PlayerStats) UpdateSolvedStats(answer string) {
 
 func (s *PlayerStats) UpdateFailedStats() {
 	s.PromptsFailed++
+	s.CurrentStreak = 0
 }
 
 func (s PlayerStats) AverageSolveLength() float64 {
