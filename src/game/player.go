@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fzwds/src/utils"
 	"slices"
 	"strings"
 )
@@ -17,14 +18,19 @@ type Player struct {
 func InitializePlayer(cfg *Settings, alphabet string) Player {
 	player := Player{
 		HealthCurrent: cfg.HealthInitial,
-		LettersRemaining: alphabetToMap(alphabet),
+		LettersRemaining: utils.StringToMap(alphabet),
 		Stats: InitializePlayerStats(),
 	}
 
 	return player
 }
 
-func (g *GameState) HandleCorrectAnswer(answer string) {
+type TurnResult struct {
+	ExtraLifeGranted	bool
+}
+
+func (g *GameState) HandleCorrectAnswer(answer string) TurnResult {
+	result := TurnResult { ExtraLifeGranted: false }
 	g.Player.TurnsSinceLastExtraLife++
 
 	for _, c := range strings.ToUpper(answer) {
@@ -37,17 +43,19 @@ func (g *GameState) HandleCorrectAnswer(answer string) {
 		g.Player.LettersRemaining[ch] = true
 	}
 
-	slices.Sort(g.Player.LettersUsed)
-	g.Player.Stats.UpdateSolvedStats(answer)
-}
-
-func (g *GameState) ShouldGrantExtraLife() bool {
-	if len(g.Player.LettersUsed) < len(g.Alphabet) {
-		return false
+	if len(g.Player.LettersUsed) >= len(g.Alphabet) {
+		result.ExtraLifeGranted = true
 	}
 
+	slices.Sort(g.Player.LettersUsed)
+	g.Player.Stats.UpdateSolvedStats(answer)
+
+	return result
+}
+
+func (g *GameState) GrantExtraLife() bool {
 	g.Player.LettersUsed = nil
-	g.Player.LettersRemaining = alphabetToMap(g.Alphabet)
+	g.Player.LettersRemaining = utils.StringToMap(g.Alphabet)
 
 	g.Player.Stats.ExtraLivesGained++
 	if g.Player.Stats.FewestExtraLifeSolves == 0 || g.Player.TurnsSinceLastExtraLife < g.Player.Stats.FewestExtraLifeSolves {
@@ -67,12 +75,4 @@ func (g *GameState) HandleFailedTurn() {
 	g.Player.HealthCurrent--
 	g.Player.TurnsSinceLastExtraLife++
 	g.Player.Stats.UpdateFailedStats()
-}
-
-func alphabetToMap(alphabet string) map[string]bool {
-	letters_remaining := make(map[string]bool)
-	for _, c := range alphabet {
-		letters_remaining[string(c)] = false
-	}
-	return letters_remaining
 }

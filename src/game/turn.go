@@ -38,9 +38,9 @@ func (g *GameState) NewTurn() {
 		}
 	}
 
-	next_turn := Turn{ 
+	next_turn := Turn { 
 		SourceWord: word,
-		PossibleAnswer: g.getShortPossibleAnswer(prompt, word),
+		PossibleAnswer: g.getPossibleAnswer(prompt, word),
 		Prompt: prompt,
 		Strikes: 0,
 	}
@@ -94,7 +94,7 @@ func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 	return is_valid, msg
 }
 
-func (g *GameState) getShortPossibleAnswer(prompt, source_word string) string {
+func (g *GameState) getPossibleAnswer(prompt, source_word string) string {
 	is_valid_word := g.WordLists.FULL_MAP[prompt]
 	has_been_used := g.WordLists.Used[prompt]
 	if is_valid_word && !has_been_used {

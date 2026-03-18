@@ -189,3 +189,11 @@ func FillDescending(max, min int) []int {
 	}
 	return out
 }
+
+func StringToMap(str string) map[string]bool {
+	letters_remaining := make(map[string]bool)
+	for _, c := range str {
+		letters_remaining[string(c)] = false
+	}
+	return letters_remaining
+}

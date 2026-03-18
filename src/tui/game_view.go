@@ -156,8 +156,9 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				break
 			}
 
-			m.state.game.HandleCorrectAnswer(answer)
-			if m.state.game.ShouldGrantExtraLife() {
+			result := m.state.game.HandleCorrectAnswer(answer)
+			if result.ExtraLifeGranted {
+				m.state.game.GrantExtraLife()
 				m.anim_mgr.InitAnimations(animations.ExtraLife)
 			}
 
