@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"slices"
 )
 
 func Average(arr []int) float64 {
@@ -24,7 +25,7 @@ func Average(arr []int) float64 {
 
 // Preserves order, which is necessary for binary search
 func Remove[T any](list []T, i int) []T {
-    return append(list[:i], list[i+1:]...)
+    return slices.Delete(list, i, i + 1)
 }
 
 func GetLongestStr(list []string) string {
