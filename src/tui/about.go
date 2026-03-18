@@ -45,7 +45,8 @@ func (m model) AboutView() string {
 		m.highlightPromptAnswer("RWO", "OVERWORK", enums.PromptModeFuzzy) +
 		base(" and ") +
 		m.highlightPromptAnswer("RWO", "REWROTE", enums.PromptModeFuzzy) +
-		base(" both solve the prompt ") + accent("RWO"),
+		base(" both solve ") + accent("RWO") + base(", but ") +
+		accent("WARRIOR") + base(" does not"),
 
 		// TODO: rules on extra lives, game modes (endless/max lives), etc
 		// TODO: scrollbar and/or rule pages

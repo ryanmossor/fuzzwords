@@ -85,6 +85,8 @@ func (m model) renderTopBar() string {
 
 	header := table.New().
 		Border(lipgloss.NormalBorder()).
+		BorderLeft(false).
+		BorderRight(false).
 		BorderStyle(border_style).
 		BorderColumn(false).
 		Row(row_items...).

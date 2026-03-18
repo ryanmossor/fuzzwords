@@ -63,8 +63,6 @@ type model struct {
 	debug 				bool
 	debug_map			map[string]string
 	
-	rainbow_offset		int
-
     ready               bool
 	switched			bool
     has_scroll          bool

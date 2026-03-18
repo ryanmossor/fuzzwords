@@ -40,7 +40,11 @@ func (m model) HeaderView() string {
 
 	if m.page == settings_page {
 		return m.theme.Base().
-			Border(lipgloss.HiddenBorder()).
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(m.theme.Border()).
+			BorderLeft(false).
+			BorderRight(false).
+			Width(m.width_container).
 			AlignHorizontal(lipgloss.Center).
 			Render(m.theme.TextYellow().Bold(true).Render("Game Settings"))
 	}
