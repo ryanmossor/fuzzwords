@@ -4,10 +4,12 @@ import (
 	"fzwds/src/enums"
 	"fzwds/src/tui/animations"
 	"fzwds/src/utils"
+	"image/color"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 func (m model) wordInDictionary(answer string) bool {
@@ -53,7 +55,7 @@ func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.Pr
 
 // Get accent color for input box based on HighlightInput setting, damage state, etc.
 // Style applied to border if rounded-style input box, or left accent bar if block-style input box.
-func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipgloss.TerminalColor {
+func (m model) getInputAccentColor(default_color color.Color) color.Color {
 	prompt_upper := strings.ToUpper(m.state.game.CurrentTurn.Prompt)
 	answer_upper := strings.ToUpper(m.text_input.Value())
 
@@ -110,7 +112,8 @@ func (m model) initRoundedTextInput() textinput.Model {
 	text_input := textinput.New()
 	text_input.Prompt = " "
 	text_input.CharLimit = 40
-	text_input.Width = 40
+	text_input.SetWidth(40)
+	// text_input.Width = 40
 
 	text_input.Focus()
 
@@ -125,30 +128,63 @@ func (m model) GetRoundedInputView() string {
 	return lipgloss.JoinHorizontal(lipgloss.Center, input)
 }
 
-// Initialize text input for use with block style borders
 func (m model) initBlockTextInput() textinput.Model {
-	text_input := textinput.New()
-	text_input.Prompt = "  "
-	text_input.CharLimit = 40
-	text_input.Width = text_input.CharLimit - len(text_input.Prompt) - 1
+	ti := textinput.New()
 
-	input_bg_style := lipgloss.NewStyle().Background(m.theme.input_bg)
+	ti.Prompt = "  "
+	ti.CharLimit = 34
+	ti.SetWidth(34)
 
-	text_input.TextStyle = input_bg_style
-	text_input.PromptStyle = input_bg_style.
+	s := textinput.DefaultStyles(true)
+
+	bg := lipgloss.NewStyle().Background(m.theme.input_bg)
+
+	s.Focused.Prompt = bg.
 		Foreground(m.theme.body).
 		BorderLeftForeground(m.theme.blue)
-	text_input.Cursor.TextStyle = input_bg_style
-	text_input.PlaceholderStyle = input_bg_style.Foreground(m.theme.dim)
 
-	text_input.Focus()
+	s.Cursor.Blink = false // TODO: re-enable if maintainers fix cursor BG
+	s.Cursor.Shape = tea.CursorUnderline
 
-	return text_input
+	s.Focused.Text = bg
+
+	s.Focused.Placeholder = bg.Foreground(m.theme.dim)
+
+	ti.SetStyles(s)
+
+	ti.Focus()
+
+	return ti
 }
+
+// Initialize text input for use with block style borders
+// func (m model) initBlockTextInput() textinput.Model {
+// 	text_input := textinput.New()
+// 	text_input.Prompt = "  "
+// 	text_input.CharLimit = 40
+// 	// text_input.Width = text_input.CharLimit - len(text_input.Prompt) - 1
+// 	text_input.SetWidth(text_input.CharLimit - len(text_input.Prompt) - 1)
+//
+// 	input_bg_style := lipgloss.NewStyle().Background(m.theme.input_bg)
+//
+// 	style := text_input.DefaultStyles()
+// 	// text_input.TextStyle = input_bg_style
+// 	text_input.TextStyle = input_bg_style
+// 	text_input.PromptStyle = input_bg_style.
+// 		Foreground(m.theme.body).
+// 		BorderLeftForeground(m.theme.blue)
+// 	text_input.Cursor.TextStyle = input_bg_style
+// 	text_input.PlaceholderStyle = input_bg_style.Foreground(m.theme.dim)
+//
+// 	text_input.Focus()
+//
+// 	return text_input
+// }
 
 // Get text input with block border styling applied
 func (m model) GetBlockInputView() string {
-	border_color := m.getInputAccentColor(m.text_input.PromptStyle.GetBorderLeftForeground())
+	prompt_style := m.text_input.Styles().Focused.Prompt.GetBorderLeftForeground()
+	border_color := m.getInputAccentColor(prompt_style)
 	return m.TextInputBlockBorderStyle(border_color).
 		Render(m.text_input.View())
 }

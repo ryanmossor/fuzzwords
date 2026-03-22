@@ -4,8 +4,8 @@ import (
 	"fzwds/src/constants"
 	"fzwds/src/tui/animations"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 var letters = map[byte][]string {
@@ -132,7 +132,7 @@ func (m model) MainMenuView() string {
 			}
 
 		case animations.TypingFullTitlePhase, animations.FullTitlePausePhase:
-			base := m.theme.Base()
+			base := m.theme.TextBody()
 			highlight := m.theme.TextHighlight()
 
 			prompt_idx := 0

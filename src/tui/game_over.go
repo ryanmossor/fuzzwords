@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/table"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+	"charm.land/lipgloss/v2/table"
 )
 
 func (m model) GameOverSwitch(won, early_quit bool) (model, tea.Cmd) {
@@ -129,7 +129,8 @@ func (m model) GameOverView() string {
 	stats_table := table.New().
 		Border(lipgloss.HiddenBorder()).
 		BorderColumn(false).
-		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
+		// BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
+		BorderStyle(lipgloss.NewStyle().Foreground(m.theme.Border())).
 		Rows(rows...).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			var style lipgloss.Style

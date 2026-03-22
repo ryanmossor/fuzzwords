@@ -1,7 +1,9 @@
 package tui
 
 import (
-	"github.com/charmbracelet/lipgloss"
+	"image/color"
+
+	"charm.land/lipgloss/v2"
 )
 
 func (m model) CreateBox(content string, selected bool) string {
@@ -31,15 +33,17 @@ func (m model) CreateSettingsMenuItem(content string, is_selected, apply_bottom_
 	return base.PaddingLeft(1).Render(padded)
 }
 
-func (m model) TextInputBlockBorderStyle(accent_color lipgloss.TerminalColor) lipgloss.Style {
+func (m model) TextInputBlockBorderStyle(accent_color color.Color) lipgloss.Style {
 	return lipgloss.NewStyle().
 		BorderForeground(m.theme.input_bg).
+		Background(m.theme.input_bg).
 		BorderStyle(lipgloss.InnerHalfBlockBorder()).
 		BorderLeftForeground(accent_color).
-		Width(m.text_input.CharLimit)
+		// Width(m.text_input.Width() + 6)
+		Width(40)
 }
 
-func (m model) TextInputRoundedBorderStyle(border_color lipgloss.TerminalColor) lipgloss.Style {
+func (m model) TextInputRoundedBorderStyle(border_color color.Color) lipgloss.Style {
 	return lipgloss.NewStyle().
 		BorderForeground(border_color).
 		BorderStyle(lipgloss.RoundedBorder()).

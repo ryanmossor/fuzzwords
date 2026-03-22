@@ -9,8 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
 )
 
 func main() {
@@ -53,12 +52,8 @@ func main() {
     fileHandler := slog.NewJSONHandler(log_file, opts)
     slog.SetDefault(slog.New(fileHandler))
 
-	menu := tui.NewModel(lipgloss.DefaultRenderer(), *debug)
-	prog := tea.NewProgram(
-        menu,
-        tea.WithAltScreen(),
-        tea.WithMouseCellMotion(), // enable mouse support for scroll wheel usage
-    )
+	model := tui.NewModel(*debug)
+	prog := tea.NewProgram(model)
 	_, err = prog.Run()
 	if err != nil {
 		fmt.Println("Error running program:", err)

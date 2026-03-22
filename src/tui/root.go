@@ -12,10 +12,10 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/textinput"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 type page int
@@ -78,7 +78,7 @@ type model struct {
 	height_container 	int
 	width_content    	int
 	height_content   	int
-	renderer        	*lipgloss.Renderer
+	// renderer        	*lipgloss.Renderer
 	theme 				theme
 	size				size
 	footer_keymaps		[]FooterKeymap
@@ -99,7 +99,8 @@ type model struct {
 //go:embed game_settings_schema.json
 var game_settings_schema_json []byte
 
-func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
+// func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
+func NewModel(debug bool) tea.Model {
 	cfg_dir, err := os.UserConfigDir()
 	if err != nil {
 		slog.Error("Config dir not found, using tmp dir to save settings instead", "error", err)
@@ -137,7 +138,8 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		slog.Error("Error writing settings.json", "error", err)
 	}
 
-	theme := BasicTheme(renderer)
+	// theme := BasicTheme(renderer)
+	theme := BasicTheme()
 
 	title_logo_anim := anim.NewTitleScreenLogoAnim(theme.GetRainbowColors())
 	extra_life_anim := anim.NewRainbowScrollAnim(anim.ExtraLife, 30, false, theme.GetRainbowColors())
@@ -154,11 +156,11 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		win_anim,
 	)
 
-	return model{
+	return model {
 		debug: debug,
 		debug_map: make(map[string]string),
 
-		renderer: renderer,
+		// renderer: renderer,
 		theme: theme,
 
 		footer_keymaps: []FooterKeymap {
@@ -308,7 +310,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m model) View() tea.View {
 	header := m.HeaderView()
 	footer := m.FooterView()
 
@@ -346,7 +348,7 @@ func (m model) View() string {
 		footer,
 	) 
 
-	v := m.renderer.Place(
+	view_content := lipgloss.Place(
 		m.viewport_width,
 		m.viewport_height,
 		lipgloss.Center,
@@ -358,10 +360,13 @@ func (m model) View() string {
 		) 
 
 	if m.debug {
-		m.debug_map["viewSize"] = strconv.Itoa(len(v))
-		m.debug_map["runeCount"] = strconv.Itoa(utf8.RuneCountInString(v))
+		m.debug_map["viewSize"] = strconv.Itoa(len(view_content))
+		m.debug_map["runeCount"] = strconv.Itoa(utf8.RuneCountInString(view_content))
 	}
 
+	v := tea.NewView(view_content)
+	v.AltScreen = true
+	v.MouseMode = tea.MouseModeCellMotion // enable mouse support for scroll wheel usage
 	return v
 }
 
@@ -402,16 +407,15 @@ func (m model) updateViewport() model {
     m.width_content = m.width_container - 4
 
     if !m.ready {
-        m.viewport = viewport.New(width, m.height_content)
+        m.viewport = viewport.New(viewport.WithWidth(width), viewport.WithHeight(m.height_content))
         m.viewport.YPosition = header_height
-        m.viewport.HighPerformanceRendering = false
         m.ready = true
 
         // m.viewport.YPosition = headerHeight + 1
         m.viewport.YPosition = header_height
     } else {
-        m.viewport.Width = width
-		m.viewport.Height = m.height_content
+		m.viewport.SetWidth(width)
+		m.viewport.SetHeight(m.height_content)
 		m.viewport.GotoTop()
     }
 
@@ -432,8 +436,8 @@ func (m model) updateViewport() model {
 }
 
 func (m model) getScrollbar() string {
-	y := m.viewport.YOffset
-	viewport_height := m.viewport.Height
+	y := m.viewport.YOffset()
+	viewport_height := m.viewport.Height()
 	content_height := lipgloss.Height(m.getContent())
 	if viewport_height >= content_height {
 		return ""

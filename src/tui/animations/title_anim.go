@@ -4,7 +4,7 @@ import (
 	"fzwds/src/constants"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 )
 
 type TitleScreenLogoAnim struct {

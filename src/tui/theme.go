@@ -1,75 +1,85 @@
 package tui
 
 import (
-	"github.com/charmbracelet/lipgloss"
+	"image/color"
+	"os"
+
+	"charm.land/lipgloss/v2"
 )
 
 type theme struct {
-	renderer *lipgloss.Renderer
+	// renderer *lipgloss.Renderer
 
-	border     	lipgloss.TerminalColor
-	background 	lipgloss.TerminalColor
-	highlight  	lipgloss.TerminalColor
-	body       	lipgloss.TerminalColor
-	accent     	lipgloss.TerminalColor
-	dim			lipgloss.TerminalColor
-	lavender	lipgloss.TerminalColor
-	input_bg	lipgloss.TerminalColor
+	border     	color.Color
+	background 	color.Color
+	highlight  	color.Color
+	body       	color.Color
+	accent     	color.Color
+	dim			color.Color
+	lavender	color.Color
+	input_bg	color.Color
 
-	red      	lipgloss.TerminalColor
-	orange		lipgloss.TerminalColor
-	yellow     	lipgloss.TerminalColor
-	green      	lipgloss.TerminalColor
-	blue		lipgloss.TerminalColor
-	indigo		lipgloss.TerminalColor
-	purple		lipgloss.TerminalColor
+	red      	color.Color
+	orange		color.Color
+	yellow     	color.Color
+	green      	color.Color
+	blue		color.Color
+	indigo		color.Color
+	purple		color.Color
 
 	base lipgloss.Style
 }
 
-func BasicTheme(renderer *lipgloss.Renderer) theme {
-	base := theme{
-		renderer: renderer,
-	}
+// func BasicTheme(renderer *lipgloss.Renderer) theme {
+func BasicTheme() theme {
+	// base := theme{
+	// 	renderer: renderer,
+	// }
+
+	hasDark := lipgloss.HasDarkBackground(os.Stdin, os.Stdout)
+	lightDark := lipgloss.LightDark(hasDark)
+	// color := lightDark(lipgloss.Color("#0000ff"), lipgloss.Color("#000099"))
 
 	// TODO: look into ANSI colors for increased compatibility
-	base.background = lipgloss.AdaptiveColor{Dark: "#1E1E2E", Light: "#EFF1F5"}
-	base.border = lipgloss.AdaptiveColor{Dark: "#585B70", Light: "#ACB0BE"} // Surface 2
-	base.body = lipgloss.AdaptiveColor{Dark: "#A6ADC8", Light: "#6C6F85"} // Subtext 0
-	base.accent = lipgloss.AdaptiveColor{Dark: "#FFFFFF", Light: "#11181C"}
-	base.dim = lipgloss.AdaptiveColor{Dark: "#6C7086", Light: "#ACB0BE"} // Overlay 0
-	base.lavender = lipgloss.AdaptiveColor{Dark: "#B4BEFE", Light: "#7287FD"}
-	base.input_bg = lipgloss.AdaptiveColor{Dark: "#45475A", Light: "#CCD0DA"} // Surface 1
-	// base.input_bg = lipgloss.AdaptiveColor{Dark: "#313244", Light: "#CCD0DA"} // Surface 0
+	return theme {
+		background: lightDark(lipgloss.Color("#EFF1F5"), lipgloss.Color("#1E1E2E")),
+		border: lightDark(lipgloss.Color("#ACB0BE"), lipgloss.Color("#585B70")), // Surface 2
+		body: lightDark(lipgloss.Color("#6C6F85"), lipgloss.Color("#A6ADC8")), // Subtext 0
+		accent: lightDark(lipgloss.Color("#11181C"), lipgloss.Color("#FFFFFF")),
+		dim: lightDark(lipgloss.Color("#ACB0BE"), lipgloss.Color("#6C7086")), // Overlay 0
+		lavender: lightDark(lipgloss.Color("#7287FD"), lipgloss.Color("#B4BEFE")),
+		input_bg: lightDark(lipgloss.Color("#CCD0DA"), lipgloss.Color("#45475A")), // Surface 1
+		// input_bg: lightDark(lipgloss.Color("#CCD0DA"), lipgloss.Color("#313244")), // Surface 0
 
-	base.highlight = lipgloss.AdaptiveColor{Dark: "#74C7EC", Light: "#209FB5"}
+		highlight: lightDark(lipgloss.Color("#209FB5"), lipgloss.Color("#74C7EC")),
 
-	base.red = lipgloss.AdaptiveColor{Dark: "#F38BA8", Light: "#D20F39"}
-	base.orange = lipgloss.AdaptiveColor{Dark: "#FAB387", Light: "#FE640B"}
-	base.yellow = lipgloss.AdaptiveColor{Dark: "#F9E2AF", Light: "#DF8E1D"}
-	base.green = lipgloss.AdaptiveColor{Dark: "#A6E3A1", Light: "#40A02B"}
-	base.blue = lipgloss.AdaptiveColor{Dark: "#74C7EC", Light: "#209FB5"}
-	base.indigo = lipgloss.AdaptiveColor{Dark: "#7287FD", Light: "#8839EF"} // swapped indigo/purple light values
-	base.purple = lipgloss.AdaptiveColor{Dark: "#CBA6F7", Light: "#7287FD"}
+		red: lightDark(lipgloss.Color("#D20F39"), lipgloss.Color("#F38BA8")),
+		orange: lightDark(lipgloss.Color("#FE640B"), lipgloss.Color("#FAB387")),
+		yellow: lightDark(lipgloss.Color("#DF8E1D"), lipgloss.Color("#F9E2AF")),
+		green: lightDark(lipgloss.Color("#40A02B"), lipgloss.Color("#A6E3A1")),
+		blue: lightDark(lipgloss.Color("#209FB5"), lipgloss.Color("#74C7EC")),
+		indigo: lightDark(lipgloss.Color("#8839EF"), lipgloss.Color("#7287FD")), // swapped indigo/purple light values
+		purple: lightDark(lipgloss.Color("#7287FD"), lipgloss.Color("#CBA6F7")),
+	}
 
-	base.base = renderer.NewStyle().Foreground(base.body)
+	// base.base = renderer.NewStyle().Foreground(base.body)
 
-	return base
+	// return base
 }
 
-func (b theme) Body() lipgloss.TerminalColor {
+func (b theme) Body() color.Color {
 	return b.body
 }
 
-func (b theme) Highlight() lipgloss.TerminalColor {
+func (b theme) Highlight() color.Color {
 	return b.highlight
 }
 
-func (b theme) Background() lipgloss.TerminalColor {
+func (b theme) Background() color.Color {
 	return b.background
 }
 
-func (b theme) Accent() lipgloss.TerminalColor {
+func (b theme) Accent() color.Color {
 	return b.accent
 }
 
@@ -125,7 +135,7 @@ func (b theme) TextDim() lipgloss.Style {
 	return b.Base().Foreground(b.dim)
 }
 
-func (b theme) Border() lipgloss.TerminalColor {
+func (b theme) Border() color.Color {
 	return b.border
 }
 
