@@ -70,6 +70,9 @@ func (m model) HeaderView() string {
 		
 	return table.New().
 		Border(lipgloss.NormalBorder()).
+		BorderLeft(false).
+		BorderRight(false).
+		BorderColumn(false).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
 		Row(tabs...).
 		Width(m.width_container).
