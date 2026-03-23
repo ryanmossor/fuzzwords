@@ -50,6 +50,7 @@ type GameUIState struct {
 
 	input_restricted		bool
 	validation_msg			string
+	prev_answer				string
 }
 
 type State struct {

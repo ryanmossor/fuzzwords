@@ -72,6 +72,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 
 	m.text_input = m.initBlockTextInput()
 	m.state.game_ui.input_restricted = false
+	m.state.game_ui.prev_answer = ""
 
 	return m, tea.Batch(
 		textinput.Blink,
@@ -140,6 +141,10 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 
 		switch key {
+		case "up":
+			m.text_input.SetValue(m.state.game_ui.prev_answer)
+			return m, nil
+
 		case "esc":
 			m.text_input.Reset()
 
@@ -153,7 +158,10 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			var is_valid bool
 			is_valid, m.state.game_ui.validation_msg = m.state.game.ValidateAnswer(answer)
 			if !is_valid {
+				m.state.game_ui.prev_answer = answer
 				break
+			} else {
+				m.state.game_ui.prev_answer = ""
 			}
 
 			result := m.state.game.HandleCorrectAnswer(answer)
