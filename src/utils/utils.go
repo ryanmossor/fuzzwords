@@ -197,3 +197,7 @@ func StringToMap(str string) map[string]bool {
 	}
 	return letters_remaining
 }
+
+func RandomBetween(min, max int) int {
+	return rand.Intn(max - min + 1) + min
+}

@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"slices"
 	"strings"
+	"time"
 )
 
 type Turn struct {
@@ -15,10 +16,12 @@ type Turn struct {
 	PossibleAnswer	string
 	Prompt 	   		string
 	Strikes	   		int
+	TurnStart		time.Time
+	TurnDuration	time.Duration
 }
 
 // TODO: ensure next prompt is different from previous if previous prompt was failed
-func (g *GameState) NewTurn() {
+func (g *GameState) NewTurn(first_turn bool) {
 	word_idx := rand.Intn(len(g.WordLists.Available))
 	word := g.WordLists.Available[word_idx]
 
@@ -38,6 +41,19 @@ func (g *GameState) NewTurn() {
 		}
 	}
 
+	var turn_duration_sec int
+	if first_turn {
+		turn_duration_sec = 30
+	} else if g.TimeRemaining() <= 0 {
+		turn_duration_min := max(g.Settings.TurnDurationMin, 10)
+		turn_duration_max := 30
+		turn_duration_sec = utils.RandomBetween(turn_duration_min, turn_duration_max)
+	} else if g.TimeRemaining().Seconds() < float64(g.Settings.TurnDurationMin) {
+		turn_duration_sec = g.Settings.TurnDurationMin
+	} else {
+		turn_duration_sec = int(g.TimeRemaining().Seconds())
+	}
+
 	next_turn := Turn { 
 		SourceWord: word,
 		PossibleAnswer: g.getPossibleAnswer(prompt, word),
@@ -47,6 +63,19 @@ func (g *GameState) NewTurn() {
 
 	g.PreviousTurn = g.CurrentTurn
 	g.CurrentTurn = next_turn
+
+	g.StartTurn(turn_duration_sec)
+}
+
+func (g *GameState) StartTurn(duration_sec int) {
+	g.CurrentTurn.TurnStart = time.Now()
+	g.CurrentTurn.TurnDuration = time.Duration(duration_sec) * time.Second
+}
+
+func (g *GameState) TimeRemaining() time.Duration {
+	return g.CurrentTurn.TurnStart.
+		Add(g.CurrentTurn.TurnDuration).
+		Sub(time.Now())
 }
 
 func (g *GameState) ValidateAnswer(answer string) (bool, string) {

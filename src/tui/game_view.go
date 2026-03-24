@@ -3,9 +3,8 @@ package tui
 import (
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
-	"math/rand"
+	"fzwds/src/utils"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -61,9 +60,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 
 	m.state.game = game.InitializeGame(m.game_settings)
 	m.state.game.StartGame()
-	m.state.game.NewTurn()
-
-    m.state.game_ui.timer = (30 + 1) * time.Second
+	m.state.game.NewTurn(true)
 
 	m.footer_keymaps = []FooterKeymap{
 		{key: "esc", value: "clear input"},
@@ -74,32 +71,19 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game_ui.input_restricted = false
 	m.state.game_ui.prev_answer = ""
 
-	return m, tea.Batch(
-		textinput.Blink,
-		m.setTurnTickerCmd(),
-	)
+	return m, textinput.Blink
 }
 
 func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
-    case TurnTimerTickMsg:
-		if m.state.game_ui.timer > 0 {
-			return m, m.setTurnTickerCmd()
-		}
-
+	case TurnTimerExpiredMsg:
 		m.state.game.HandleFailedTurn()
 		cmds = append(cmds,
 			m.setPlayerDamagedStateCmd(),
 			m.terminalBellCmd(false),
 		)
-
-		// TODO: move turn timer logic to game state and call timer.Update from main Update bubbletea func
-		turn_duration_min := max(m.game_settings.TurnDurationMin, 10)
-		turn_duration_max := 30
-		turn_time := rand.Intn(turn_duration_max - turn_duration_min + 1) + turn_duration_min 
-		m.state.game_ui.timer = time.Duration(turn_time) * time.Second
 
 		if m.state.game.IsGameOver() {
 			return m.GameOverSwitch(false, false)
@@ -108,6 +92,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		turn_failure_msg := m.state.game.GetTurnFailureMessage()
 		if turn_failure_msg == "" {
 			m.anim_mgr.InitAnimations(animations.StrikeCounter)
+			m.state.game.StartTurn(utils.RandomBetween(m.game_settings.TurnDurationMin, 30))
 		} else {
 			// Strike limit reached, show failure message and start new turn
 			possible_solve := m.highlightPromptAnswer(
@@ -122,11 +107,10 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.text_input.Reset()
 			cmds = append(cmds, m.debounceInputCmd(500))
 
-			m.state.game.NewTurn()
+			m.state.game.NewTurn(false)
 		}
 		m.state.game_ui.validation_msg = turn_failure_msg
 
-        cmds = append(cmds, m.setTurnTickerCmd())
         return m, tea.Batch(cmds...)
 
 	case tea.KeyMsg:
@@ -179,12 +163,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return m.GameOverSwitch(true, false)
 			}
 
-			m.state.game.NewTurn()
-
-			// TODO; move timer logic into game state
-			if m.state.game_ui.timer < time.Duration(m.game_settings.TurnDurationMin) * time.Second {
-				m.state.game_ui.timer = time.Duration(m.game_settings.TurnDurationMin) * time.Second
-			}
+			m.state.game.NewTurn(false)
 
 			cmds = append(cmds, m.debounceInputCmd(300))
 			return m, tea.Batch(cmds...)

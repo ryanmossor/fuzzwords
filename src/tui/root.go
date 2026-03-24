@@ -213,13 +213,19 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case TickMsg:
+		var cmds []tea.Cmd
 		now := msg.Time
+
+		if m.state.game.TimeRemaining() <= 0 {
+			cmds = append(cmds, m.turnTimerExpiredCmd())
+		}
 
 		if m.animations_enabled {
 			m.anim_mgr.Update(now)
 		}
 
-		return m, m.tickCmd()
+		cmds = append(cmds, m.tickCmd())
+		return m, tea.Batch(cmds...)
 
 	case tea.WindowSizeMsg:
 		m.viewport_width = msg.Width
