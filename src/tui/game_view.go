@@ -126,7 +126,9 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		switch key {
 		case "up":
-			m.text_input.SetValue(m.state.game_ui.prev_answer)
+			if m.state.game_ui.prev_answer != "" {
+				m.text_input.SetValue(m.state.game_ui.prev_answer)
+			}
 			return m, nil
 
 		case "esc":
