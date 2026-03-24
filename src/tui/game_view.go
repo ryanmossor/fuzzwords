@@ -75,10 +75,10 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 }
 
 func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
-	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case TurnTimerExpiredMsg:
+		var cmds []tea.Cmd
 		m.state.game.HandleFailedTurn()
 		cmds = append(cmds,
 			m.setPlayerDamagedStateCmd(),
@@ -133,6 +133,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		case "esc":
 			m.text_input.Reset()
+			return m, nil
 
 		case "ctrl+q":
 			return m.GameOverSwitch(false, true)
@@ -167,14 +168,12 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			m.state.game.NewTurn(false)
 
-			cmds = append(cmds, m.debounceInputCmd(300))
-			return m, tea.Batch(cmds...)
+			return m, m.debounceInputCmd(300)
 		}
 	}
 
 	var update_input_cmd tea.Cmd
 	m.text_input, update_input_cmd = m.text_input.Update(msg)
-	cmds = append(cmds, update_input_cmd)
 
-	return m, tea.Batch(cmds...)
+	return m, update_input_cmd
 }
