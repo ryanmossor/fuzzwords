@@ -42,15 +42,11 @@ type FooterKeymap struct {
 }
 
 type GameUIState struct {
-	timer 					time.Duration
-
-	game_over_msg			string
-
-	player_damaged			bool
-
-	input_restricted		bool
-	validation_msg			string
 	prev_answer				string
+	validation_msg			string
+	game_over_msg			string
+	player_damaged			bool
+	input_restricted		bool
 }
 
 type State struct {
@@ -175,12 +171,11 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 			press_play: PressPlayState { visible: true },
 			settings: SettingsState { selected: 0 },
 			game_ui: GameUIState {
-				game_over_msg: "",
-
-				player_damaged: false,
-
-				input_restricted: false,
-				validation_msg: "",
+				prev_answer: 		"",
+				validation_msg: 	"",
+				game_over_msg: 		"",
+				player_damaged: 	false,
+				input_restricted: 	false,
 			},
 		},
 

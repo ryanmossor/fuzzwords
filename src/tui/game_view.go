@@ -53,24 +53,22 @@ func (m model) GameView() string {
 func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
 
-	m.state.game_ui.validation_msg = ""
-
-	// Reset damage animation to ensure it doesn't keep playing from previous failed turn
-	m.state.game_ui.player_damaged = false
-
-	m.state.game = game.InitializeGame(m.game_settings)
-	m.state.game.StartGame()
-	m.state.game.NewTurn(true)
-
 	m.footer_keymaps = []FooterKeymap{
 		{key: "esc", value: "clear input"},
 		{key: "ctrl+q", value: "quit"},
 	}
 
-	m.text_input = m.initBlockTextInput()
+	// Reset damage animation to ensure it doesn't keep playing from previous failed turn
+	m.state.game_ui.player_damaged = false
 	m.state.game_ui.input_restricted = false
 	m.state.game_ui.prev_answer = ""
+	m.state.game_ui.validation_msg = ""
 
+	m.state.game = game.InitializeGame(m.game_settings)
+	m.state.game.StartGame()
+	m.state.game.NewTurn(true)
+
+	m.text_input = m.initBlockTextInput()
 	return m, textinput.Blink
 }
 

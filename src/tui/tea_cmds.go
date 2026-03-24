@@ -32,21 +32,6 @@ func (m *model) setPlayerDamagedStateCmd() tea.Cmd {
 	})
 }
 
-type TurnTimerTickMsg struct{}
-func (m *model) setTurnTickerCmd() tea.Cmd {
-	if m.state.game_ui.timer > time.Second * 10 {
-		m.state.game_ui.timer -= time.Second
-		return tea.Tick(time.Second, func(t time.Time) tea.Msg {
-			return TurnTimerTickMsg{}
-		})
-	}
-
-	m.state.game_ui.timer -= time.Millisecond * 100
-	return tea.Tick(time.Millisecond * 100, func(t time.Time) tea.Msg {
-		return TurnTimerTickMsg{}
-	})
-}
-
 func (m model) terminalBellCmd(force bool) tea.Cmd {
 	if force || m.game_settings.BellEnabled {
 		return func() tea.Msg {
