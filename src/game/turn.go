@@ -59,12 +59,12 @@ func (g *GameState) NewTurn(first_turn bool) {
 		PossibleAnswer: g.getPossibleAnswer(prompt, word),
 		Prompt: prompt,
 		Strikes: 0,
+		TurnStart: time.Now(),
+		TurnDuration: time.Duration(turn_duration_sec) * time.Second,
 	}
 
 	g.PreviousTurn = g.CurrentTurn
 	g.CurrentTurn = next_turn
-
-	g.StartTurn(turn_duration_sec)
 }
 
 func (g *GameState) StartTurn(duration_sec int) {

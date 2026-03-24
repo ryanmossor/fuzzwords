@@ -211,7 +211,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmds []tea.Cmd
 		now := msg.Time
 
-		if m.state.game.TimeRemaining() <= 0 {
+		if m.state.game.GameActive && m.state.game.TimeRemaining() <= 0 {
 			cmds = append(cmds, m.turnTimerExpiredCmd())
 		}
 
