@@ -53,7 +53,7 @@ func (m model) GameView() string {
 func (m model) GameSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_page)
 
-	m.footer_keymaps = []FooterKeymap{
+	m.footer_keymaps = []FooterKeymap {
 		{key: "esc", value: "clear input"},
 		{key: "ctrl+q", value: "quit"},
 	}
@@ -65,8 +65,6 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game_ui.validation_msg = ""
 
 	m.state.game = game.InitializeGame(m.game_settings)
-	m.state.game.StartGame()
-	m.state.game.NewTurn(true)
 
 	m.text_input = m.initBlockTextInput()
 	return m, textinput.Blink

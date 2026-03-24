@@ -28,17 +28,17 @@ func InitializeGame(settings *Settings) GameState {
     }
 	alphabet := enums.Alphabets[settings.Alphabet]
 
-	return GameState {
+	g := GameState {
 		Alphabet: alphabet,
+		GameActive: true,
+		GameStart: time.Now(),
 		Settings: *settings,
 		WordLists: word_lists,
 		Player: InitializePlayer(settings, alphabet),
 	}
-}
+	g.NewTurn(true)
 
-func (g *GameState) StartGame() {
-	g.GameStart = time.Now()
-	g.GameActive = true
+	return g
 }
 
 func (g *GameState) EndGame(won bool) {
