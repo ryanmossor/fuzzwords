@@ -107,6 +107,7 @@ func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 	}
 
 	slog.Info("Answer validated",
+		"startUnixTs", g.StartUnixTs,
 		"prompt", g.CurrentTurn.Prompt,
 		"sourceWord", g.CurrentTurn.SourceWord,
 		"possibleAnswer", g.CurrentTurn.PossibleAnswer,

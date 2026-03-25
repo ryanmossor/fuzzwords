@@ -4,6 +4,7 @@ import (
 	fzwds "fzwds/src"
 	"fzwds/src/enums"
 	"fzwds/src/utils"
+	"log/slog"
 	"time"
 )
 
@@ -17,6 +18,7 @@ type GameState struct {
 	Player				Player
 	PreviousTurn		Turn
 	CurrentTurn			Turn
+	StartUnixTs			int64
 	// TODO: cache next turn?
 }
 
@@ -35,8 +37,15 @@ func InitializeGame(settings *Settings) GameState {
 		Settings: *settings,
 		WordLists: word_lists,
 		Player: InitializePlayer(settings, alphabet),
+		StartUnixTs: time.Now().UnixMilli(),
 	}
 	g.NewTurn(true)
+
+	slog.Info("Initialized game",
+		"startUnixTs", g.StartUnixTs,
+		"alphabet", g.Alphabet,
+		"settings", g.Settings,
+		"firstTurn", g.CurrentTurn)
 
 	return g
 }
