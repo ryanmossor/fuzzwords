@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"fzwds/src/constants"
 	"math"
 	"math/rand"
 	"regexp"
@@ -47,6 +48,12 @@ func ArrToMap(lines []string) map[string]bool {
 }
 
 func FilterWordList(words []string, min_len int) []string {
+	if min_len == constants.PROMPT_LEN_MIN {
+		out := make([]string, len(words))
+		copy(out, words)
+		return out
+	}
+
 	var filtered []string
 	for _, word := range words {
 		if len(word) >= min_len {
