@@ -44,6 +44,7 @@ func (g *GameState) HandleCorrectAnswer(answer string) TurnResult {
 	}
 
 	if len(g.Player.LettersUsed) >= len(g.Alphabet) {
+		g.GrantExtraLife()
 		result.ExtraLifeGranted = true
 	}
 
@@ -53,7 +54,7 @@ func (g *GameState) HandleCorrectAnswer(answer string) TurnResult {
 	return result
 }
 
-func (g *GameState) GrantExtraLife() bool {
+func (g *GameState) GrantExtraLife() {
 	g.Player.LettersUsed = nil
 	g.Player.LettersRemaining = utils.StringToMap(g.Alphabet)
 
@@ -66,8 +67,6 @@ func (g *GameState) GrantExtraLife() bool {
 	if g.Player.HealthCurrent < g.Settings.HealthMax {
 		g.Player.HealthCurrent++
 	}
-
-	return true
 }
 
 func (g *GameState) HandleFailedTurn() {
