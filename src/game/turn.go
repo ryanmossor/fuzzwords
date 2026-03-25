@@ -58,15 +58,19 @@ func (g *GameState) NewTurn(first_turn bool) {
 
 	var turn_duration time.Duration
 	if first_turn {
+		// Game start: default to 30s
 		turn_duration = 30 * time.Second
 	} else if g.TimeRemaining() <= 0 {
+		// Timer expiration: reset to random time between 10s (or turn min if larger) and 30s
 		turn_duration_min := max(g.Settings.TurnDurationMin, 10)
 		turn_duration_max := 30
 		rand_sec := utils.RandomBetween(turn_duration_min, turn_duration_max)
 		turn_duration = time.Duration(rand_sec) * time.Second
 	} else if g.TimeRemaining().Seconds() < float64(g.Settings.TurnDurationMin) {
+		// Correct answer: reset timer to TurnDurationMin if timer is < TurnDurationMin
 		turn_duration = time.Duration(g.Settings.TurnDurationMin) * time.Second
 	} else {
+		// Correct answer: do nothing if timer > TurnDurationMin
 		turn_duration = g.TimeRemaining()
 	}
 
