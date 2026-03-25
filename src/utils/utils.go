@@ -5,9 +5,9 @@ import (
 	"math"
 	"math/rand"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
-	"slices"
 )
 
 func Average(arr []int) float64 {
@@ -49,7 +49,7 @@ func ArrToMap(lines []string) map[string]bool {
 func FilterWordList(words []string, min_len int) []string {
 	var filtered []string
 	for _, word := range words {
-		if len(word) > min_len {
+		if len(word) >= min_len {
 			filtered = append(filtered, word)
 		}
 	}
