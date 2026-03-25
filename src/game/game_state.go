@@ -1,7 +1,7 @@
 package game
 
 import (
-	fzwds "fzwds/src"
+	"fzwds/src/dictionary"
 	"fzwds/src/enums"
 	"fzwds/src/utils"
 	"log/slog"
@@ -24,8 +24,8 @@ type GameState struct {
 
 func InitializeGame(settings *Settings) GameState {
     word_lists := WordLists {
-		FULL_MAP: fzwds.EnglishDictionaryMap,
-		Available: utils.FilterWordList(fzwds.EnglishDictionary, settings.PromptLenMin),
+		FULL_MAP: dictionary.EnglishDictionaryMap,
+		Available: utils.FilterWordList(dictionary.EnglishDictionary, settings.PromptLenMin),
         Used: make(map[string]bool),
     }
 	alphabet := enums.Alphabets[settings.Alphabet]
@@ -44,8 +44,7 @@ func InitializeGame(settings *Settings) GameState {
 	slog.Info("Initialized game",
 		"startUnixTs", g.StartUnixTs,
 		"alphabet", g.Alphabet,
-		"settings", g.Settings,
-		"firstTurn", g.CurrentTurn)
+		"settings", g.Settings)
 
 	return g
 }

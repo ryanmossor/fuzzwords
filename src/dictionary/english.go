@@ -1,4 +1,4 @@
-package fzwds
+package dictionary
 
 import (
 	"fzwds/src/utils"
