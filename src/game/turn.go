@@ -41,26 +41,27 @@ func (g *GameState) NewTurn(first_turn bool) {
 		}
 	}
 
-	var turn_duration_sec int
+	var turn_duration time.Duration
 	if first_turn {
-		turn_duration_sec = 30
+		turn_duration = 30 * time.Second
 	} else if g.TimeRemaining() <= 0 {
 		turn_duration_min := max(g.Settings.TurnDurationMin, 10)
 		turn_duration_max := 30
-		turn_duration_sec = utils.RandomBetween(turn_duration_min, turn_duration_max)
+		rand_sec := utils.RandomBetween(turn_duration_min, turn_duration_max)
+		turn_duration = time.Duration(rand_sec) * time.Second
 	} else if g.TimeRemaining().Seconds() < float64(g.Settings.TurnDurationMin) {
-		turn_duration_sec = g.Settings.TurnDurationMin
+		turn_duration = time.Duration(g.Settings.TurnDurationMin) * time.Second
 	} else {
-		turn_duration_sec = int(g.TimeRemaining().Seconds())
+		turn_duration = g.TimeRemaining()
 	}
 
-	next_turn := Turn { 
+	next_turn := Turn {
 		SourceWord: word,
 		PossibleAnswer: g.getPossibleAnswer(prompt, word),
 		Prompt: prompt,
 		Strikes: 0,
 		TurnStart: time.Now(),
-		TurnDuration: time.Duration(turn_duration_sec) * time.Second,
+		TurnDuration: turn_duration,
 	}
 
 	g.PreviousTurn = g.CurrentTurn
@@ -99,7 +100,7 @@ func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 		is_valid = false
 		msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
 	}
-	
+
 	if is_valid && g.WordLists.Used[answer] {
 		is_valid = false
 		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
