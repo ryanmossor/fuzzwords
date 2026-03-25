@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"fzwds/src/assert"
 	"fzwds/src/enums"
 	"fzwds/src/utils"
 	"log/slog"
@@ -25,8 +26,17 @@ func (g *GameState) NewTurn(first_turn bool) {
 	word_idx := rand.Intn(len(g.WordLists.Available))
 	word := g.WordLists.Available[word_idx]
 
+	assert.Assert(word != "", "Random word must not be empty", "word", word, "wordIdx", word_idx)
+
 	var prompt string
-	prompt_len := rand.Intn(g.Settings.PromptLenMax - g.Settings.PromptLenMin + 1) + g.Settings.PromptLenMin 
+	prompt_len := utils.RandomBetween(g.Settings.PromptLenMin, g.Settings.PromptLenMax)
+
+	assert.Assert(prompt_len >= g.Settings.PromptLenMin, "Prompt len must be >= PromptLenMin",
+		"randPromptLen", prompt_len,
+		"promptLenMin", g.Settings.PromptLenMin)
+	assert.Assert(prompt_len <= g.Settings.PromptLenMax, "Prompt len must be <= PromptLenMax",
+		"randPromptLen", prompt_len,
+		"promptLenMax", g.Settings.PromptLenMax)
 
 	switch g.Settings.PromptMode {
 	case enums.PromptModeFuzzy:
@@ -40,6 +50,11 @@ func (g *GameState) NewTurn(first_turn bool) {
 			prompt = word[rand_idx:prompt_len + rand_idx]
 		}
 	}
+
+	assert.Assert(prompt != "", "Prompt must not be empty",
+		"word", word,
+		"wordIdx", word_idx,
+		"prompt", prompt)
 
 	var turn_duration time.Duration
 	if first_turn {
@@ -106,7 +121,7 @@ func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
 	}
 
-	slog.Info("Answer validated",
+	slog.Debug("Answer validated",
 		"startUnixTs", g.StartUnixTs,
 		"prompt", g.CurrentTurn.Prompt,
 		"sourceWord", g.CurrentTurn.SourceWord,
@@ -117,7 +132,16 @@ func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 		"promptMode", g.Settings.PromptMode.String())
 
 	if is_valid {
-		word_idx, _ := slices.BinarySearch(g.WordLists.Available, answer)
+		word_idx, found := slices.BinarySearch(g.WordLists.Available, answer)
+		assert.Assert(found, "Validated answer not found in available word list",
+			"startUnixTs", g.StartUnixTs,
+			"prompt", g.CurrentTurn.Prompt,
+			"answer", answer,
+			"wordIdx", word_idx,
+			"actualWordAtIdx", g.WordLists.Available[word_idx],
+			"remainingWords", len(g.WordLists.Available),
+			"alreadyUsed", g.WordLists.Used[answer])
+
 		g.WordLists.Available = utils.Remove(g.WordLists.Available, word_idx)
 		g.WordLists.Used[answer] = true
 	}

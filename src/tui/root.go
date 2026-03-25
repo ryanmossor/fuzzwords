@@ -59,7 +59,7 @@ type State struct {
 type model struct {
 	debug 				bool
 	debug_map			map[string]string
-	
+
     ready               bool
 	switched			bool
     has_scroll          bool
