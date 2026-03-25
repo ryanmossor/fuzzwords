@@ -86,7 +86,7 @@ func CreateFuzzyPrompt(word string, prompt_len int) string {
 
 	for i := prompt_len; i > 0; i-- {
 		rand_max := len(word) - i
-		rand_idx := rand.Intn(rand_max - rand_min + 1) + rand_min
+		rand_idx := RandomBetween(rand_min, rand_max)
 
 		if i == prompt_len && rand_idx == rand_max {
 			return prompt + word[rand_idx:]
