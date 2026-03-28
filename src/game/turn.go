@@ -40,7 +40,7 @@ func (g *GameState) NewTurn(first_turn bool) {
 
 	switch g.Settings.PromptMode {
 	case enums.PromptModeFuzzy:
-		prompt = utils.CreateFuzzyPrompt(word, prompt_len)
+		prompt = CreateFuzzyPrompt(word, prompt_len)
 	case enums.PromptModeClassic:
 		if len(word) <= g.Settings.PromptLenMax {
 			prompt = word
@@ -198,4 +198,27 @@ func (g *GameState) GetTurnFailureMessage() string {
 	}
 
 	return ""
+}
+
+func CreateFuzzyPrompt(word string, prompt_len int) string {
+	if len(word) <= prompt_len {
+		return word
+	}
+
+	var prompt string
+	rand_min := 0
+
+	for i := prompt_len; i > 0; i-- {
+		rand_max := len(word) - i
+		rand_idx := utils.RandomBetween(rand_min, rand_max)
+
+		if i == prompt_len && rand_idx == rand_max {
+			return prompt + word[rand_idx:]
+		}
+
+		prompt += string(word[rand_idx])
+		rand_min = rand_idx + 1
+	}
+
+	return prompt
 }

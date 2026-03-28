@@ -76,29 +76,6 @@ func FormatTime(seconds int) string {
 	}
 }
 
-func CreateFuzzyPrompt(word string, prompt_len int) string {
-	if len(word) <= prompt_len {
-		return word
-	}
-
-	var prompt string
-	rand_min := 0
-
-	for i := prompt_len; i > 0; i-- {
-		rand_max := len(word) - i
-		rand_idx := RandomBetween(rand_min, rand_max)
-
-		if i == prompt_len && rand_idx == rand_max {
-			return prompt + word[rand_idx:]
-		}
-
-		prompt += string(word[rand_idx])
-		rand_min = rand_idx + 1
-	}
-
-	return prompt
-}
-
 func IsFuzzyMatch(answer string, prompt string) bool {
     sub_idx := 0
 	for i := range answer {
@@ -197,7 +174,7 @@ func FillDescending(max, min int) []int {
 	return out
 }
 
-func StringToMap(str string) map[string]bool {
+func StringToCharMap(str string) map[string]bool {
 	letters_remaining := make(map[string]bool)
 	for _, c := range str {
 		letters_remaining[string(c)] = false

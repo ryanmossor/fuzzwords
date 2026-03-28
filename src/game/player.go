@@ -18,7 +18,7 @@ type Player struct {
 func InitializePlayer(cfg *GameSettings, alphabet string) Player {
 	player := Player{
 		HealthCurrent: cfg.HealthInitial,
-		LettersRemaining: utils.StringToMap(alphabet),
+		LettersRemaining: utils.StringToCharMap(alphabet),
 		Stats: InitializePlayerStats(),
 	}
 
@@ -56,7 +56,7 @@ func (g *GameState) HandleCorrectAnswer(answer string) TurnResult {
 
 func (g *GameState) GrantExtraLife() {
 	g.Player.LettersUsed = nil
-	g.Player.LettersRemaining = utils.StringToMap(g.Alphabet)
+	g.Player.LettersRemaining = utils.StringToCharMap(g.Alphabet)
 
 	g.Player.Stats.ExtraLivesGained++
 	if g.Player.Stats.FewestExtraLifeSolves == 0 || g.Player.TurnsSinceLastExtraLife < g.Player.Stats.FewestExtraLifeSolves {

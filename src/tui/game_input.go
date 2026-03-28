@@ -22,7 +22,7 @@ func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.Pr
 	prompt_upper := strings.ToUpper(prompt)
 	answer_upper := strings.ToUpper(answer)
 	var sb strings.Builder
-	 
+
 	switch prompt_mode {
 	case enums.PromptModeFuzzy:
 		prompt_idx := 0
@@ -41,7 +41,7 @@ func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.Pr
 			sb.WriteString(accent(answer_upper))
 			return sb.String()
 		}
-		
+
 		sub_idx := strings.Index(answer_upper, prompt_upper)
 		sb.WriteString(accent(answer_upper[0:sub_idx]))
 		sb.WriteString(highlight(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
@@ -72,7 +72,7 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 		} else if is_match && !valid_word {
 			return m.theme.red
 		}
-	} 
+	}
 
 	if m.state.game_ui.player_damaged {
 		return m.theme.red
