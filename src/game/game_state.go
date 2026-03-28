@@ -13,7 +13,7 @@ type GameState struct {
 	GameActive			bool
 	GameStart			time.Time
 	GameEnd				time.Time
-	Settings			Settings
+	Settings			GameSettings
 	WordLists			WordLists
 	Player				Player
 	PreviousTurn		Turn
@@ -22,7 +22,7 @@ type GameState struct {
 	// TODO: cache next turn?
 }
 
-func InitializeGame(settings *Settings) GameState {
+func InitializeGame(settings *GameSettings) GameState {
     word_lists := WordLists {
 		FULL_MAP: dictionary.EnglishDictionaryMap,
 		Available: utils.FilterWordList(dictionary.EnglishDictionary, settings.PromptLenMin),

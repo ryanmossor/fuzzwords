@@ -64,7 +64,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game_ui.prev_answer = ""
 	m.state.game_ui.validation_msg = ""
 
-	m.state.game = game.InitializeGame(m.game_settings)
+	m.state.game = game.InitializeGame(&m.app_settings.Game)
 
 	m.text_input = m.initBlockTextInput()
 	return m, textinput.Blink
@@ -88,7 +88,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		turn_failure_msg := m.state.game.GetTurnFailureMessage()
 		if turn_failure_msg == "" {
 			m.anim_mgr.InitAnimations(animations.StrikeCounter)
-			m.state.game.StartTurn(utils.RandomBetween(m.game_settings.TurnDurationMin, 30))
+			m.state.game.StartTurn(utils.RandomBetween(m.app_settings.Game.TurnDurationMin, 30))
 		} else {
 			// Strike limit reached, show failure message and start new turn
 			possible_solve := m.highlightPromptAnswer(

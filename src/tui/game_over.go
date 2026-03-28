@@ -64,7 +64,7 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m.MainMenuSwitch()
 		case "s":
 			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
-			return m.SettingsSwitch()
+			return m.SettingsSwitch(game_settings)
 		case "enter":
 			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.GameSwitch()
@@ -156,8 +156,7 @@ func (m model) GameOverView() string {
 
 	game_over_msg, changed := m.anim_mgr.ApplyAnimations(
 		string(animations.GameOverWin),
-		m.state.game_ui.game_over_msg,
-		m.animations_enabled)
+		m.state.game_ui.game_over_msg)
 	if !changed {
 		game_over_msg = m.theme.TextGreen().Bold(true).Render(game_over_msg)
 	}

@@ -46,7 +46,7 @@ func (m model) HeaderView() string {
 			BorderRight(false).
 			Width(m.width_container).
 			AlignHorizontal(lipgloss.Center).
-			Render(m.theme.TextYellow().Bold(true).Render("Game Settings"))
+			Render(m.theme.TextYellow().Bold(true).Render(m.state.settings_page.title))
 	}
 
 	menu := accent("m") + base(" main menu")

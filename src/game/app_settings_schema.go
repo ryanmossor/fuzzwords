@@ -20,12 +20,20 @@ type SettingsSchemaItem struct {
 	BindRule		string			`json:"bindRule,omitempty"`
 }
 
-type SettingsSchema []SettingsSchemaItem
+type SettingsSchema struct {
+	Prefs	[]SettingsSchemaItem
+	Game	[]SettingsSchemaItem
+}
 
 func (sc SettingsSchema) GetSchemaItem(propName string) *SettingsSchemaItem {
-	for i, schema_item := range sc {
+	for i, schema_item := range sc.Game {
 		if schema_item.PropName == propName {
-			return &sc[i]
+			return &sc.Game[i]
+		}
+	}
+	for j, schema_item := range sc.Prefs {
+		if schema_item.PropName == propName {
+			return &sc.Prefs[j]
 		}
 	}
 

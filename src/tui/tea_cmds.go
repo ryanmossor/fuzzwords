@@ -33,7 +33,7 @@ func (m *model) setPlayerDamagedStateCmd() tea.Cmd {
 }
 
 func (m model) terminalBellCmd(force bool) tea.Cmd {
-	if force || m.game_settings.BellEnabled {
+	if force || m.app_settings.Prefs.BellEnabled {
 		return func() tea.Msg {
 			// Send BEL character
 			fmt.Fprint(os.Stdout, "\a")

@@ -53,7 +53,7 @@ type State struct {
 	game				game.GameState
 	game_ui				GameUIState
 	press_play			PressPlayState
-	settings			SettingsState
+	settings_page		SettingsState
 }
 
 type model struct {
@@ -83,13 +83,12 @@ type model struct {
 	text_input			textinput.Model
 
 	state				State
-	game_settings		*game.Settings
-	game_settings_copy	game.Settings
-	settings_schema		game.SettingsSchema
-	settings_path		string
+	app_settings		*game.Settings
+	app_settings_copy	game.Settings
+	app_settings_schema	game.SettingsSchema
+	app_settings_path	string
 
 	FPS					int
-	animations_enabled	bool
 	anim_mgr			anim.AnimationManager
 }
 
@@ -142,7 +141,7 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 	strike_dmg_anim := anim.NewDamageShakeAnim(anim.StrikeCounter, 8)
 	win_anim := anim.NewRainbowScrollAnim(anim.GameOverWin, 0, true, theme.GetRainbowColors())
 
-	mgr := anim.NewAnimationManager()
+	mgr := anim.NewAnimationManager(game_settings.Prefs.AnimationsEnabled)
 	mgr.Register(
 		title_logo_anim,
 		extra_life_anim,
@@ -159,17 +158,18 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		theme: theme,
 
 		footer_keymaps: []FooterKeymap {
+			{key: "ctrl+p", value: "preferences"},
 			{key: "q", value: "quit"},
 		},
 
-		game_settings: &game_settings,
-		game_settings_copy: game_settings,
-		settings_schema: game_settings_schema_parsed,
-		settings_path: settings_file_path,
+		app_settings: &game_settings,
+		app_settings_copy: game_settings,
+		app_settings_schema: game_settings_schema_parsed,
+		app_settings_path: settings_file_path,
 
 		state: State {
 			press_play: PressPlayState { visible: true },
-			settings: SettingsState { selected: 0 },
+			settings_page: SettingsState { selected: 0 },
 			game_ui: GameUIState {
 				prev_answer: 		"",
 				validation_msg: 	"",
@@ -180,7 +180,6 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		},
 
 		FPS: 30,
-		animations_enabled: true,
 		anim_mgr: mgr,
 	}
 }
@@ -215,7 +214,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, m.turnTimerExpiredCmd())
 		}
 
-		if m.animations_enabled {
+		if m.app_settings.Prefs.AnimationsEnabled {
 			m.anim_mgr.Update(now)
 		}
 

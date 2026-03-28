@@ -15,7 +15,7 @@ type Player struct {
 	Stats					PlayerStats
 }
 
-func InitializePlayer(cfg *Settings, alphabet string) Player {
+func InitializePlayer(cfg *GameSettings, alphabet string) Player {
 	player := Player{
 		HealthCurrent: cfg.HealthInitial,
 		LettersRemaining: utils.StringToMap(alphabet),

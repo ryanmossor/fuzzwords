@@ -80,6 +80,7 @@ func (m model) MainMenuSwitch() (model, tea.Cmd) {
 
 	m = m.SwitchPage(splash_page)
 	m.footer_keymaps = []FooterKeymap{
+		{key: "ctrl+p", value: "preferences"},
 		{key: "q", value: "quit"},
 	}
 	m.anim_mgr.InitAnimations(animations.TitleLogo)
@@ -92,7 +93,9 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			return m.SettingsSwitch()
+			return m.SettingsSwitch(game_settings)
+		case "ctrl+p":
+			return m.SettingsSwitch(preferences)
 		case "q":
 			return m, tea.Quit
 		}
@@ -112,7 +115,7 @@ func (m model) MainMenuView() string {
 	case large:
 		a, _ := m.anim_mgr.Get(animations.TitleLogo)
 		anim, ok := a.(*animations.TitleScreenLogoAnim)
-		if !ok {
+		if !m.app_settings.Prefs.AnimationsEnabled || !ok {
 			// Display yellow logo if animation state could not be retrieved
 			for _, ch := range constants.FULL_GAME_TITLE {
 				logo = drawGlyph(byte(ch), logo, yellow)

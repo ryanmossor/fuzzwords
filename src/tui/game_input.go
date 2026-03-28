@@ -89,8 +89,7 @@ func (m *model) renderValidationMsg() string {
 	var msg string
 	msg, _ = m.anim_mgr.ApplyAnimations(
 		string(animations.ValidationMessage),
-		m.state.game_ui.validation_msg,
-		m.animations_enabled)
+		m.state.game_ui.validation_msg)
 
 	// Prevent input box from shaking by ensuring msg and input width are both even/odd
 	raw_str := utils.StripANSICodes(msg)

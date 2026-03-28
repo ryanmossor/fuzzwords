@@ -18,9 +18,9 @@ func (m model) GameHudView() string {
 }
 
 func (m model) renderHealthDisplay() string {
-	health_icons := strings.Split(m.game_settings.HealthDisplay, ";")
+	health_icons := strings.Split(m.app_settings.Game.HealthDisplay, ";")
 	if len(health_icons) != 2 {
-		health_icons = strings.Split(game.GetDefaultSettings().HealthDisplay, ";")
+		health_icons = strings.Split(game.GetDefaultSettings().Game.HealthDisplay, ";")
 	}
 	health_icon_full := health_icons[0]
 	health_icon_empty := health_icons[1]
@@ -108,8 +108,7 @@ func (m model) renderRemainingLetters() string {
 
 	letters, changed := m.anim_mgr.ApplyAnimations(
 		string(animations.ExtraLife),
-		strings.Join(strings.Split(m.state.game.Alphabet, ""), " "),
-		m.animations_enabled)
+		strings.Join(strings.Split(m.state.game.Alphabet, ""), " "))
 	if changed {
 		return letters
 	}

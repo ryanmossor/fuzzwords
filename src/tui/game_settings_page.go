@@ -13,19 +13,46 @@ import (
 )
 
 type SettingsState struct {
-	selected int
+	selected 		int
+	category		SettingsMenuCategory
+	schema_list		[]game.SettingsSchemaItem
+	title			string
 }
 
-func (m model) SettingsSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(settings_page)
-	m.state.settings.selected = 0
+type SettingsMenuCategory string
+const (
+	preferences	 = "preferences"
+	game_settings = "game_settings"
+)
 
-	m.footer_keymaps = []FooterKeymap{
-		{key: "↑/↓", value: "scroll"},
-		{key: "←/→", value: "change"},
-		{key: "enter", value: "play"},
-		{key: "ctrl+d", value: "defaults"},
-		{key: "m", value: "menu"},
+func (m model) SettingsSwitch(category SettingsMenuCategory) (model, tea.Cmd) {
+	m = m.SwitchPage(settings_page)
+	m.state.settings_page.selected = 0
+	m.state.settings_page.category = category
+
+	switch category {
+	case preferences:
+		m.state.settings_page.schema_list = m.app_settings_schema.Prefs
+		m.state.settings_page.title = "General Preferences"
+
+		m.footer_keymaps = []FooterKeymap {
+			{key: "↑/↓", value: "scroll"},
+			{key: "←/→", value: "change"},
+			{key: "enter", value: "save"},
+			{key: "ctrl+d", value: "defaults"},
+			{key: "m", value: "menu"},
+		}
+	case game_settings:
+		m.state.settings_page.schema_list = m.app_settings_schema.Game
+		m.state.settings_page.title = "Game Settings"
+
+		m.footer_keymaps = []FooterKeymap {
+			{key: "↑/↓", value: "scroll"},
+			{key: "←/→", value: "change"},
+			{key: "enter", value: "play"},
+			{key: "ctrl+d", value: "defaults"},
+			{key: "m", value: "menu"},
+		}
 	}
 
 	return m, nil
@@ -38,58 +65,69 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down", "tab":
-			m.state.settings.selected = (m.state.settings.selected + 1 + len(m.settings_schema)) % len(m.settings_schema)
-			if m.state.settings.selected == 0 {
+			m.state.settings_page.selected = (m.state.settings_page.selected + 1 + len(m.state.settings_page.schema_list)) % len(m.state.settings_page.schema_list)
+			if m.state.settings_page.selected == 0 {
 				m.goto_top = true
 			}
 
 		case "k", "up", "shift+tab":
-			m.state.settings.selected = (m.state.settings.selected - 1 + len(m.settings_schema)) % len(m.settings_schema)
-			if m.state.settings.selected == len(m.settings_schema) - 1 {
+			m.state.settings_page.selected = (m.state.settings_page.selected - 1 + len(m.state.settings_page.schema_list)) % len(m.state.settings_page.schema_list)
+			if m.state.settings_page.selected == len(m.state.settings_page.schema_list) - 1 {
 				m.goto_bottom = true
 			}
 
 		case "+", "=", "right", "l":
-			setting := m.settings_schema[m.state.settings.selected]
-			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.game_settings_copy.BellEnabled
+			setting := m.state.settings_page.schema_list[m.state.settings_page.selected]
+			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.app_settings_copy.Prefs.BellEnabled
 
-			m.changeCurrentSetting(Next)
+			m.changeCurrentSetting(Next, m.state.settings_page.schema_list)
 
 			if is_bell_being_enabled {
 				cmds = append(cmds, m.terminalBellCmd(true))
 			}
 
 		case "-", "left", "h":
-			setting := m.settings_schema[m.state.settings.selected]
-			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.game_settings_copy.BellEnabled
+			setting := m.state.settings_page.schema_list[m.state.settings_page.selected]
+			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.app_settings_copy.Prefs.BellEnabled
 
-			m.changeCurrentSetting(Prev)
+			m.changeCurrentSetting(Prev, m.state.settings_page.schema_list)
 
 			if is_bell_being_enabled {
 				cmds = append(cmds, m.terminalBellCmd(true))
 			}
 
 		case "ctrl+d":
-			m.game_settings_copy = game.GetDefaultSettings()
+			switch m.state.settings_page.category {
+			case preferences:
+				m.app_settings_copy.Prefs = game.GetDefaultGeneralPreferences()
+			case game_settings:
+				m.app_settings_copy.Game = game.GetDefaultGameSettings()
+			}
 
 		case "enter":
-			m.game_settings = &m.game_settings_copy
+			m.app_settings = &m.app_settings_copy
 
 			// TODO: return m, cmd that updates game_settings
 			// TODO: abstract this save logic to common func shared with root initalization of settings
-			marshaled_settings, err := json.MarshalIndent(m.game_settings, "", "    ")
+			marshaled_settings, err := json.MarshalIndent(m.app_settings, "", "    ")
 			if err != nil {
 				slog.Error("Error marshaling validated settings JSON", "error", err)
 			}
 
-			if err := os.WriteFile(m.settings_path, marshaled_settings, 0644); err != nil {
+			if err := os.WriteFile(m.app_settings_path, marshaled_settings, 0644); err != nil {
 				slog.Error("Error writing settings.json", "error", err)
 			}
 
-			return m.GameSwitch()
+			switch m.state.settings_page.category {
+			case preferences:
+				m.anim_mgr.SetAnimationStatus(m.app_settings.Prefs.AnimationsEnabled)
+				return m.MainMenuSwitch()
+			case game_settings:
+				return m.GameSwitch()
+			}
 
 		case "m", "esc":
-			m.game_settings_copy = *m.game_settings
+			m.app_settings_copy = *m.app_settings
 			return m.MainMenuSwitch()
 		}
 	}
@@ -103,13 +141,13 @@ func (m model) SettingsView() string {
 	accent := m.theme.TextAccent().Bold(true).Render
 
 	var lines []string
-	for i, setting := range m.settings_schema {
+	for i, setting := range m.state.settings_page.schema_list {
 		if setting.Disabled {
 			continue
 		}
 
 		var default_val, sub_desc string
-		current_val := m.game_settings_copy.GetSetting(setting.PropName)
+		current_val := m.app_settings_copy.GetSetting(setting.PropName)
 
 		switch setting.Type {
 		case "int":
@@ -132,7 +170,7 @@ func (m model) SettingsView() string {
 		}
 		default_text := dim("  " + default_val + "    ")
 		var display_name string
-		is_selected := m.state.settings.selected == i
+		is_selected := m.state.settings_page.selected == i
 
 		if is_selected {
 			display_name = accent(setting.DisplayName)
@@ -197,7 +235,7 @@ func (m model) SettingsView() string {
 		}
 
 		// Don't apply border to final setting box
-		apply_bottom_border := i != len(m.settings_schema) - 1
+		apply_bottom_border := i != len(m.state.settings_page.schema_list) - 1
 		line := m.CreateSettingsMenuItem(content, is_selected, apply_bottom_border)
 		lines = append(lines, line)
 	}
@@ -211,15 +249,15 @@ const (
 	Prev Direction = -1
 )
 
-func (m *model) changeCurrentSetting(dir Direction) {
-	if m.state.settings.selected < 0 || m.state.settings.selected >= len(m.settings_schema) {
+func (m *model) changeCurrentSetting(dir Direction, schema []game.SettingsSchemaItem) {
+	if m.state.settings_page.selected < 0 || m.state.settings_page.selected >= len(schema) {
 		return
 	}
 
 	dir_int := int(dir)
 
-	setting := m.settings_schema[m.state.settings.selected]
-	cur_val := m.game_settings_copy.GetSetting(setting.PropName)
+	setting := schema[m.state.settings_page.selected]
+	cur_val := m.app_settings_copy.GetSetting(setting.PropName)
 	var new_val any
 
 	if len(setting.ValidValues) > 0 {
@@ -257,5 +295,5 @@ func (m *model) changeCurrentSetting(dir Direction) {
 		return
 	}
 
-	m.game_settings_copy.SetSetting(setting.PropName, new_val, m.settings_schema)
+	m.app_settings_copy.SetSetting(setting.PropName, new_val, m.app_settings_schema)
 }

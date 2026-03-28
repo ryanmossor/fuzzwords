@@ -31,7 +31,7 @@ func (m model) PressPlayUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) PressPlayView() string {
-	if !m.state.press_play.visible {
+	if !m.state.press_play.visible && m.app_settings.Prefs.AnimationsEnabled {
 		return ""
 	}
 

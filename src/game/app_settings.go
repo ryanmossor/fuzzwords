@@ -8,7 +8,13 @@ import (
 	"reflect"
 )
 
-type Settings struct {
+type GeneralPreferences struct {
+	AnimationsEnabled		bool		`json:"animationsEnabled"`
+	BellEnabled				bool		`json:"bellEnabled"`
+	// TODO: color theme, health bar color?
+}
+
+type GameSettings struct {
 	Alphabet				enums.Alphabet		`json:"alphabet"`
 	PromptMode				enums.PromptMode	`json:"promptMode"`
 	WinCondition			enums.WinCondition	`json:"winCondition"`
@@ -20,14 +26,25 @@ type Settings struct {
 	TurnDurationMin			int					`json:"turnDurationMin"`
 	PromptStrikes			int					`json:"promptStrikes"`
 	HealthDisplay			string				`json:"healthDisplay"`
-	BellEnabled				bool				`json:"bellEnabled"`
 	// TODO: add cfg for hints after each strike?
 	// hints_enabled			bool
 	// hint_chars_per_turn		int
 }
 
-func GetDefaultSettings() Settings {
-	return Settings{
+type Settings struct {
+	Prefs		GeneralPreferences	`json:"prefs"`
+	Game 		GameSettings		`json:"game"`
+}
+
+func GetDefaultGeneralPreferences() GeneralPreferences {
+	return GeneralPreferences {
+		AnimationsEnabled: true,
+		BellEnabled: false,
+	}
+}
+
+func GetDefaultGameSettings() GameSettings {
+	return GameSettings {
 		Alphabet: 			enums.AlphabetEasy,
 		PromptMode: 		enums.PromptModeFuzzy,
 		WinCondition: 		enums.WinConditionEndless,
@@ -39,36 +56,44 @@ func GetDefaultSettings() Settings {
 		TurnDurationMin: 	10,
 		PromptStrikes:		2,
 		HealthDisplay:		"● ;◯ ",
-		BellEnabled:		false,
+	}
+}
+
+func GetDefaultSettings() Settings {
+	return Settings {
+		Prefs: GetDefaultGeneralPreferences(),
+		Game: GetDefaultGameSettings(),
 	}
 }
 
 func (s *Settings) GetSetting(propName string) any {
 	switch propName {
 	case "Alphabet":
-		return s.Alphabet.String()
+		return s.Game.Alphabet.String()
 	case "PromptMode":
-		return s.PromptMode.String()
+		return s.Game.PromptMode.String()
 	case "WinCondition":
-		return s.WinCondition.String()
+		return s.Game.WinCondition.String()
 	case "HealthInitial":
-		return s.HealthInitial
+		return s.Game.HealthInitial
 	case "HealthMax":
-		return s.HealthMax
+		return s.Game.HealthMax
 	case "HighlightInput":
-		return s.HighlightInput
+		return s.Game.HighlightInput
 	case "PromptLenMin":
-		return s.PromptLenMin
+		return s.Game.PromptLenMin
 	case "PromptLenMax":
-		return s.PromptLenMax
+		return s.Game.PromptLenMax
 	case "TurnDurationMin":
-		return s.TurnDurationMin
+		return s.Game.TurnDurationMin
 	case "PromptStrikes":
-		return s.PromptStrikes
+		return s.Game.PromptStrikes
 	case "HealthDisplay":
-		return s.HealthDisplay
+		return s.Game.HealthDisplay
+	case "AnimationsEnabled":
+		return s.Prefs.AnimationsEnabled
 	case "BellEnabled":
-		return s.BellEnabled
+		return s.Prefs.BellEnabled
 	}
 
 	return nil
@@ -98,51 +123,55 @@ func (s *Settings) SetSetting(propName string, value any, schema SettingsSchema)
 	switch propName {
 	case "Alphabet":
 		if vStr, ok := value.(string); ok {
-			s.Alphabet = enums.ParseAlphabet(vStr)
+			s.Game.Alphabet = enums.ParseAlphabet(vStr)
 		}
 	case "PromptMode":
 		if vStr, ok := value.(string); ok {
-			s.PromptMode = enums.ParsePromptMode(vStr)
+			s.Game.PromptMode = enums.ParsePromptMode(vStr)
 		}
 	case "WinCondition":
 		if vStr, ok := value.(string); ok {
-			s.WinCondition = enums.ParseWinCond(vStr)
+			s.Game.WinCondition = enums.ParseWinCond(vStr)
 		}
 	case "HealthInitial":
 		if vInt, ok := utils.ParseInt(value); ok {
-			s.HealthInitial = vInt
+			s.Game.HealthInitial = vInt
 		}
 	case "HealthMax":
 		if vInt, ok := utils.ParseInt(value); ok {
-			s.HealthMax = vInt
+			s.Game.HealthMax = vInt
 		}
 	case "HighlightInput":
 		if vbool, ok := value.(bool); ok {
-			s.HighlightInput = vbool
+			s.Game.HighlightInput = vbool
 		}
 	case "PromptLenMin":
 		if vInt, ok := utils.ParseInt(value); ok {
-			s.PromptLenMin = vInt
+			s.Game.PromptLenMin = vInt
 		}
 	case "PromptLenMax":
 		if vInt, ok := utils.ParseInt(value); ok {
-			s.PromptLenMax = vInt
+			s.Game.PromptLenMax = vInt
 		}
 	case "TurnDurationMin":
 		if vInt, ok := utils.ParseInt(value); ok {
-			s.TurnDurationMin = vInt
+			s.Game.TurnDurationMin = vInt
 		}
 	case "PromptStrikes":
 		if vInt, ok := utils.ParseInt(value); ok {
-			s.PromptStrikes = vInt
+			s.Game.PromptStrikes = vInt
 		}
 	case "HealthDisplay":
 		if vStr, ok := value.(string); ok {
-			s.HealthDisplay = vStr
+			s.Game.HealthDisplay = vStr
+		}
+	case "AnimationsEnabled":
+		if vbool, ok := value.(bool); ok {
+			s.Prefs.AnimationsEnabled = vbool
 		}
 	case "BellEnabled":
 		if vbool, ok := value.(bool); ok {
-			s.BellEnabled = vbool
+			s.Prefs.BellEnabled = vbool
 		}
 	}
 
@@ -217,6 +246,11 @@ func (s *Settings) SetHealthDisplay(display string, schema SettingsSchema) *Sett
 	return s
 }
 
+func (s *Settings) SetAnimationsEnabled(enabled bool, schema SettingsSchema) *Settings {
+	s.SetSetting("AnimationsEnabled", enabled, schema)
+	return s
+}
+
 func (s *Settings) SetBellEnabled(enabled bool, schema SettingsSchema) *Settings {
 	s.SetSetting("BellEnabled", enabled, schema)
 	return s
@@ -224,17 +258,18 @@ func (s *Settings) SetBellEnabled(enabled bool, schema SettingsSchema) *Settings
 
 func (s *Settings) ValidateSettings(schema SettingsSchema) *Settings {
 	return s.
-		SetAlphabet(s.Alphabet.String(), schema).
-		SetHealthInitial(s.HealthInitial, schema).
-		SetHealthMax(s.HealthMax, schema).
-		SetPromptLenMin(s.PromptLenMin, schema).
-		SetPromptLenMax(s.PromptLenMax, schema).
-		SetPromptMode(s.PromptMode.String(), schema).
-		SetPromptStrikes(s.PromptStrikes, schema).
-		SetTurnDurationMin(s.TurnDurationMin, schema).
-		SetWinCondition(s.WinCondition.String(), schema).
-		SetHealthDisplay(s.HealthDisplay, schema).
-		SetBellEnabled(s.BellEnabled, schema)
+		SetAlphabet(s.Game.Alphabet.String(), schema).
+		SetHealthInitial(s.Game.HealthInitial, schema).
+		SetHealthMax(s.Game.HealthMax, schema).
+		SetPromptLenMin(s.Game.PromptLenMin, schema).
+		SetPromptLenMax(s.Game.PromptLenMax, schema).
+		SetPromptMode(s.Game.PromptMode.String(), schema).
+		SetPromptStrikes(s.Game.PromptStrikes, schema).
+		SetTurnDurationMin(s.Game.TurnDurationMin, schema).
+		SetWinCondition(s.Game.WinCondition.String(), schema).
+		SetHealthDisplay(s.Game.HealthDisplay, schema).
+		SetAnimationsEnabled(s.Prefs.AnimationsEnabled, schema).
+		SetBellEnabled(s.Prefs.BellEnabled, schema)
 }
 
 func ValidateSettingValue(schema_item SettingsSchemaItem, value any) bool {
