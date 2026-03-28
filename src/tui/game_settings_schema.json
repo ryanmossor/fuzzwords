@@ -39,16 +39,13 @@
       "propName": "Dictionary",
       "displayName": "Dictionary",
       "type": "enum",
-      "description": "n/a",
       "default": "english",
       "validValues": [
         {
-          "value": "english",
-          "description": "English"
+          "value": "english"
         },
         {
-          "value": "pokemon",
-          "description": "Pokemon names (generations configurable before game starts)"
+          "value": "pokemon"
         }
       ]
     },
