@@ -8,7 +8,10 @@ import (
 
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// TODO: has_header flag
-	if m.state.game.GameActive || m.page == game_over_page || m.page == settings_page {
+	if m.state.game.GameActive ||
+	m.page == game_over_page ||
+	m.page == settings_page ||
+	m.page == pokemon_gen_selector {
 		return m, nil
 	}
 
@@ -38,7 +41,7 @@ func (m model) HeaderView() string {
 	accent := m.theme.TextAccent().Render
 	base := m.theme.Base().Render
 
-	if m.page == settings_page {
+	if m.page == settings_page || m.page == pokemon_gen_selector {
 		return m.theme.Base().
 			Border(lipgloss.NormalBorder()).
 			BorderForeground(m.theme.Border()).
@@ -46,7 +49,7 @@ func (m model) HeaderView() string {
 			BorderRight(false).
 			Width(m.width_container).
 			AlignHorizontal(lipgloss.Center).
-			Render(m.theme.TextYellow().Bold(true).Render(m.state.settings_page.title))
+			Render(m.theme.TextYellow().Bold(true).Render(m.state.settings.title))
 	}
 
 	menu := accent("m") + base(" main menu")

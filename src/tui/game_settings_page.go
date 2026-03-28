@@ -2,6 +2,7 @@ package tui
 
 import (
 	"encoding/json"
+	"fzwds/src/enums"
 	"fzwds/src/game"
 	"fzwds/src/utils"
 	"log/slog"
@@ -27,13 +28,13 @@ const (
 
 func (m model) SettingsSwitch(category SettingsMenuCategory) (model, tea.Cmd) {
 	m = m.SwitchPage(settings_page)
-	m.state.settings_page.selected = 0
-	m.state.settings_page.category = category
+	m.state.settings.selected = 0
+	m.state.settings.category = category
 
 	switch category {
 	case preferences:
-		m.state.settings_page.schema_list = m.app_settings_schema.Prefs
-		m.state.settings_page.title = "General Preferences"
+		m.state.settings.schema_list = m.app_settings_schema.Prefs
+		m.state.settings.title = "General Preferences"
 
 		m.footer_keymaps = []FooterKeymap {
 			{key: "↑/↓", value: "scroll"},
@@ -43,8 +44,8 @@ func (m model) SettingsSwitch(category SettingsMenuCategory) (model, tea.Cmd) {
 			{key: "m", value: "menu"},
 		}
 	case game_settings:
-		m.state.settings_page.schema_list = m.app_settings_schema.Game
-		m.state.settings_page.title = "Game Settings"
+		m.state.settings.schema_list = m.app_settings_schema.Game
+		m.state.settings.title = "Game Settings"
 
 		m.footer_keymaps = []FooterKeymap {
 			{key: "↑/↓", value: "scroll"},
@@ -65,39 +66,39 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down", "tab":
-			m.state.settings_page.selected = (m.state.settings_page.selected + 1 + len(m.state.settings_page.schema_list)) % len(m.state.settings_page.schema_list)
-			if m.state.settings_page.selected == 0 {
+			m.state.settings.selected = (m.state.settings.selected + 1 + len(m.state.settings.schema_list)) % len(m.state.settings.schema_list)
+			if m.state.settings.selected == 0 {
 				m.goto_top = true
 			}
 
 		case "k", "up", "shift+tab":
-			m.state.settings_page.selected = (m.state.settings_page.selected - 1 + len(m.state.settings_page.schema_list)) % len(m.state.settings_page.schema_list)
-			if m.state.settings_page.selected == len(m.state.settings_page.schema_list) - 1 {
+			m.state.settings.selected = (m.state.settings.selected - 1 + len(m.state.settings.schema_list)) % len(m.state.settings.schema_list)
+			if m.state.settings.selected == len(m.state.settings.schema_list) - 1 {
 				m.goto_bottom = true
 			}
 
 		case "+", "=", "right", "l":
-			setting := m.state.settings_page.schema_list[m.state.settings_page.selected]
+			setting := m.state.settings.schema_list[m.state.settings.selected]
 			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.app_settings_copy.Prefs.BellEnabled
 
-			m.changeCurrentSetting(Next, m.state.settings_page.schema_list)
+			m.changeCurrentSetting(Next, m.state.settings.schema_list)
 
 			if is_bell_being_enabled {
 				cmds = append(cmds, m.terminalBellCmd(true))
 			}
 
 		case "-", "left", "h":
-			setting := m.state.settings_page.schema_list[m.state.settings_page.selected]
+			setting := m.state.settings.schema_list[m.state.settings.selected]
 			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.app_settings_copy.Prefs.BellEnabled
 
-			m.changeCurrentSetting(Prev, m.state.settings_page.schema_list)
+			m.changeCurrentSetting(Prev, m.state.settings.schema_list)
 
 			if is_bell_being_enabled {
 				cmds = append(cmds, m.terminalBellCmd(true))
 			}
 
 		case "ctrl+d":
-			switch m.state.settings_page.category {
+			switch m.state.settings.category {
 			case preferences:
 				m.app_settings_copy.Prefs = game.GetDefaultGeneralPreferences()
 			case game_settings:
@@ -118,12 +119,16 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 				slog.Error("Error writing settings.json", "error", err)
 			}
 
-			switch m.state.settings_page.category {
+			switch m.state.settings.category {
 			case preferences:
 				m.anim_mgr.SetAnimationStatus(m.app_settings.Prefs.AnimationsEnabled)
 				return m.MainMenuSwitch()
 			case game_settings:
-				return m.GameSwitch()
+				if m.app_settings.Game.Dictionary == enums.Pokemon {
+					return m.PokemonGenSelectorSwitch()
+				} else {
+					return m.GameSwitch()
+				}
 			}
 
 		case "m", "esc":
@@ -141,7 +146,7 @@ func (m model) SettingsView() string {
 	accent := m.theme.TextAccent().Bold(true).Render
 
 	var lines []string
-	for i, setting := range m.state.settings_page.schema_list {
+	for i, setting := range m.state.settings.schema_list {
 		if setting.Disabled {
 			continue
 		}
@@ -170,7 +175,7 @@ func (m model) SettingsView() string {
 		}
 		default_text := dim("  " + default_val + "    ")
 		var display_name string
-		is_selected := m.state.settings_page.selected == i
+		is_selected := m.state.settings.selected == i
 
 		if is_selected {
 			display_name = accent(setting.DisplayName)
@@ -235,7 +240,7 @@ func (m model) SettingsView() string {
 		}
 
 		// Don't apply border to final setting box
-		apply_bottom_border := i != len(m.state.settings_page.schema_list) - 1
+		apply_bottom_border := i != len(m.state.settings.schema_list) - 1
 		line := m.CreateSettingsMenuItem(content, is_selected, apply_bottom_border)
 		lines = append(lines, line)
 	}
@@ -250,13 +255,13 @@ const (
 )
 
 func (m *model) changeCurrentSetting(dir Direction, schema []game.SettingsSchemaItem) {
-	if m.state.settings_page.selected < 0 || m.state.settings_page.selected >= len(schema) {
+	if m.state.settings.selected < 0 || m.state.settings.selected >= len(schema) {
 		return
 	}
 
 	dir_int := int(dir)
 
-	setting := schema[m.state.settings_page.selected]
+	setting := schema[m.state.settings.selected]
 	cur_val := m.app_settings_copy.GetSetting(setting.PropName)
 	var new_val any
 

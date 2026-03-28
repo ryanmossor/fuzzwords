@@ -15,6 +15,7 @@ type GeneralPreferences struct {
 }
 
 type GameSettings struct {
+	Dictionary				enums.Dictionary	`json:"dictionary"`
 	Alphabet				enums.Alphabet		`json:"alphabet"`
 	PromptMode				enums.PromptMode	`json:"promptMode"`
 	WinCondition			enums.WinCondition	`json:"winCondition"`
@@ -26,6 +27,7 @@ type GameSettings struct {
 	TurnDurationMin			int					`json:"turnDurationMin"`
 	PromptStrikes			int					`json:"promptStrikes"`
 	HealthDisplay			string				`json:"healthDisplay"`
+	PokemonGens				[]int				`json:"pokemonGens"`
 	// TODO: add cfg for hints after each strike?
 	// hints_enabled			bool
 	// hint_chars_per_turn		int
@@ -45,6 +47,7 @@ func GetDefaultGeneralPreferences() GeneralPreferences {
 
 func GetDefaultGameSettings() GameSettings {
 	return GameSettings {
+		Dictionary:			enums.English,
 		Alphabet: 			enums.AlphabetEasy,
 		PromptMode: 		enums.PromptModeFuzzy,
 		WinCondition: 		enums.WinConditionEndless,
@@ -68,6 +71,8 @@ func GetDefaultSettings() Settings {
 
 func (s *Settings) GetSetting(propName string) any {
 	switch propName {
+	case "Dictionary":
+		return s.Game.Dictionary.String()
 	case "Alphabet":
 		return s.Game.Alphabet.String()
 	case "PromptMode":
@@ -121,6 +126,10 @@ func (s *Settings) SetSetting(propName string, value any, schema SettingsSchema)
 	}
 
 	switch propName {
+	case "Dictionary":
+		if vStr, ok := value.(string); ok {
+			s.Game.Dictionary = enums.ParseDictionary(vStr)
+		}
 	case "Alphabet":
 		if vStr, ok := value.(string); ok {
 			s.Game.Alphabet = enums.ParseAlphabet(vStr)
@@ -196,6 +205,11 @@ func (s *Settings) SetSetting(propName string, value any, schema SettingsSchema)
 	return nil
 }
 
+func (s *Settings) SetDictionary(dictionary string, schema SettingsSchema) *Settings {
+	s.SetSetting("Dictionary", dictionary, schema)
+	return s
+}
+
 func (s *Settings) SetAlphabet(alphabet string, schema SettingsSchema) *Settings {
 	s.SetSetting("Alphabet", alphabet, schema)
 	return s
@@ -258,6 +272,7 @@ func (s *Settings) SetBellEnabled(enabled bool, schema SettingsSchema) *Settings
 
 func (s *Settings) ValidateSettings(schema SettingsSchema) *Settings {
 	return s.
+		SetDictionary(s.Game.Dictionary.String(), schema).
 		SetAlphabet(s.Game.Alphabet.String(), schema).
 		SetHealthInitial(s.Game.HealthInitial, schema).
 		SetHealthMax(s.Game.HealthMax, schema).

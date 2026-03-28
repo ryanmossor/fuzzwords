@@ -20,12 +20,13 @@ import (
 
 type page int
 const (
-	splash_page page = iota
-	about_page
-	settings_page
-    stats_page
-	game_page
+	about_page page = iota
 	game_over_page
+	game_page
+	pokemon_gen_selector
+	settings_page
+	splash_page
+    stats_page
 )
 
 type size int
@@ -49,11 +50,17 @@ type GameUIState struct {
 	input_restricted		bool
 }
 
+type FooterState struct {
+	footer_msg		string
+}
+
 type State struct {
-	game				game.GameState
-	game_ui				GameUIState
-	press_play			PressPlayState
-	settings_page		SettingsState
+	game					game.GameState
+	game_ui					GameUIState
+	press_play				PressPlayState
+	settings				SettingsState
+	pokemon_gen_selector	PokemonGenSelectorState
+	footer					FooterState
 }
 
 type model struct {
@@ -150,7 +157,7 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		win_anim,
 	)
 
-	return model{
+	return model {
 		debug: debug,
 		debug_map: make(map[string]string),
 
@@ -167,9 +174,23 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		app_settings_schema: game_settings_schema_parsed,
 		app_settings_path: settings_file_path,
 
+		page: splash_page,
+
 		state: State {
-			press_play: PressPlayState { visible: true },
-			settings_page: SettingsState { selected: 0 },
+			press_play: PressPlayState {
+				visible: true,
+			},
+
+			settings: SettingsState {
+				selected: 0,
+			},
+
+			pokemon_gen_selector: PokemonGenSelectorState {
+				gen_list: []int{},
+				gen_state: initSelectedPokemonGens(&game_settings),
+				selected: 1,
+			},
+
 			game_ui: GameUIState {
 				prev_answer: 		"",
 				validation_msg: 	"",
@@ -276,6 +297,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m, cmd = m.AboutUpdate(msg)
 	case settings_page:
 		m, cmd = m.SettingsUpdate(msg)
+	case pokemon_gen_selector:
+		m, cmd = m.PokemonGenSelectorUpdate(msg)
 	case game_page:
 		m, cmd = m.GameUpdate(msg)
 	case game_over_page:
@@ -290,7 +313,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
-	m.viewport.SetContent(m.getContent()) 
+	m.viewport.SetContent(m.getContent())
 	m.viewport, cmd = m.viewport.Update(msg)
 	if m.switched {
 		m = m.updateViewport()
@@ -356,7 +379,7 @@ func (m model) View() string {
 			MaxWidth(m.viewport_width).
 			MaxHeight(m.viewport_height).
 			Render(child),
-		) 
+		)
 
 	if m.debug {
 		m.debug_map["viewSize"] = strconv.Itoa(len(v))
@@ -382,6 +405,8 @@ func (m model) getContent() string {
 		page = m.AboutView()
 	case settings_page:
 		page = m.SettingsView()
+	case pokemon_gen_selector:
+		page = m.PokemonGenSelectorView()
 	case stats_page:
 		page = m.StatsView()
 	case game_page:

@@ -23,9 +23,21 @@ type GameState struct {
 }
 
 func InitializeGame(settings *GameSettings) GameState {
+	var full_map map[string]bool
+	var available []string
+
+	switch settings.Dictionary {
+	case enums.English:
+		full_map = dictionary.EnglishDictionaryMap
+		available = utils.FilterWordList(dictionary.EnglishDictionary, settings.PromptLenMin)
+	case enums.Pokemon:
+		available = dictionary.GetSelectedPokemonGenList(settings.PokemonGens...)
+		full_map = utils.ArrToMap(available)
+	}
+
     word_lists := WordLists {
-		FULL_MAP: dictionary.EnglishDictionaryMap,
-		Available: utils.FilterWordList(dictionary.EnglishDictionary, settings.PromptLenMin),
+		FULL_MAP: full_map,
+		Available: available,
         Used: make(map[string]bool),
     }
 	alphabet := enums.Alphabets[settings.Alphabet]

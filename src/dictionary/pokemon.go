@@ -7,8 +7,9 @@ import (
 
 type PokemonMap map[int][]string
 
-func GetPokemonList(gens ...int) []string {
+func GetSelectedPokemonGenList(gens ...int) []string {
 	list := []string{}
+
 	for _, gen := range gens {
 		pokemon, ok := PokemonDictionary[gen]
 		if ok {

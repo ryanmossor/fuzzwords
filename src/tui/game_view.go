@@ -36,6 +36,7 @@ func (m model) GameView() string {
 		"",
 		"",
 		"",
+		"",
 		prompt,
 		m.GameStrikeCounterView(),
 		"",
@@ -88,7 +89,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		turn_failure_msg := m.state.game.GetTurnFailureMessage()
 		if turn_failure_msg == "" {
 			m.anim_mgr.InitAnimations(animations.StrikeCounter)
-			m.state.game.StartTurn(utils.RandomBetween(m.app_settings.Game.TurnDurationMin, 30))
+			turn_duration_min := max(10, m.app_settings.Game.TurnDurationMin)
+			m.state.game.StartTurn(utils.RandomBetween(turn_duration_min, 30))
 		} else {
 			// Strike limit reached, show failure message and start new turn
 			possible_solve := m.highlightPromptAnswer(
