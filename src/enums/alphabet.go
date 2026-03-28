@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type Alphabet int 
+type Alphabet int
 const (
 	AlphabetEasy Alphabet = iota
 	AlphabetMedium

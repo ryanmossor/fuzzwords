@@ -185,3 +185,16 @@ func StringToCharMap(str string) map[string]bool {
 func RandomBetween(min, max int) int {
 	return rand.Intn(max - min + 1) + min
 }
+
+func StripNumbersAndSymbols(s string) string {
+	alphabet := constants.FULL_ALPHABET_LOWER
+	var stripped strings.Builder
+
+	for _, c := range s {
+		if strings.ContainsRune(alphabet, c) {
+			stripped.WriteRune(c)
+		}
+	}
+
+	return stripped.String()
+}
