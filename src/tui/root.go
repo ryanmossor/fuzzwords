@@ -67,6 +67,8 @@ type model struct {
 	debug 				bool
 	debug_map			map[string]string
 
+	ctrl_c_pressed		bool
+
     ready               bool
 	switched			bool
     has_scroll          bool
@@ -284,7 +286,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
-			return m, tea.Quit
+			if m.ctrl_c_pressed {
+				return m, tea.Quit
+			} else {
+				m.ctrl_c_pressed = true
+				m.state.footer.footer_msg = m.theme.TextRed().Bold(true).Render("Press ctrl+c again to quit")
+				return m, nil
+			}
+		default:
+			if m.ctrl_c_pressed {
+				m.ctrl_c_pressed = false
+				m.state.footer.footer_msg = ""
+			}
 		}
 	}
 

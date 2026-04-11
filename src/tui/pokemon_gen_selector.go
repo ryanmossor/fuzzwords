@@ -74,7 +74,7 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			if len(selected_gens) == 0 {
-				m.state.footer.footer_msg = "You must select at least one generation"
+				m.state.footer.footer_msg = m.theme.TextRed().Bold(true).Render("You must select at least one generation")
 				return m, nil
 			}
 
