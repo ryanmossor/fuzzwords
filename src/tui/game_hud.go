@@ -17,7 +17,8 @@ func (m model) GameHudView() string {
 		m.renderRemainingLetters())
 }
 
-func (m model) renderHealthDisplay() string {
+func (m model) renderHealthDisplay(health_current int) string {
+	// TODO: perform this check once on game startup rather than per redraw?
 	health_icons := strings.Split(m.app_settings.Game.HealthDisplay, ";")
 	if len(health_icons) != 2 {
 		health_icons = strings.Split(game.GetDefaultSettings().Game.HealthDisplay, ";")
@@ -30,7 +31,7 @@ func (m model) renderHealthDisplay() string {
 		full_style = m.theme.TextRed()
 		bracket_style = m.theme.TextRed()
 	} else {
-		full_style = m.theme.TextGreen()
+		full_style = m.theme.TextHighlight()
 		bracket_style = m.theme.Base()
 	}
 
@@ -39,10 +40,9 @@ func (m model) renderHealthDisplay() string {
 		sb.WriteString(bracket_style.Render("["))
 	}
 
-	health_cur := m.state.game.Player.HealthCurrent
 	health_max := m.state.game.Settings.HealthMax
-	sb.WriteString(full_style.Render(strings.Repeat(health_icon_full, health_cur)))
-	sb.WriteString(m.theme.Base().Render(strings.Repeat(health_icon_empty, health_max - health_cur)))
+	sb.WriteString(full_style.Render(strings.Repeat(health_icon_full, health_current)))
+	sb.WriteString(m.theme.Base().Render(strings.Repeat(health_icon_empty, health_max - health_current)))
 
 	if strings.HasPrefix(health_icon_full, "#") {
 		sb.WriteString(bracket_style.Render("]"))
@@ -77,8 +77,8 @@ func (m model) renderTopBar() string {
 		border_style = m.theme.Base().Foreground(m.theme.Border())
 	}
 
-	row_items := []string{
-		m.renderHealthDisplay(),
+	row_items := []string {
+		m.renderHealthDisplay(m.state.game.Player.HealthCurrent),
 		text_style.Render(timer_display),
 	}
 
@@ -113,18 +113,20 @@ func (m model) renderRemainingLetters() string {
 		return letters
 	}
 
-	out := []string{}
-	for _, c := range m.state.game.Alphabet {
-		letter := string(c)
-
-		if m.state.game.Player.LettersRemaining[letter] {
-			out = append(out, m.theme.TextDim().Render(letter))
+	var out strings.Builder
+	for i, c := range m.state.game.Alphabet {
+		if m.state.game.Player.LettersRemaining[c] {
+			out.WriteString(m.theme.TextDim().Render(string(c)))
 		} else if m.state.game_ui.player_damaged {
-			out = append(out, m.theme.TextRed().Bold(true).Render(letter))
+			out.WriteString(m.theme.TextRed().Bold(true).Render(string(c)))
 		} else {
-			out = append(out, m.theme.TextYellow().Bold(true).Render(letter))
+			out.WriteString(m.theme.TextYellow().Bold(true).Render(string(c)))
+		}
+
+		if i < len(m.state.game.Alphabet) - 1 {
+			out.WriteRune(' ')
 		}
 	}
 
-	return strings.Join(out, " ")
+	return out.String()
 }

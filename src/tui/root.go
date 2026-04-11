@@ -3,6 +3,7 @@ package tui
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"fzwds/src/game"
 	anim "fzwds/src/tui/animations"
 	"log/slog"
@@ -10,7 +11,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
-	"unicode/utf8"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -23,6 +23,7 @@ const (
 	about_page page = iota
 	game_over_page
 	game_page
+	game_review_page
 	pokemon_gen_selector
 	settings_page
 	splash_page
@@ -57,6 +58,7 @@ type FooterState struct {
 type State struct {
 	game					game.GameState
 	game_ui					GameUIState
+	game_review				GameReviewState
 	press_play				PressPlayState
 	settings				SettingsState
 	pokemon_gen_selector	PokemonGenSelectorState
@@ -200,6 +202,10 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 				player_damaged: 	false,
 				input_restricted: 	false,
 			},
+
+			game_review: GameReviewState {
+				selected_turn: 0,
+			},
 		},
 
 		FPS: 30,
@@ -229,6 +235,9 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
+	// TODO: animations/timer only enabled on title screen/game
+	// should probably not render other screens at 30fps
 	case TickMsg:
 		var cmds []tea.Cmd
 		now := msg.Time
@@ -273,6 +282,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width_content = m.width_container - 4
 		m = m.updateViewport()
 
+	//TODO move these commands to relevant views
 	case PressPlayTickMsg:
 		m, cmd := m.PressPlayUpdate(msg)
 		return m, cmd
@@ -290,7 +300,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			} else {
 				m.ctrl_c_pressed = true
-				m.state.footer.footer_msg = m.theme.TextRed().Bold(true).Render("Press ctrl+c again to quit")
+				m.state.footer.footer_msg = m.theme.TextYellow().Render("Press ctrl+c again to quit")
 				return m, nil
 			}
 		default:
@@ -316,6 +326,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m, cmd = m.GameUpdate(msg)
 	case game_over_page:
 		m, cmd = m.GameOverUpdate(msg)
+	case game_review_page:
+		m, cmd = m.GameReviewUpdate(msg)
 	}
 
 	var header_cmd tea.Cmd
@@ -326,12 +338,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
-	m.viewport.SetContent(m.getContent())
-	m.viewport, cmd = m.viewport.Update(msg)
 	if m.switched {
 		m = m.updateViewport()
 		m.switched = false
 	}
+	m.viewport.SetContent(m.getContent())
+	m.viewport, cmd = m.viewport.Update(msg)
 
 	if m.goto_top {
 		m.viewport.GotoTop()
@@ -346,6 +358,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	start := time.Now()
+
 	header := m.HeaderView()
 	footer := m.FooterView()
 
@@ -375,13 +389,14 @@ func (m model) View() string {
 		view = m.getContent()
 	}
 
+	debug_view := m.DebugView()
 	child := lipgloss.JoinVertical(
 		lipgloss.Center,
-		m.DebugView(),
+		debug_view,
 		header,
 		content_style.Render(view),
 		footer,
-	) 
+	)
 
 	v := m.renderer.Place(
 		m.viewport_width,
@@ -395,8 +410,9 @@ func (m model) View() string {
 		)
 
 	if m.debug {
-		m.debug_map["viewSize"] = strconv.Itoa(len(v))
-		m.debug_map["runeCount"] = strconv.Itoa(utf8.RuneCountInString(v))
+		m.debug_map["viewSize"] = strconv.Itoa(len(v) - len(debug_view))
+		renderTimeMicros := float64(time.Since(start).Microseconds())
+		m.debug_map["fps"] = fmt.Sprintf("renderTime: %.1fms", renderTimeMicros / 1000)
 	}
 
 	return v
@@ -426,6 +442,8 @@ func (m model) getContent() string {
 		page = m.GameView()
 	case game_over_page:
 		page = m.GameOverView()
+	case game_review_page:
+		page = m.GameReviewView()
 	}
 
 	return page
@@ -454,7 +472,7 @@ func (m model) updateViewport() model {
 		m.viewport.GotoTop()
     }
 
-	if m.page == game_page {
+	if m.page == game_page || m.page == game_review_page {
 		m.has_scroll = false
 	} else {
 		m.has_scroll = m.viewport.VisibleLineCount() < m.viewport.TotalLineCount()
@@ -471,7 +489,6 @@ func (m model) updateViewport() model {
 }
 
 func (m model) getScrollbar() string {
-	y := m.viewport.YOffset
 	viewport_height := m.viewport.Height
 	content_height := lipgloss.Height(m.getContent())
 	if viewport_height >= content_height {
@@ -480,7 +497,7 @@ func (m model) getScrollbar() string {
 
 	scrollbar_height := (viewport_height * viewport_height) / content_height
 	max_scroll := content_height - viewport_height
-	scrollbar_pos := 1.0 - (float64(y) / float64(max_scroll))
+	scrollbar_pos := 1.0 - (float64(m.viewport.YOffset) / float64(max_scroll))
 	if scrollbar_pos <= 0 {
 		scrollbar_pos = 1
 	} else if scrollbar_pos >= 1 {

@@ -14,14 +14,14 @@ import (
 func (m model) GameView() string {
 	prompt := m.theme.TextAccent().
 		Bold(true).
-		Render(strings.ToUpper(m.state.game.CurrentTurn.Prompt))
+		Render(strings.ToUpper(m.state.game.CurrentTurn().Prompt))
 
 	var colorized_input string
 	if m.state.game_ui.validation_msg != "" {
 		colorized_input = m.renderValidationMsg()
 	} else {
 		colorized_input = m.highlightPromptAnswer(
-			m.state.game.CurrentTurn.Prompt,
+			m.state.game.CurrentTurn().Prompt,
 			m.text_input.Value(),
 			m.state.game.Settings.PromptMode)
 	}
@@ -65,6 +65,9 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game_ui.prev_answer = ""
 	m.state.game_ui.validation_msg = ""
 
+	m.state.game_review.selected_turn = 0
+	m.state.game_review.visible_row_start = 0
+	m.state.game_review.view_cache = make(map[int]*TurnDisplay, 0)
 	m.state.game = game.InitializeGame(&m.app_settings.Game)
 
 	m.text_input = m.initBlockTextInput()
@@ -92,14 +95,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			turn_duration_min := max(10, m.app_settings.Game.TurnDurationMin)
 			m.state.game.StartTurn(utils.RandomBetween(turn_duration_min, 30))
 		} else {
-			// Strike limit reached, show failure message and start new turn
-			possible_solve := m.highlightPromptAnswer(
-				m.state.game.CurrentTurn.Prompt,
-				m.state.game.CurrentTurn.PossibleAnswer,
-				m.state.game.Settings.PromptMode)
-			updated_msg := strings.ReplaceAll(turn_failure_msg, "{solve}", possible_solve)
-			turn_failure_msg = m.theme.TextRed().Render(updated_msg)
-
 			m.anim_mgr.InitAnimations(animations.ValidationMessage)
 
 			m.text_input.Reset()
@@ -122,6 +117,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 
+		// TODO: skips -- sacrifice life for skip, earn extra skips from extra lifes if already full
+		// TODO: mute key combo for alert sound in game?
 		switch key {
 		case "up":
 			if m.state.game_ui.prev_answer != "" {
@@ -149,8 +146,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.state.game_ui.prev_answer = ""
 			}
 
-			result := m.state.game.HandleCorrectAnswer(answer)
-			if result.ExtraLifeGranted {
+			m.state.game.HandleCorrectAnswer(answer)
+			if m.state.game.CurrentTurn().ExtraLifeGained {
 				m.anim_mgr.InitAnimations(animations.ExtraLife)
 			}
 

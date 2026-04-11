@@ -10,6 +10,7 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// TODO: has_header flag
 	if m.state.game.GameActive ||
 	m.page == game_over_page ||
+	m.page == game_review_page ||
 	m.page == settings_page ||
 	m.page == pokemon_gen_selector {
 		return m, nil
@@ -35,6 +36,9 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 func (m model) HeaderView() string {
 	if m.page == game_page || m.page == game_over_page {
 		return m.GameHudView()
+	}
+	if m.page == game_review_page {
+		return m.GameReviewHudView()
 	}
 
 	bold := m.theme.TextAccent().Bold(true).Render
@@ -70,7 +74,7 @@ func (m model) HeaderView() string {
 		about,
 		stats,
 	}
-		
+
 	return table.New().
 		Border(lipgloss.NormalBorder()).
 		BorderLeft(false).

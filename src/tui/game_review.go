@@ -1,0 +1,452 @@
+package tui
+
+import (
+	"fmt"
+	"fzwds/src/game"
+	"fzwds/src/utils"
+	"math"
+	"strings"
+	"time"
+
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
+)
+
+type TurnDisplay struct {
+	summary_row			string
+	summary_row_hl		string
+	detail_view			string
+}
+
+type GameReviewState struct {
+	summary_row_fmt_str		string
+	summary_row_width		int
+	// TODO: store *Turn instead of idx?
+	selected_turn			int
+	visible_row_start		int
+	view_cache				map[int]*TurnDisplay
+}
+
+func (m model) GameReviewSwitch() (model, tea.Cmd) {
+	summary_row_width := fmt.Sprintf("%s %d. %s %s %s",
+		"v", // validated symbol
+		m.state.game.TurnCount(),
+		strings.Repeat("_", m.state.game.Settings.PromptLenMax),
+		"-s", // strike count
+		"+l", // extra life
+	)
+	pad := 1
+	summary_row_width = utils.RightPad(summary_row_width, pad)
+	summary_row_width = utils.LeftPad(summary_row_width, pad)
+	m.state.game_review.summary_row_width = len(summary_row_width)
+
+	m.footer_keymaps = []FooterKeymap {
+		{key: "↑/↓", value: "scroll"},
+		{key: "n/p", value: "next/prev strike"},
+        {key: "esc", value: "game over"},
+	}
+
+	m = m.SwitchPage(game_review_page)
+
+	return m, nil
+}
+
+func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
+	switch msg := msg.(type) {
+
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+u":
+			visible_rows := m.height_content - 2
+			scroll := int(math.Floor(float64(visible_rows) / 2))
+			clamped := utils.Clamp(
+				m.state.game_review.selected_turn - scroll,
+				0,
+				m.state.game_review.selected_turn - scroll)
+			m.state.game_review.selected_turn = clamped
+
+		case "ctrl+d":
+			visible_rows := m.height_content - 2
+			scroll := int(math.Floor(float64(visible_rows) / 2))
+			clamped := utils.Clamp(
+				m.state.game_review.selected_turn + scroll,
+				m.state.game_review.selected_turn + scroll,
+				m.state.game.TurnCount() - 1)
+			m.state.game_review.selected_turn = clamped
+
+		case "g":
+			m.state.game_review.selected_turn = 0
+
+		case "G":
+			m.state.game_review.selected_turn = m.state.game.TurnCount() - 1
+
+		case "j", "down", "tab":
+			if m.state.game_review.selected_turn < m.state.game.TurnCount() - 1 {
+				m.state.game_review.selected_turn++
+			}
+
+		case "k", "up", "shift+tab":
+			if m.state.game_review.selected_turn > 0 {
+				m.state.game_review.selected_turn--
+			}
+
+		case "esc":
+			return m.GameOverSwitch(false, false)
+
+		case "n", "s":
+			m.state.game_review.selected_turn = m.state.game.NextFailedTurnIdx(m.state.game_review.selected_turn)
+
+		case "p", "S":
+			m.state.game_review.selected_turn = m.state.game.PrevFailedTurnIdx(m.state.game_review.selected_turn)
+		}
+	}
+
+	m.updateVisibleRowsStartIdx()
+
+	return m, nil
+}
+
+func (m model) GameReviewView() string {
+	current_turn := m.state.game.GetTurn(m.state.game_review.selected_turn)
+	return m.theme.Base().Height(m.height_content).Render(
+		lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			m.renderTurnSummaryList(),
+			m.renderTurnDetailView(current_turn)))
+}
+
+func (m model) renderTurnSummaryList() string {
+	border := lipgloss.Border(lipgloss.RoundedBorder())
+	border_style := m.theme.Base().Foreground(m.theme.border).Render
+	width := m.state.game_review.summary_row_width
+
+	list_title := "Turns"
+	list_header := border_style(border.TopLeft + border.Top)
+	list_header += m.theme.TextBody().Render(list_title)
+	list_header += border_style(strings.Repeat(border.Top, width - len(list_title) - 1))
+	list_header += border_style(border.TopRight)
+
+	visible_rows := min(m.state.game.TurnCount(), m.height_content - 2) // -2 rows for top/bottom borders
+	start := m.state.game_review.visible_row_start
+	end := start + visible_rows
+
+	list_items := make([]string, 0, visible_rows)
+	for i := start; i < end; i++ {
+		list_items = append(list_items, m.renderReviewSummaryRow(m.state.game.GetTurn(i)))
+	}
+
+	// TODO: cache bigger styles like this so they only need to be created once
+	list := m.theme.Base().
+		Height(m.height_content - 2).
+		Width(width).
+		Border(border).
+		BorderTop(false).
+		BorderForeground(m.theme.border).
+		AlignVertical(lipgloss.Top).
+		Render(lipgloss.JoinVertical(lipgloss.Top, list_items...))
+
+	return lipgloss.JoinVertical(lipgloss.Top, list_header, list)
+}
+
+func (m model) renderTurnDetailView(turn *game.Turn) string {
+	td, ok := m.state.game_review.view_cache[turn.TurnNumber]
+	if ok && td.detail_view != "" {
+		return td.detail_view
+	}
+
+	var solved_style lipgloss.Style
+	if turn.Solved {
+		solved_style = m.theme.Base().Foreground(m.theme.black).Background(m.theme.green).Bold(true)
+	} else {
+		solved_style = m.theme.Base().Foreground(m.theme.black).Background(m.theme.red).Bold(true)
+	}
+
+	rows := [][]string{}
+
+	if turn.Solved {
+		rows = append(rows, []string{
+			"Answer",
+			m.highlightPromptAnswer(turn.Prompt, turn.Answer, m.state.game.Settings.PromptMode),
+		})
+	} else {
+		rows = append(rows, []string{
+			"Possible answer",
+			m.highlightPromptAnswer(turn.Prompt, turn.SourceWord, m.state.game.Settings.PromptMode),
+		})
+	}
+
+	// if turn.TotalTurnDuration.Seconds() <= 59.9 {
+	if turn.TotalTurnDuration < time.Duration(time.Minute) {
+		rows = append(rows, []string{
+			"Total duration",
+			fmt.Sprintf("%.1fs", turn.TotalTurnDuration.Seconds()),
+		})
+	} else {
+		rows = append(rows, []string{
+			"Total duration",
+			utils.FormatTime(int(turn.TotalTurnDuration.Seconds())),
+		})
+    }
+
+	rows = append(rows, []string{ "Guesses", fmt.Sprintf("%d", turn.Guesses) })
+
+	if turn.Strikes == 0 {
+		rows = append(rows, []string{ "Strikes", "-" })
+	} else {
+		red := m.theme.TextRed().Render
+		rows = append(rows, []string{
+			"Strikes",
+			red(fmt.Sprintf("%d/%d", turn.Strikes, m.state.game.Settings.PromptStrikes)),
+		})
+	}
+
+	if turn.Solved {
+		rows = append(rows,
+			[]string{"Solve length", fmt.Sprintf("%d", len(turn.Answer)) },
+			[]string{"Unique letters", fmt.Sprintf("%d", utils.CountUniqueLetters(turn.Answer)) },
+		)
+	} else {
+		rows = append(rows,
+			[]string{"Solve length", "-" },
+			[]string{"Unique letters", "-" },
+		)
+	}
+
+	rows = append(rows, []string{ "Streak", fmt.Sprintf("%d", turn.Streak) })
+
+	stats_table := table.New().
+		Border(lipgloss.HiddenBorder()).
+		BorderColumn(false).
+		BorderLeft(false).BorderTop(false).BorderBottom(false).BorderRight(false).
+		Rows(rows...).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			var style lipgloss.Style
+
+			if row % 2 == 0 {
+				style = m.theme.TextAccent()
+			} else {
+				style = m.theme.TextBody()
+			}
+
+			if col == 0 {
+				style = style.
+					Align(lipgloss.Left).
+					Width(len("Possible answer")) // TODO dynamic - len of longest col item
+			}
+			if col == 1 {
+				style = style.
+					Align(lipgloss.Left).
+					MaxWidth(35). // TODO: +5 bc spheno was getting cut off
+					PaddingLeft(3) // TODO: 30 == max word len, is this sufficient?
+			}
+			return style
+		}).
+		Render()
+
+	detail_table := lipgloss.JoinVertical(
+		lipgloss.Left,
+		"",
+		"",
+		solved_style.Render(fmt.Sprintf(" #%d ", turn.TurnNumber)) + " " + m.theme.TextAccent().Bold(true).Render(strings.ToUpper(turn.Prompt)),
+		"",
+		m.getTurnBadges(turn),
+		"",
+		stats_table,
+	)
+
+	// TODO: prefer single border style being passed around; maybe state prop
+	border := lipgloss.Border(lipgloss.RoundedBorder())
+
+	table := m.theme.Base().
+		Height(m.height_content - 2). // -2 for border top/bottom
+		Width(m.width_content - m.state.game_review.summary_row_width).
+		PaddingLeft(3).
+		Border(border).
+		BorderTop(false).
+		BorderForeground(m.theme.border).
+		Render(detail_table)
+
+	table_header_style := m.theme.Base().Foreground(m.theme.border).Render
+	table_width := lipgloss.Width(table)
+
+	detail_title := "Details"
+	title_header := table_header_style(border.TopLeft + border.Top) +
+		m.theme.TextBody().Render(detail_title) +
+		// TODO: magic number 3 = TopLeft + Top + TopRight
+		table_header_style(strings.Repeat(border.Top, table_width - len(detail_title) - 3) + border.TopRight)
+
+	view := lipgloss.JoinVertical(lipgloss.Center, title_header, table)
+
+	if !ok {
+		m.state.game_review.view_cache[turn.TurnNumber] = &TurnDisplay{}
+	}
+	m.state.game_review.view_cache[turn.TurnNumber].detail_view = view
+
+	return view
+}
+
+func (m model) renderReviewSummaryRow(turn *game.Turn) string {
+	is_turn_selected := m.state.game_review.selected_turn == turn.TurnNumber - 1
+	td, ok := m.state.game_review.view_cache[turn.TurnNumber]
+	if ok {
+		if !is_turn_selected && td.summary_row != "" {
+			return td.summary_row
+		}
+		if is_turn_selected && td.summary_row_hl != "" {
+			return td.summary_row_hl
+		}
+	}
+
+	final_turn_num_str := fmt.Sprintf("%d. ", m.state.game.TurnCount())
+
+	strikes_width := " -9"
+	extra_lives_width := " +1"
+
+	edge_pad_str := strings.Repeat(" ", 1)
+
+	var solved_indicator_text string
+	var solved_indicator_style lipgloss.Style
+	if turn.Solved {
+		if turn.FinalTurn {
+			solved_indicator_style = m.theme.TextYellow().Bold(true)
+			solved_indicator_text = "W "
+		} else {
+			solved_indicator_style = m.theme.TextGreen().Bold(true)
+			solved_indicator_text = "✓ "
+		}
+	} else {
+		solved_indicator_style = m.theme.TextRed().Bold(true)
+		if turn.FinalTurn {
+			solved_indicator_text = "L "
+		} else {
+			solved_indicator_text = "✘ "
+		}
+	}
+
+	turn_num_str := fmt.Sprintf("%d. ", turn.TurnNumber)
+	turn_num_padding := strings.Repeat(" ", len(final_turn_num_str) - len(turn_num_str))
+
+	prompt := strings.ToLower(turn.Prompt)
+	prompt_padding := strings.Repeat(" ", m.state.game.Settings.PromptLenMax - len(prompt))
+
+	var strikes string
+	if turn.Strikes > 0 {
+		strikes = fmt.Sprintf(" -%d", turn.Strikes)
+	} else {
+		strikes = strings.Repeat(" ", len(strikes_width))
+	}
+
+	var extra_life string
+	if turn.ExtraLifeGained {
+		extra_life = " +1"
+	} else {
+		extra_life = strings.Repeat(" ", len(extra_lives_width))
+	}
+
+	turn_prompt_style := m.theme.TextBody()
+	if is_turn_selected {
+		turn_prompt_style = m.theme.TextAccent().Bold(true)
+	} else {
+		turn_prompt_style = m.theme.TextBody()
+	}
+
+	var out strings.Builder
+	red := m.theme.TextRed()
+
+	if is_turn_selected {
+		selection_bg_color := m.theme.input_bg
+		// selection_bg_color := lipgloss.AdaptiveColor{Dark: "#560cf5", Light: "#560cf5"}
+		selection_style := m.theme.Base().Background(selection_bg_color)
+		highlight := selection_style.Bold(true).Foreground(m.theme.highlight)
+
+		out.WriteString(selection_style.Render(edge_pad_str))
+		out.WriteString(solved_indicator_style.Background(selection_bg_color).Render(solved_indicator_text))
+		out.WriteString(selection_style.Render(turn_num_padding))
+		out.WriteString(turn_prompt_style.Background(selection_bg_color).Render(turn_num_str))
+		out.WriteString(turn_prompt_style.Background(selection_bg_color).Render(prompt))
+		out.WriteString(selection_style.Render(prompt_padding))
+		out.WriteString(red.Background(selection_bg_color).Bold(true).Render(strikes))
+		out.WriteString(highlight.Render(extra_life))
+		out.WriteString(selection_style.Render(edge_pad_str))
+
+		s := out.String()
+		if _, ok := m.state.game_review.view_cache[turn.TurnNumber]; !ok {
+			m.state.game_review.view_cache[turn.TurnNumber] = &TurnDisplay{}
+		}
+		m.state.game_review.view_cache[turn.TurnNumber].summary_row_hl = s
+
+		return m.theme.Base().
+			Width(m.state.game_review.summary_row_width).
+			Render(s)
+	}
+
+	out.WriteString(edge_pad_str)
+	out.WriteString(solved_indicator_style.Render(solved_indicator_text))
+	out.WriteString(turn_num_padding)
+	out.WriteString(turn_prompt_style.Render(turn_num_str))
+	out.WriteString(turn_prompt_style.Render(prompt))
+	out.WriteString(prompt_padding)
+	out.WriteString(red.Render(strikes))
+	out.WriteString(m.theme.TextHighlight().Render(extra_life))
+	out.WriteString(edge_pad_str)
+
+	s := out.String()
+	if _, ok := m.state.game_review.view_cache[turn.TurnNumber]; !ok {
+		m.state.game_review.view_cache[turn.TurnNumber] = &TurnDisplay{}
+	}
+	m.state.game_review.view_cache[turn.TurnNumber].summary_row = s
+
+	return s
+}
+
+func (m model) getTurnBadges(turn *game.Turn) string {
+	badges := make([]string, 0)
+	base_badge_style := m.theme.Base().Foreground(m.theme.black).Bold(true)
+
+	// if turn.Solved {
+	// 	badges = append(badges, base_badge_style.Background(m.theme.green).Render(" solved "))
+	// } else {
+	// 	badges = append(badges, base_badge_style.Background(m.theme.red).Render(" failed "))
+	// }
+
+	if turn.ExtraLifeGained {
+		badges = append(badges, base_badge_style.Background(m.theme.highlight).Render(" extra life "))
+	}
+
+	if turn.Solved && len(turn.Answer) == len(m.state.game.Player.Stats.LongestSolve) {
+		badges = append(badges, base_badge_style.Background(m.theme.yellow).Render(" longest answer "))
+	}
+
+	// BAD! should only calculate unique letters once per turn
+	if turn.Solved && utils.CountUniqueLetters(turn.Answer) == utils.CountUniqueLetters(m.state.game.Player.Stats.MostUniqueLetters) {
+		badges = append(badges, base_badge_style.Background(m.theme.purple).Render(" most unique "))
+	}
+
+	if m.state.game.Player.Stats.LongestStreak > 0 && turn.Streak == m.state.game.Player.Stats.LongestStreak {
+		badges = append(badges, base_badge_style.Background(m.theme.orange).Render(" longest streak "))
+	}
+
+	return strings.Join(badges, " ") // TODO: lipgloss.Wrap on v2 to ensure all badges are styled
+}
+
+func (m *model) updateVisibleRowsStartIdx() {
+	// Scroll up
+	sel := m.state.game_review.selected_turn
+	if sel < m.state.game_review.visible_row_start {
+		m.state.game_review.visible_row_start = sel
+	}
+
+	// TODO: this is also calculated in view; need to consolidate/store as struct prop
+	max_rows := min(m.state.game.TurnCount(), m.height_content - 2) // -2 rows for top/bottom borders
+
+	// Scroll down
+	if sel >= m.state.game_review.visible_row_start + max_rows {
+		m.state.game_review.visible_row_start = sel - max_rows + 1
+	}
+
+	clamped := utils.Clamp(m.state.game_review.visible_row_start, 0, m.state.game.TurnCount() - max_rows)
+	if m.state.game_review.visible_row_start > clamped {
+		m.state.game_review.visible_row_start = clamped
+	}
+}

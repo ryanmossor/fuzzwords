@@ -1,9 +1,7 @@
 package game
 
 import (
-	"fzwds/src/enums"
 	"fzwds/src/utils"
-	"strings"
 )
 
 type PlayerStats struct {
@@ -15,18 +13,9 @@ type PlayerStats struct {
 	FewestExtraLifeSolves	int
 	LongestSolve			string
 	MostUniqueLetters		string
-	LetterCounts			map[string]int
 	SolveLengths			[]int
+	AverageSolveLength		float64
 	TimeSurvived			int
-}
-
-func InitializePlayerStats() PlayerStats {
-	letter_counts := make(map[string]int)
-	for _, c := range enums.Alphabets[enums.AlphabetFull] {
-		letter_counts[string(c)] = 0
-	}
-
-	return PlayerStats{ LetterCounts: letter_counts }
 }
 
 func (s *PlayerStats) UpdateSolvedStats(answer string) {
@@ -46,17 +35,9 @@ func (s *PlayerStats) UpdateSolvedStats(answer string) {
 	if utils.CountUniqueLetters(answer) > utils.CountUniqueLetters(s.MostUniqueLetters) {
 		s.MostUniqueLetters = answer
 	}
-
-	for _, ch := range strings.ToUpper(answer) {
-		s.LetterCounts[string(ch)] += 1
-	}
 }
 
 func (s *PlayerStats) UpdateFailedStats() {
 	s.PromptsFailed++
 	s.CurrentStreak = 0
-}
-
-func (s PlayerStats) AverageSolveLength() float64 {
-	return utils.Average(s.SolveLengths)
 }
