@@ -63,6 +63,32 @@ type State struct {
 	footer					FooterState
 }
 
+// TODO: refactor root model to have context prop that is passed to views
+// Root: orchestrator, delegates updates/view renders to pages
+// Page: branches of root, interface
+//	- Update(...)
+//	- View(...) string
+// 	- state struct
+// Components: leaves of pages, move more complicated rendering here
+//	- eg review summary rows/detail tables, scrollable menu items (eg settings)?
+type UIContext struct {
+	Size				size
+
+	ContainerWidth		int
+	ContainerHeight		int
+
+	ContentWidth		int
+	ContentHeight		int
+
+	viewportWidth		int
+	viewportHeight		int
+
+	Theme				theme
+
+	// ?
+	// anim?
+}
+
 type model struct {
 	debug 				bool
 	debug_map			map[string]string

@@ -26,6 +26,7 @@ func (m model) AboutView() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
+		// TODO: hyperlink styling after v2 upgrade
 		accent("Fuzzwords") + base(" is a word game inspired by ") + accent("BombParty: https://jklm.fun/"),
 		"",
 		base("In BombParty, players respond to a prompt (a sequence of letters) by typing " +
@@ -33,7 +34,7 @@ func (m model) AboutView() string {
 		"",
 		yellow_bold(" - Example: ") +
 		m.highlightPromptAnswer("RWO", "OVERWORK", enums.PromptModeClassic) +
-		base(" solves the prompt ") + accent("RWO") + base(", but ") + 
+		base(" solves the prompt ") + accent("RWO") + base(", but ") +
 		m.highlightPromptAnswer("RWO", "REWROTE", enums.PromptModeClassic) +
 		base(" does not"),
 		"",

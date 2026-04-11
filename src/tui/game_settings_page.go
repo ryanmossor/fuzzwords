@@ -56,6 +56,10 @@ func (m model) SettingsSwitch(category SettingsMenuCategory) (model, tea.Cmd) {
 		}
 	}
 
+	// TODO: presets in header? beginner/med/hard/expert
+	// preset text highlighted if currently selected settings match a preset
+	// would need custom equals function
+
 	return m, nil
 }
 
