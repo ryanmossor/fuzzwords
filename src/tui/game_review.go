@@ -22,6 +22,7 @@ type TurnDisplay struct {
 type GameReviewState struct {
 	summary_row_fmt_str		string
 	summary_row_width		int
+	summary_row_pad			int
 	// TODO: store *Turn instead of idx?
 	selected_turn			int
 	visible_row_start		int
@@ -39,7 +40,9 @@ func (m model) GameReviewSwitch() (model, tea.Cmd) {
 	pad := 2
 	summary_row_width = utils.RightPad(summary_row_width, pad)
 	summary_row_width = utils.LeftPad(summary_row_width, pad)
+
 	m.state.game_review.summary_row_width = len(summary_row_width)
+	m.state.game_review.summary_row_pad = pad
 
 	m.footer_keymaps = []FooterKeymap {
 		{key: "↑/↓", value: "scroll"},
@@ -303,7 +306,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 	strikes_width := " -9"
 	extra_lives_width := " +1"
 
-	edge_pad_str := strings.Repeat(" ", 2)
+	edge_pad_str := strings.Repeat(" ", m.state.game_review.summary_row_pad)
 
 	var solved_indicator_text string
 	var solved_indicator_style lipgloss.Style
