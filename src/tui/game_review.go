@@ -320,12 +320,8 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 		}
 	}
 
-	final_turn_num_str := fmt.Sprintf("%d. ", m.state.game.TurnCount())
-
 	strikes_width := " -9"
 	extra_lives_width := " +1"
-
-	edge_pad_str := strings.Repeat(" ", m.state.game_review.summary_row_pad)
 
 	var solved_indicator_text string
 	var solved_indicator_style lipgloss.Style
@@ -346,6 +342,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 		}
 	}
 
+	final_turn_num_str := fmt.Sprintf("%d. ", m.state.game.TurnCount())
 	turn_num_str := fmt.Sprintf("%d. ", turn.TurnNumber)
 	turn_num_padding := strings.Repeat(" ", len(final_turn_num_str) - len(turn_num_str))
 
@@ -373,6 +370,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 		turn_prompt_style = m.theme.TextBody()
 	}
 
+	edge_pad_str := strings.Repeat(" ", m.state.game_review.summary_row_pad)
 	var out strings.Builder
 
 	if is_turn_selected {
