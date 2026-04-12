@@ -322,6 +322,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state.game_ui.player_damaged = false
 
 	case tea.KeyMsg:
+		m.debug_map["keyPress"] = msg.String()
 		switch msg.String() {
 		case "ctrl+c":
 			if m.ctrl_c_pressed {

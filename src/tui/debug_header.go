@@ -48,6 +48,7 @@ func (m model) DebugView() string {
 
 	tabs := []string{
 		"viewSize " + m.debug_map["viewSize"] + " B",
+		"keyPress " + m.debug_map["keyPress"],
 
 		// fmt.Sprintf("heightContainer %d", m.height_container),
 		// fmt.Sprintf("heightContent %d", m.height_content),

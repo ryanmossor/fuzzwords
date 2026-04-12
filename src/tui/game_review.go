@@ -60,52 +60,52 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+u": // TODO pgup
+		case "g", "home":
+			m.updateSummaryListState(0)
+
+		case "G", "end":
+			m.updateSummaryListState(m.state.game.TurnCount() - 1)
+
+		case "j", "down", "tab":
+			if m.state.game_review.selected_turn < m.state.game.TurnCount() - 1 {
+				m.updateSummaryListState(m.state.game_review.selected_turn + 1)
+			}
+
+		case "k", "up", "shift+tab":
+			if m.state.game_review.selected_turn > 0 {
+				m.updateSummaryListState(m.state.game_review.selected_turn - 1)
+			}
+
+		case "n":
+			sel := m.state.game.NextFailedTurnIdx(m.state.game_review.selected_turn)
+			m.updateSummaryListState(sel)
+
+		case "p":
+			sel := m.state.game.PrevFailedTurnIdx(m.state.game_review.selected_turn)
+			m.updateSummaryListState(sel)
+
+		case "ctrl+u", "pgup":
 			visible_rows := m.height_content - 2
 			scroll := int(math.Floor(float64(visible_rows) / 2))
 			clamped := utils.Clamp(
 				m.state.game_review.selected_turn - scroll,
 				0,
 				m.state.game_review.selected_turn - scroll)
-			m.state.game_review.selected_turn = clamped
+			m.updateSummaryListState(clamped)
 
-		case "ctrl+d": // TODO pgdn
+		case "ctrl+d", "pgdown":
 			visible_rows := m.height_content - 2
 			scroll := int(math.Floor(float64(visible_rows) / 2))
 			clamped := utils.Clamp(
 				m.state.game_review.selected_turn + scroll,
 				m.state.game_review.selected_turn + scroll,
 				m.state.game.TurnCount() - 1)
-			m.state.game_review.selected_turn = clamped
-
-		case "g": // TODO home
-			m.state.game_review.selected_turn = 0
-
-		case "G": // TODO end
-			m.state.game_review.selected_turn = m.state.game.TurnCount() - 1
-
-		case "j", "down", "tab":
-			if m.state.game_review.selected_turn < m.state.game.TurnCount() - 1 {
-				m.state.game_review.selected_turn++
-			}
-
-		case "k", "up", "shift+tab":
-			if m.state.game_review.selected_turn > 0 {
-				m.state.game_review.selected_turn--
-			}
+			m.updateSummaryListState(clamped)
 
 		case "esc":
 			return m.GameOverSwitch()
-
-		case "n":
-			m.state.game_review.selected_turn = m.state.game.NextFailedTurnIdx(m.state.game_review.selected_turn)
-
-		case "p":
-			m.state.game_review.selected_turn = m.state.game.PrevFailedTurnIdx(m.state.game_review.selected_turn)
 		}
 	}
-
-	m.updateVisibleRowsStartIdx()
 
 	return m, nil
 }
@@ -434,14 +434,19 @@ func (m model) getTurnBadges(turn *game.Turn) string {
 	return strings.Join(badges, " ") // TODO: lipgloss.Wrap on v2 to ensure all badges are styled
 }
 
-func (m *model) updateVisibleRowsStartIdx() {
+func (m *model) updateSummaryListState(sel int) {
+	if sel == m.state.game_review.selected_turn {
+		return
+	}
+
+	m.state.game_review.selected_turn = sel
+
 	scrolloff := 2
 	// TODO: this is also calculated in view; need to consolidate/store as struct prop
 	max_rows := min(m.state.game.TurnCount(), m.height_content - 2) // -2 rows for top/bottom borders
 	scrolloff_clamped := utils.Clamp(scrolloff, 0, int(math.Floor(float64(max_rows / 2))))
 
 	// Scroll up
-	sel := m.state.game_review.selected_turn
 	if sel < m.state.game_review.visible_row_start + scrolloff_clamped {
 		m.state.game_review.visible_row_start = utils.Clamp(sel - scrolloff_clamped, 0, sel - scrolloff_clamped)
 	}
