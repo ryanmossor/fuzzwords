@@ -22,7 +22,7 @@ type Turn struct {
 	SourceWord 			string
 	Prompt 	   			string
 	Answer				string
-	Guesses				int // could make this []string to display all guesses on review
+	Guesses				int
 
 	Strikes	   			int
 	StrikeStart			time.Time
@@ -235,7 +235,6 @@ func CreateFuzzyPrompt(word string, prompt_len int, dict enums.Dictionary) strin
 }
 
 func (g GameState) CurrentTurn() *Turn {
-	// TODO: will this assertion trigger if accessing current turn on second game or later?
 	assert.Assert(len(g.turns) > 0, "Attempted to access current turn before game initialized")
 	return &g.turns[len(g.turns) - 1]
 }
@@ -247,39 +246,27 @@ func (g GameState) PreviousTurn() (*Turn, bool) {
 	return &g.turns[len(g.turns) - 2], true
 }
 
-// TODO: this takes turn idx, but i'm referencing turns by number (1-based) in many places. Should probably standardize
+// TODO: this takes turn idx, but i'm referencing turns by number (1-based) in many places.
+// Consider pros/cons of idx vs turn number
 func (g GameState) GetTurn(idx int) *Turn {
-	// if idx < 0 {
-	// 	return &g.Turns[0]
-	// }
-	// if idx >= len(g.Turns) {
-	// 	return &g.Turns[len(g.Turns) - 1]
-	// }
-	// return &g.Turns[idx]
 	clamped_idx := utils.Clamp(idx, 0, len(g.turns) - 1)
 	return &g.turns[clamped_idx]
 }
 
-// func (g GameState) NextFailedTurn(turn_idx_cur int) *Turn {
 func (g GameState) NextFailedTurnIdx(turn_idx_cur int) int {
 	for i := turn_idx_cur; i < len(g.turns); i++ {
 		if (g.turns[i].Strikes > 0 || !g.turns[i].Solved) && i > turn_idx_cur {
-			// return g.GetTurn(i)
 			return i
 		}
 	}
-	// return g.GetTurn(turn_idx_cur)
 	return turn_idx_cur
 }
 
-// func (g GameState) PrevFailedTurn(turn_idx_cur int) *Turn {
 func (g GameState) PrevFailedTurnIdx(turn_idx_cur int) int {
 	for i := turn_idx_cur; i >= 0; i-- {
 		if (g.turns[i].Strikes > 0 || !g.turns[i].Solved) && i < turn_idx_cur {
-			// return g.GetTurn(i)
 			return i
 		}
 	}
-	// return g.GetTurn(turn_idx_cur)
 	return turn_idx_cur
 }

@@ -60,7 +60,7 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+u":
+		case "ctrl+u": // TODO pgup
 			visible_rows := m.height_content - 2
 			scroll := int(math.Floor(float64(visible_rows) / 2))
 			clamped := utils.Clamp(
@@ -69,7 +69,7 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.state.game_review.selected_turn - scroll)
 			m.state.game_review.selected_turn = clamped
 
-		case "ctrl+d":
+		case "ctrl+d": // TODO pgdn
 			visible_rows := m.height_content - 2
 			scroll := int(math.Floor(float64(visible_rows) / 2))
 			clamped := utils.Clamp(
@@ -78,10 +78,10 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.state.game.TurnCount() - 1)
 			m.state.game_review.selected_turn = clamped
 
-		case "g":
+		case "g": // TODO home
 			m.state.game_review.selected_turn = 0
 
-		case "G":
+		case "G": // TODO end
 			m.state.game_review.selected_turn = m.state.game.TurnCount() - 1
 
 		case "j", "down", "tab":
@@ -97,10 +97,10 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "esc":
 			return m.GameOverSwitch(false, false)
 
-		case "n", "s":
+		case "n":
 			m.state.game_review.selected_turn = m.state.game.NextFailedTurnIdx(m.state.game_review.selected_turn)
 
-		case "p", "S":
+		case "p":
 			m.state.game_review.selected_turn = m.state.game.PrevFailedTurnIdx(m.state.game_review.selected_turn)
 		}
 	}
