@@ -12,41 +12,48 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (m model) GameOverSwitch(won, early_quit bool) (model, tea.Cmd) {
-	m.state.game.EndGame(won)
+func (m model) GameOverSwitch() (model, tea.Cmd) {
+	// Briefly prevent key presses on game over screen
+	cmds := []tea.Cmd{ m.debounceInputCmd(500) }
+
+	m = m.SwitchPage(game_over_page)
+
+	m.footer_keymaps = []FooterKeymap {
+		{key: m.theme.Base().Foreground(m.theme.black).Background(m.theme.blue).Bold(true).Render(" r review "), value: ""},
+		{key: "enter", value: "new game"},
+		{key: "m", value: "main menu"},
+        {key: "s", value: "change settings"},
+		{key: "q", value: "quit"},
+	}
+
+	if m.state.game.GameWon {
+		m.anim_mgr.InitAnimations(animations.GameOverWin)
+	}
+
 	m.state.game_ui.player_damaged = false
 
-    if won {
-        m.state.game_ui.validation_msg = ""
-        m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
+	if m.state.game.GameWon {
+		m.state.game_ui.validation_msg = ""
+		m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
 	} else {
 		red := m.theme.TextRed()
 		m.state.game_ui.validation_msg = red.Render(fmt.Sprintf(
 			"Possible solve for final prompt %s: ",
-			strings.ToUpper(m.state.game.CurrentTurn.Prompt)))
+			strings.ToUpper(m.state.game.CurrentTurn().Prompt)))
 		m.state.game_ui.validation_msg += m.highlightPromptAnswer(
-			m.state.game.CurrentTurn.Prompt,
-			m.state.game.CurrentTurn.SourceWord,
+			m.state.game.CurrentTurn().Prompt,
+			m.state.game.CurrentTurn().SourceWord,
 			m.state.game.Settings.PromptMode)
 
-        m.state.game_ui.game_over_msg = red.Bold(true).Render("☠️ GAME OVER ☠️")
-    }
-
-	m = m.SwitchPage(game_over_page)
-
-	m.footer_keymaps = []FooterKeymap{
-		{key: "m", value: "main menu"},
-        {key: "s", value: "change settings"},
-		{key: "enter", value: "new game"},
-		{key: "q", value: "quit"},
+		m.state.game_ui.game_over_msg = red.Bold(true).Render("☠️ GAME OVER ☠️")
 	}
 
-	// Briefly prevent key presses on game over screen
-	cmds := []tea.Cmd{ m.debounceInputCmd(500) }
-	if !early_quit && !won {
+	if !m.state.game.EarlyQuit && !m.state.game.GameWon && !m.state.game_ui.game_over_seen {
 		cmds = append(cmds, m.terminalBellCmd(false))
 	}
+
+	m.state.game_ui.game_over_seen = true
 
 	return m, tea.Batch(cmds...)
 }
@@ -65,6 +72,8 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "s":
 			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.SettingsSwitch(game_settings)
+		case "r":
+			return m.GameReviewSwitch()
 		case "enter":
 			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.GameSwitch()
@@ -95,11 +104,11 @@ func (m model) GameOverView() string {
 	}
 
 	var most_unique_solve, most_unique_count string
-	if stats.MostUniqueLetters == "" {
+	if stats.MostUniqueWord == "" {
 		most_unique_solve = "-"
 	} else {
-		most_unique_solve = fmt.Sprintf("%s", stats.MostUniqueLetters)
-		most_unique_count = fmt.Sprintf("(%d)", utils.CountUniqueLetters(stats.MostUniqueLetters))
+		most_unique_solve = fmt.Sprintf("%s", stats.MostUniqueWord)
+		most_unique_count = fmt.Sprintf("(%d)", stats.MostUniqueCount)
 	}
 
 	fastest_extra_life := fmt.Sprintf("%d turns", stats.FewestExtraLifeSolves)
@@ -109,23 +118,23 @@ func (m model) GameOverView() string {
 
 	solves_per_min := "0"
     if stats.PromptsSolved > 0 {
-		spm := float64(stats.PromptsSolved) / (float64(stats.TimeSurvived) / 60.0)
+		spm := float64(stats.PromptsSolved) / (float64(stats.TimePlayed) / 60.0)
 		solves_per_min = fmt.Sprintf("%.1f", spm)
 	}
 
 	rows := [][]string {
-		{"Time survived", utils.FormatTime(stats.TimeSurvived)},
+		{"Time played", utils.FormatTime(stats.TimePlayed)},
 		{"Prompts solved", strconv.Itoa(stats.PromptsSolved)},
 		{"Prompts failed", strconv.Itoa(stats.PromptsFailed)},
 		{"Solves per minute", solves_per_min},
 		{"Longest streak", longest_streak},
-		{"Average solve length", fmt.Sprintf("%.1f letters", stats.AverageSolveLength())},
+		{"Average solve length", fmt.Sprintf("%.1f letters", stats.AverageSolveLength)},
 		{"Longest word used", longest_solve, longest_count},
 		{"Most unique letters", most_unique_solve, most_unique_count},
 		{"Extra lives gained", strconv.Itoa(stats.ExtraLivesGained)},
 		{"Fastest extra life", fastest_extra_life},
 	}
-		
+
 	stats_table := table.New().
 		Border(lipgloss.HiddenBorder()).
 		BorderColumn(false).
@@ -158,7 +167,7 @@ func (m model) GameOverView() string {
 		string(animations.GameOverWin),
 		m.state.game_ui.game_over_msg)
 	if !changed {
-		game_over_msg = m.theme.TextGreen().Bold(true).Render(game_over_msg)
+		game_over_msg = m.theme.TextYellow().Bold(true).Render(game_over_msg)
 	}
 
 	return lipgloss.JoinVertical(

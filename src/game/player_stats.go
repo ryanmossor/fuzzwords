@@ -1,62 +1,83 @@
 package game
 
 import (
-	"fzwds/src/enums"
 	"fzwds/src/utils"
-	"strings"
+	"log/slog"
+	"time"
 )
 
 type PlayerStats struct {
 	PromptsSolved 			int
 	PromptsFailed			int
-	CurrentStreak			int
 	LongestStreak			int
 	ExtraLivesGained		int
 	FewestExtraLifeSolves	int
 	LongestSolve			string
-	MostUniqueLetters		string
-	LetterCounts			map[string]int
-	SolveLengths			[]int
-	TimeSurvived			int
+	MostUniqueWord			string
+	MostUniqueCount			int
+	AverageSolveLength		float64
+	TimePlayed				int
 }
 
-func InitializePlayerStats() PlayerStats {
-	letter_counts := make(map[string]int)
-	for _, c := range enums.Alphabets[enums.AlphabetFull] {
-		letter_counts[string(c)] = 0
+func (g *GameState) CalculateGameStats() PlayerStats {
+	start := time.Now()
+
+	stats := PlayerStats{}
+	stats.TimePlayed = int(g.GameEnd.Sub(g.GameStart).Seconds())
+
+	solve_lengths := make([]int, 0, len(g.turns))
+	solve_len_idx := 0
+
+	turns_since_last_extra_life := 0
+	longest_streak := 0
+
+	for i, turn := range g.turns {
+		turns_since_last_extra_life++
+
+		if turn.Solved {
+			stats.PromptsSolved++
+
+			if turn.Streak > longest_streak {
+				longest_streak = turn.Streak
+			}
+
+			solve_lengths = append(solve_lengths, len(turn.Answer))
+			solve_len_idx++
+
+			if len(turn.Answer) > len(stats.LongestSolve) {
+				stats.LongestSolve = turn.Answer
+			}
+
+			if turn.UniqueLetterCount > stats.MostUniqueCount {
+				stats.MostUniqueWord = turn.Answer
+				stats.MostUniqueCount = turn.UniqueLetterCount
+			}
+
+			if turn.ExtraLifeGained {
+				stats.ExtraLivesGained++
+				if stats.FewestExtraLifeSolves == 0 || turns_since_last_extra_life < stats.FewestExtraLifeSolves {
+					stats.FewestExtraLifeSolves = turns_since_last_extra_life
+				}
+				turns_since_last_extra_life = 0
+			}
+		} else {
+			stats.PromptsFailed++
+			g.FailedTurns = append(g.FailedTurns, i)
+		}
 	}
 
-	return PlayerStats{ LetterCounts: letter_counts }
+	stats.AverageSolveLength = utils.Average(solve_lengths)
+	stats.LongestStreak = longest_streak
+
+	elapsed := time.Since(start)
+
+	slog.Debug("Calculated stats for game",
+		"startUnixTx", g.StartUnixTs,
+		"turns", len(g.turns),
+		"gameDuration", utils.FormatTime(int(g.GameEnd.Sub(g.GameStart).Seconds())),
+		"calcTimeMs", elapsed.Milliseconds(),
+	)
+
+	return stats
 }
 
-func (s *PlayerStats) UpdateSolvedStats(answer string) {
-	s.PromptsSolved++
-
-	s.CurrentStreak++
-	if s.CurrentStreak > s.LongestStreak {
-		s.LongestStreak = s.CurrentStreak
-	}
-
-	s.SolveLengths = append(s.SolveLengths, len(answer))
-
-	if len(answer) > len(s.LongestSolve) {
-		s.LongestSolve = answer
-	}
-
-	if utils.CountUniqueLetters(answer) > utils.CountUniqueLetters(s.MostUniqueLetters) {
-		s.MostUniqueLetters = answer
-	}
-
-	for _, ch := range strings.ToUpper(answer) {
-		s.LetterCounts[string(ch)] += 1
-	}
-}
-
-func (s *PlayerStats) UpdateFailedStats() {
-	s.PromptsFailed++
-	s.CurrentStreak = 0
-}
-
-func (s PlayerStats) AverageSolveLength() float64 {
-	return utils.Average(s.SolveLengths)
-}

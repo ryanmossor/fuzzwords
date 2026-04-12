@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"cmp"
 	"fmt"
 	"fzwds/src/constants"
 	"math"
@@ -174,10 +175,10 @@ func FillDescending(max, min int) []int {
 	return out
 }
 
-func StringToCharMap(str string) map[string]bool {
-	letters_remaining := make(map[string]bool)
+func StringToCharMap(str string) map[rune]bool {
+	letters_remaining := make(map[rune]bool)
 	for _, c := range str {
-		letters_remaining[string(c)] = false
+		letters_remaining[c] = false
 	}
 	return letters_remaining
 }
@@ -197,4 +198,14 @@ func StripNumbersAndSymbols(s string) string {
 	}
 
 	return stripped.String()
+}
+
+func Clamp[T cmp.Ordered](v, lo, hi T) T {
+	if v < lo {
+		return lo
+	}
+	if v > hi {
+		return hi
+	}
+	return v
 }

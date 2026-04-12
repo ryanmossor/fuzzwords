@@ -54,7 +54,7 @@ func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.Pr
 // Get accent color for input box based on HighlightInput setting, damage state, etc.
 // Style applied to border if rounded-style input box, or left accent bar if block-style input box.
 func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipgloss.TerminalColor {
-	prompt_upper := strings.ToUpper(m.state.game.CurrentTurn.Prompt)
+	prompt_upper := strings.ToUpper(m.state.game.CurrentTurn().Prompt)
 	answer_upper := strings.ToUpper(m.text_input.Value())
 
 	is_match := false
@@ -136,7 +136,7 @@ func (m model) initBlockTextInput() textinput.Model {
 	text_input.TextStyle = input_bg_style
 	text_input.PromptStyle = input_bg_style.
 		Foreground(m.theme.body).
-		BorderLeftForeground(m.theme.blue)
+		BorderLeftForeground(m.theme.highlight)
 	text_input.Cursor.TextStyle = input_bg_style
 	text_input.PlaceholderStyle = input_bg_style.Foreground(m.theme.dim)
 

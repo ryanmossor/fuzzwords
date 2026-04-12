@@ -1,0 +1,70 @@
+package tui
+
+import (
+	"fmt"
+	"fzwds/src/game"
+	"fzwds/src/utils"
+	"slices"
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
+
+func (m model) GameReviewHudView() string {
+	// TODO: refactor review state to have ref to current turn rather than idx
+	turn := m.state.game.GetTurn(m.state.game_review.selected_turn)
+	return lipgloss.JoinVertical(
+		lipgloss.Center,
+		m.renderTurnInfo(turn),
+		m.renderReviewRemainingLetters(turn),
+		"",
+	)
+}
+
+func (m model) renderTurnInfo(turn *game.Turn) string {
+	health_display := m.renderHealthDisplay(turn.Health)
+	health_change_info := m.renderHealthChangeInfo(turn)
+
+	border_style := m.theme.Base().Foreground(m.theme.Border())
+	line := border_style.Render(strings.Repeat("─", m.width_container))
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		line,
+		utils.LeftPad(health_display + health_change_info, 8),
+		line)
+}
+
+func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
+	var out strings.Builder
+
+	for i, c := range m.state.game.Alphabet {
+		if slices.Contains(turn.NewLettersUsed, c) {
+			out.WriteString(m.theme.TextHighlight().Bold(true).Underline(true).Render(string(c)))
+		} else if turn.LettersRemaining[c] {
+			out.WriteString(m.theme.TextDim().Render(string(c)))
+		} else {
+			out.WriteString(m.theme.TextYellow().Bold(true).Render(string(c)))
+		}
+
+		if i < len(m.state.game.Alphabet) - 1 {
+			out.WriteRune(' ')
+		}
+	}
+
+	return out.String()
+}
+
+func (m model) renderHealthChangeInfo(turn *game.Turn) string {
+	var health_change_info string
+
+	if turn.Strikes > 0 {
+		health_change_info += m.theme.TextRed().Render(fmt.Sprintf(" -%d", turn.Strikes))
+	}
+
+	if turn.ExtraLifeGained {
+		health_change_info += m.theme.TextHighlight().Render(" +1")
+	}
+
+	return health_change_info
+}

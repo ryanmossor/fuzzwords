@@ -8,27 +8,22 @@ import (
 )
 
 func (m model) FooterView() string {
-	bold := m.theme.TextAccent().Bold(true).Render
-	base := m.theme.Base().Render
-	dim := m.theme.TextDim().Render
-	red := m.theme.TextRed().Render
-
-	var footer_text string
-	if m.state.game.GameActive {
-		footer_text = fmt.Sprintf("%s/%s/%s",
+	var footer_text_right string
+	if m.state.game.GameActive || m.page == game_review_page || m.page == game_over_page {
+		footer_text_right = fmt.Sprintf("%s / %s / %s",
 			m.state.game.Settings.Dictionary.String(),
 			m.state.game.Settings.PromptMode.String(),
 			m.state.game.Settings.WinCondition.String())
 	}
 
 	pad := 2
-	max_footer_width := max(0, m.width_container - len(footer_text) - pad)
-	footer_line := strings.Repeat("─", max_footer_width) + footer_text + strings.Repeat("─", pad)
+	max_footer_width := max(0, m.width_container - len(footer_text_right) - pad)
+	footer_line := strings.Repeat("─", max_footer_width) + footer_text_right + strings.Repeat("─", pad)
 
 	if m.state.game_ui.player_damaged {
-		footer_line = red(footer_line)
+		footer_line = m.theme.TextRed().Render(footer_line)
 	} else {
-		footer_line = dim(footer_line)
+		footer_line = m.theme.TextDim().Render(footer_line)
 	}
 
 	table := m.theme.Base().
@@ -38,12 +33,18 @@ func (m model) FooterView() string {
 
 	keymaps := []string{}
 	for _, k := range m.footer_keymaps {
-		keymaps = append(keymaps, bold(" " + k.key + " ") + base(k.value + "  "))
+		keymaps = append(keymaps,
+			fmt.Sprintf(" %s %s  ",
+				m.theme.TextAccent().Bold(true).Render(k.key),
+				m.theme.Base().Render(k.value)),
+		)
 	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
-		red(m.state.footer.footer_msg),
+		// TODO move footer msg, inline text, keymaps(?) to config struct per page that is
+		// retrieved in root View() and passed to FooterView()
+		m.state.footer.footer_msg,
 		footer_line,
 		table.Render(lipgloss.JoinHorizontal(lipgloss.Center, keymaps...)),
 	)
