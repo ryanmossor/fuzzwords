@@ -91,13 +91,12 @@ type UIContext struct {
 	// ?
 	// anim?
 	// debug map? to allow pages/components to write to it
+	// footer msg?
 }
 
 type model struct {
 	debug 				bool
 	debug_map			map[string]string
-
-	ctrl_c_pressed		bool
 
     ready               bool
 	switched			bool
@@ -325,18 +324,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.debug_map["keyPress"] = msg.String()
 		switch msg.String() {
 		case "ctrl+c":
-			if m.ctrl_c_pressed {
-				return m, tea.Quit
-			} else {
-				m.ctrl_c_pressed = true
-				m.state.footer.footer_msg = m.theme.TextDim().Render("Press ctrl+c again to quit")
-				return m, nil
-			}
-		default:
-			if m.ctrl_c_pressed {
-				m.ctrl_c_pressed = false
-				m.state.footer.footer_msg = ""
-			}
+			return m, tea.Quit
 		}
 	}
 

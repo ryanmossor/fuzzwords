@@ -96,8 +96,6 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m.SettingsSwitch(game_settings)
 		case "ctrl+p":
 			return m.SettingsSwitch(preferences)
-		case "q":
-			return m, tea.Quit
 		}
 	}
 
