@@ -32,8 +32,6 @@ type Turn struct {
 	ExtraLifeGained		bool
 
 	LettersRemaining	map[rune]bool
-	// TODO: maybe an Answer struct with word, len, unique count, letters used, etc.?
-	// Might eliminate need for NewLettersUsed
 	NewLettersUsed		[]rune // TODO ensure letters remaining updated properly on final turn win
 	UniqueLetterCount	int
 	Streak				int

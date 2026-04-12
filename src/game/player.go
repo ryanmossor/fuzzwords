@@ -80,12 +80,3 @@ func (g *GameState) HandleFailedTurn() {
 	g.Player.HealthCurrent--
 	turn.Health--
 }
-
-func (g *GameState) GrantExtraLife() {
-	g.Player.LettersUsed = nil
-	g.Player.LettersRemaining = utils.StringToCharMap(g.Alphabet)
-
-	if g.Player.HealthCurrent < g.Settings.HealthMax {
-		g.Player.HealthCurrent++
-	}
-}
