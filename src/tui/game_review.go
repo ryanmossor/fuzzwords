@@ -36,7 +36,7 @@ func (m model) GameReviewSwitch() (model, tea.Cmd) {
 		"-s", // strike count
 		"+l", // extra life
 	)
-	pad := 1
+	pad := 2
 	summary_row_width = utils.RightPad(summary_row_width, pad)
 	summary_row_width = utils.LeftPad(summary_row_width, pad)
 	m.state.game_review.summary_row_width = len(summary_row_width)
@@ -303,7 +303,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 	strikes_width := " -9"
 	extra_lives_width := " +1"
 
-	edge_pad_str := strings.Repeat(" ", 1)
+	edge_pad_str := strings.Repeat(" ", 2)
 
 	var solved_indicator_text string
 	var solved_indicator_style lipgloss.Style
@@ -352,7 +352,6 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 	}
 
 	var out strings.Builder
-	red := m.theme.TextRed()
 
 	if is_turn_selected {
 		selection_bg_color := m.theme.input_bg
@@ -366,7 +365,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 		out.WriteString(turn_prompt_style.Background(selection_bg_color).Render(turn_num_str))
 		out.WriteString(turn_prompt_style.Background(selection_bg_color).Render(prompt))
 		out.WriteString(selection_style.Render(prompt_padding))
-		out.WriteString(red.Background(selection_bg_color).Bold(true).Render(strikes))
+		out.WriteString(m.theme.TextRed().Background(selection_bg_color).Bold(true).Render(strikes))
 		out.WriteString(highlight.Render(extra_life))
 		out.WriteString(selection_style.Render(edge_pad_str))
 
@@ -387,7 +386,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 	out.WriteString(turn_prompt_style.Render(turn_num_str))
 	out.WriteString(turn_prompt_style.Render(prompt))
 	out.WriteString(prompt_padding)
-	out.WriteString(red.Render(strikes))
+	out.WriteString(m.theme.TextRed().Render(strikes))
 	out.WriteString(m.theme.TextHighlight().Render(extra_life))
 	out.WriteString(edge_pad_str)
 
