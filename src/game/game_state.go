@@ -11,6 +11,7 @@ import (
 type GameState struct {
 	Alphabet			string
 	GameActive			bool
+	EarlyQuit			bool
 	GameStart			time.Time
 	GameEnd				time.Time
 	Settings			GameSettings
@@ -71,13 +72,14 @@ func InitializeGame(settings *GameSettings) GameState {
 	return g
 }
 
-func (g *GameState) EndGame(won bool) {
+func (g *GameState) EndGame(won, early_quit bool) {
 	if !g.GameActive {
 		return
 	}
 
 	g.GameEnd = time.Now()
 	g.GameActive = false
+	g.EarlyQuit = early_quit
 	g.GameWon = won
 
 	turn := g.CurrentTurn()
@@ -90,17 +92,16 @@ func (g *GameState) EndGame(won bool) {
 	g.Player.Stats = g.CalculateGameStats()
 }
 
-func (g *GameState) IsGameOver() bool {
-	player_dead := g.Player.HealthCurrent == 0
+func (g GameState) DetermineWon() bool {
 	all_words_used := len(g.WordLists.Available) == 0
 	max_lives_win := g.Settings.WinCondition == enums.WinConditionMaxLives &&
 					 g.Player.HealthCurrent == g.Settings.HealthMax
+	return all_words_used || max_lives_win
+}
 
-	if player_dead || all_words_used || max_lives_win {
-		return true
-	}
-
-	return false
+func (g GameState) IsGameOver() bool {
+	player_dead := g.Player.HealthCurrent == 0
+	return player_dead || g.DetermineWon()
 }
 
 func (g GameState) TurnCount() int {

@@ -86,7 +86,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		)
 
 		if m.state.game.IsGameOver() {
-			return m.GameOverSwitch(false, false)
+			m.state.game.EndGame(m.state.game.DetermineWon(), false)
+			return m.GameOverSwitch()
 		}
 
 		turn_failure_msg := m.state.game.GetTurnFailureMessage()
@@ -131,7 +132,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m, nil
 
 		case "ctrl+q":
-			return m.GameOverSwitch(false, true)
+			m.state.game.EndGame(false, true)
+			return m.GameOverSwitch()
 
 		case "enter":
 			answer := strings.ToLower(strings.TrimSpace(m.text_input.Value()))
@@ -157,7 +159,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			// Check if win condition met (no more available words, max lives)
 			if m.state.game.IsGameOver() {
-				return m.GameOverSwitch(true, false)
+				m.state.game.EndGame(m.state.game.DetermineWon(), false)
+				return m.GameOverSwitch()
 			}
 
 			m.state.game.NewTurn(false)

@@ -95,7 +95,7 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 		case "esc":
-			return m.GameOverSwitch(false, false)
+			return m.GameOverSwitch()
 
 		case "n":
 			m.state.game_review.selected_turn = m.state.game.NextFailedTurnIdx(m.state.game_review.selected_turn)

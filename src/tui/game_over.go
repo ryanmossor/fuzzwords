@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (m model) GameOverSwitch(won, early_quit bool) (model, tea.Cmd) {
+func (m model) GameOverSwitch() (model, tea.Cmd) {
 	// Briefly prevent key presses on game over screen
 	cmds := []tea.Cmd{ m.debounceInputCmd(500) }
 
@@ -26,18 +26,13 @@ func (m model) GameOverSwitch(won, early_quit bool) (model, tea.Cmd) {
 		{key: "q", value: "quit"},
 	}
 
-	if !m.state.game.GameActive { // ????
-		if m.state.game.GameWon {
-			m.anim_mgr.InitAnimations(animations.GameOverWin)
-		}
-		return m, tea.Batch(cmds...)
+	if m.state.game.GameWon {
+		m.anim_mgr.InitAnimations(animations.GameOverWin)
 	}
 
-	// TODO: game (not UI) should determine whether game was won; should not need to be passed to GameOverSwitch
-	m.state.game.EndGame(won)
 	m.state.game_ui.player_damaged = false
 
-	if won {
+	if m.state.game.GameWon {
 		m.state.game_ui.validation_msg = ""
 		m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
@@ -54,7 +49,7 @@ func (m model) GameOverSwitch(won, early_quit bool) (model, tea.Cmd) {
 		m.state.game_ui.game_over_msg = red.Bold(true).Render("☠️ GAME OVER ☠️")
 	}
 
-	if !early_quit && !won {
+	if !m.state.game.EarlyQuit && !m.state.game.GameWon {
 		cmds = append(cmds, m.terminalBellCmd(false))
 	}
 
