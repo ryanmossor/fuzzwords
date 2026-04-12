@@ -326,7 +326,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			} else {
 				m.ctrl_c_pressed = true
-				m.state.footer.footer_msg = m.theme.TextYellow().Render("Press ctrl+c again to quit")
+				m.state.footer.footer_msg = m.theme.TextOrange().Render("Press ctrl+c again to quit")
 				return m, nil
 			}
 		default:

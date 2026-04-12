@@ -179,7 +179,6 @@ func (m model) renderTurnDetailView(turn *game.Turn) string {
 		})
 	}
 
-	// if turn.TotalTurnDuration.Seconds() <= 59.9 {
 	if turn.TotalTurnDuration < time.Duration(time.Minute) {
 		rows = append(rows, []string{
 			"Total duration",
@@ -235,23 +234,27 @@ func (m model) renderTurnDetailView(turn *game.Turn) string {
 			if col == 0 {
 				style = style.
 					Align(lipgloss.Left).
-					Width(len("Possible answer")) // TODO dynamic - len of longest col item
+					Width(len("Possible answer"))
 			}
 			if col == 1 {
 				style = style.
 					Align(lipgloss.Left).
-					MaxWidth(35). // TODO: +5 bc spheno was getting cut off
-					PaddingLeft(3) // TODO: 30 == max word len, is this sufficient?
+					MaxWidth(35).
+					PaddingLeft(3)
 			}
 			return style
 		}).
 		Render()
 
+	title_line := solved_style.Render(fmt.Sprintf(" #%d ", turn.TurnNumber))
+	title_line += " "
+	title_line += m.theme.TextAccent().Bold(true).Render(strings.ToUpper(turn.Prompt))
+
 	detail_table := lipgloss.JoinVertical(
 		lipgloss.Left,
 		"",
 		"",
-		solved_style.Render(fmt.Sprintf(" #%d ", turn.TurnNumber)) + " " + m.theme.TextAccent().Bold(true).Render(strings.ToUpper(turn.Prompt)),
+		title_line,
 		"",
 		m.getTurnBadges(turn),
 		"",
@@ -270,14 +273,14 @@ func (m model) renderTurnDetailView(turn *game.Turn) string {
 		BorderForeground(m.theme.border).
 		Render(detail_table)
 
-	table_header_style := m.theme.Base().Foreground(m.theme.border).Render
+	border_style := m.theme.Base().Foreground(m.theme.border).Render
 	table_width := lipgloss.Width(table)
 
 	detail_title := "Details"
-	title_header := table_header_style(border.TopLeft + border.Top) +
+	title_header := border_style(border.TopLeft + border.Top) +
 		m.theme.TextBody().Render(detail_title) +
 		// TODO: magic number 3 = TopLeft + Top + TopRight
-		table_header_style(strings.Repeat(border.Top, table_width - len(detail_title) - 3) + border.TopRight)
+		border_style(strings.Repeat(border.Top, table_width - len(detail_title) - 3) + border.TopRight)
 
 	view := lipgloss.JoinVertical(lipgloss.Center, title_header, table)
 
