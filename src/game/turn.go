@@ -35,6 +35,7 @@ type Turn struct {
 	// TODO: maybe an Answer struct with word, len, unique count, letters used, etc.?
 	// Might eliminate need for NewLettersUsed
 	NewLettersUsed		[]rune // TODO ensure letters remaining updated properly on final turn win
+	UniqueLetterCount	int
 	Streak				int
 	Health				int
 	// may be able to get rid of validation_msg on ui state? maybe store on game state instead?
@@ -100,7 +101,7 @@ func (g *GameState) NewTurn(first_turn bool) {
 
 	now := time.Now()
 	g.turns = append(g.turns, Turn {
-		TurnNumber: g.CurrentTurnNumber + 1,
+		TurnNumber: g.CurrentTurnNumber() + 1,
 		TurnStart: now,
 
 		SourceWord: word,
@@ -119,7 +120,6 @@ func (g *GameState) NewTurn(first_turn bool) {
 		NewLettersUsed: make([]rune, 0, 16),
 		Health: g.Player.HealthCurrent,
 	})
-	g.CurrentTurnNumber++
 }
 
 func (g *GameState) StartTurn(duration_sec int) {
@@ -282,8 +282,4 @@ func (g GameState) PrevFailedTurnIdx(turn_idx_cur int) int {
 	}
 	// return g.GetTurn(turn_idx_cur)
 	return turn_idx_cur
-}
-
-func (g GameState) TurnCount() int {
-	return len(g.turns)
 }

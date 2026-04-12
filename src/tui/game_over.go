@@ -111,7 +111,7 @@ func (m model) GameOverView() string {
 		most_unique_solve = "-"
 	} else {
 		most_unique_solve = fmt.Sprintf("%s", stats.MostUniqueLetters)
-		most_unique_count = fmt.Sprintf("(%d)", utils.CountUniqueLetters(stats.MostUniqueLetters))
+		most_unique_count = fmt.Sprintf("(%d)", stats.MostUniqueCount)
 	}
 
 	fastest_extra_life := fmt.Sprintf("%d turns", stats.FewestExtraLifeSolves)

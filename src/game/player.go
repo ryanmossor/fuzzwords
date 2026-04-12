@@ -34,6 +34,7 @@ func (g *GameState) HandleCorrectAnswer(answer string) {
 	turn.TotalTurnDuration = time.Since(turn.TurnStart)
 	turn.Solved = true
 	turn.Answer = answer
+	turn.UniqueLetterCount = utils.CountUniqueLetters(answer)
 
 	g.Player.Streak++
 	turn.Streak = g.Player.Streak

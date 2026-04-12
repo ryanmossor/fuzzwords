@@ -23,8 +23,6 @@ type GameState struct {
 	FailedTurns			[]int
 	StartUnixTs			int64
 	GameWon				bool
-	// TODO: make this a helper method which returns 0 if len(turns) == 0 else CurrentTurn().TurnNumber
-	CurrentTurnNumber	int
 }
 
 func InitializeGame(settings *GameSettings) GameState {
@@ -62,7 +60,6 @@ func InitializeGame(settings *GameSettings) GameState {
 		// Prealloc 500 turns; should cover most games before slice needs to expand
 		turns:				make([]Turn, 0, 500),
 		FailedTurns:		[]int{},
-		CurrentTurnNumber: 	0,
 	}
 	g.NewTurn(true)
 
@@ -106,63 +103,10 @@ func (g *GameState) IsGameOver() bool {
 	return false
 }
 
-func (g *GameState) CalculateGameStats() PlayerStats {
-	start := time.Now()
+func (g GameState) TurnCount() int {
+	return len(g.turns)
+}
 
-	stats := PlayerStats{}
-	stats.TimeSurvived = int(g.GameEnd.Sub(g.GameStart).Seconds())
-
-	solve_lengths := make([]int, 0, len(g.turns))
-	solve_len_idx := 0
-
-	turns_since_last_extra_life := 0
-	longest_streak := 0
-
-	for i, turn := range g.turns {
-		turns_since_last_extra_life++
-
-		if turn.Solved {
-			stats.PromptsSolved++
-
-			if turn.Streak > longest_streak {
-				longest_streak = turn.Streak
-			}
-
-			solve_lengths = append(solve_lengths, len(turn.Answer))
-			solve_len_idx++
-
-			if len(turn.Answer) > len(stats.LongestSolve) {
-				stats.LongestSolve = turn.Answer
-			}
-
-			if utils.CountUniqueLetters(turn.Answer) > utils.CountUniqueLetters(stats.MostUniqueLetters) {
-				stats.MostUniqueLetters = turn.Answer
-			}
-
-			if turn.ExtraLifeGained {
-				stats.ExtraLivesGained++
-				if stats.FewestExtraLifeSolves == 0 || turns_since_last_extra_life < stats.FewestExtraLifeSolves {
-					stats.FewestExtraLifeSolves = turns_since_last_extra_life
-				}
-				turns_since_last_extra_life = 0
-			}
-		} else {
-			stats.PromptsFailed++
-			g.FailedTurns = append(g.FailedTurns, i)
-		}
-	}
-
-	stats.AverageSolveLength = utils.Average(solve_lengths)
-	stats.LongestStreak = longest_streak
-
-	elapsed := time.Since(start)
-
-	slog.Debug("Calculated stats for game",
-		"startUnixTx", g.StartUnixTs,
-		"turns", len(g.turns),
-		"gameDuration", utils.FormatTime(int(g.GameEnd.Sub(g.GameStart).Seconds())),
-		"calcTimeMs", elapsed.Milliseconds(),
-	)
-
-	return stats
+func (g GameState) CurrentTurnNumber() int {
+	return len(g.turns)
 }

@@ -204,7 +204,7 @@ func (m model) renderTurnDetailView(turn *game.Turn) string {
 	if turn.Solved {
 		rows = append(rows,
 			[]string{"Solve length", fmt.Sprintf("%d", len(turn.Answer)) },
-			[]string{"Unique letters", fmt.Sprintf("%d", utils.CountUniqueLetters(turn.Answer)) },
+			[]string{"Unique letters", fmt.Sprintf("%d", turn.UniqueLetterCount) },
 		)
 	} else {
 		rows = append(rows,
@@ -418,8 +418,7 @@ func (m model) getTurnBadges(turn *game.Turn) string {
 		badges = append(badges, base_badge_style.Background(m.theme.yellow).Render(" longest answer "))
 	}
 
-	// BAD! should only calculate unique letters once per turn
-	if turn.Solved && utils.CountUniqueLetters(turn.Answer) == utils.CountUniqueLetters(m.state.game.Player.Stats.MostUniqueLetters) {
+	if turn.Solved && turn.UniqueLetterCount == m.state.game.Player.Stats.MostUniqueCount {
 		badges = append(badges, base_badge_style.Background(m.theme.purple).Render(" most unique "))
 	}
 

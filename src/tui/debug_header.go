@@ -41,6 +41,7 @@ func (s size) String() string {
 	}
 }
 
+// TODO: make debug view a panel that appears left/right of main view rather than a finnicky header
 func (m model) DebugView() string {
 	if !m.debug {
 		return ""
@@ -66,7 +67,7 @@ func (m model) DebugView() string {
 		m.debug_map["tableTime"],
 		// fmt.Sprintf("reviewCacheLen %d", len(m.state.game_review.view_cache)),
 		// fmt.Sprintf("rowWidStr %s", m.debug_map["rowWidStr"]),
-		fmt.Sprintf("Turn %d", m.state.game.CurrentTurnNumber),
+		fmt.Sprintf("Turn %d", m.state.game.CurrentTurnNumber()),
 
 		// "selected " + m.debug_map["selected"],
 		// m.size.String(),
