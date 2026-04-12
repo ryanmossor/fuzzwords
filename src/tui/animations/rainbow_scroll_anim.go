@@ -47,6 +47,9 @@ func (a *rainbowScrollAnim) update(now time.Time) {
 }
 
 func (a *rainbowScrollAnim) init() {
+	if a.active {
+		return
+	}
 	a.baseAnim.init()
 	a.offset = 0
 }
