@@ -136,6 +136,7 @@ func (m model) renderTurnSummaryList(height int) string {
 	visible_rows := min(last_turn_idx, height - 1)
 
 	start := m.state.game_review.visible_row_start
+	// Show divider if last turn not within visible range
 	show_divider := start + visible_rows < last_turn_idx
 	if show_divider {
 		visible_rows--
