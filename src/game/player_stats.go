@@ -9,23 +9,21 @@ import (
 type PlayerStats struct {
 	PromptsSolved 			int
 	PromptsFailed			int
-	CurrentStreak			int
 	LongestStreak			int
 	ExtraLivesGained		int
 	FewestExtraLifeSolves	int
 	LongestSolve			string
-	MostUniqueLetters		string
+	MostUniqueWord			string
 	MostUniqueCount			int
-	SolveLengths			[]int
 	AverageSolveLength		float64
-	TimeSurvived			int
+	TimePlayed				int
 }
 
 func (g *GameState) CalculateGameStats() PlayerStats {
 	start := time.Now()
 
 	stats := PlayerStats{}
-	stats.TimeSurvived = int(g.GameEnd.Sub(g.GameStart).Seconds())
+	stats.TimePlayed = int(g.GameEnd.Sub(g.GameStart).Seconds())
 
 	solve_lengths := make([]int, 0, len(g.turns))
 	solve_len_idx := 0
@@ -51,7 +49,7 @@ func (g *GameState) CalculateGameStats() PlayerStats {
 			}
 
 			if turn.UniqueLetterCount > stats.MostUniqueCount {
-				stats.MostUniqueLetters = turn.Answer
+				stats.MostUniqueWord = turn.Answer
 				stats.MostUniqueCount = turn.UniqueLetterCount
 			}
 

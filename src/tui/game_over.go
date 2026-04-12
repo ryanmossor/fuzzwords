@@ -107,10 +107,10 @@ func (m model) GameOverView() string {
 	}
 
 	var most_unique_solve, most_unique_count string
-	if stats.MostUniqueLetters == "" {
+	if stats.MostUniqueWord == "" {
 		most_unique_solve = "-"
 	} else {
-		most_unique_solve = fmt.Sprintf("%s", stats.MostUniqueLetters)
+		most_unique_solve = fmt.Sprintf("%s", stats.MostUniqueWord)
 		most_unique_count = fmt.Sprintf("(%d)", stats.MostUniqueCount)
 	}
 
@@ -121,12 +121,12 @@ func (m model) GameOverView() string {
 
 	solves_per_min := "0"
     if stats.PromptsSolved > 0 {
-		spm := float64(stats.PromptsSolved) / (float64(stats.TimeSurvived) / 60.0)
+		spm := float64(stats.PromptsSolved) / (float64(stats.TimePlayed) / 60.0)
 		solves_per_min = fmt.Sprintf("%.1f", spm)
 	}
 
 	rows := [][]string {
-		{"Time survived", utils.FormatTime(stats.TimeSurvived)},
+		{"Time played", utils.FormatTime(stats.TimePlayed)},
 		{"Prompts solved", strconv.Itoa(stats.PromptsSolved)},
 		{"Prompts failed", strconv.Itoa(stats.PromptsFailed)},
 		{"Solves per minute", solves_per_min},
