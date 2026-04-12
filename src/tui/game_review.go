@@ -435,18 +435,20 @@ func (m model) getTurnBadges(turn *game.Turn) string {
 }
 
 func (m *model) updateVisibleRowsStartIdx() {
-	// Scroll up
-	sel := m.state.game_review.selected_turn
-	if sel < m.state.game_review.visible_row_start {
-		m.state.game_review.visible_row_start = sel
-	}
-
+	scrolloff := 2
 	// TODO: this is also calculated in view; need to consolidate/store as struct prop
 	max_rows := min(m.state.game.TurnCount(), m.height_content - 2) // -2 rows for top/bottom borders
+	scrolloff_clamped := utils.Clamp(scrolloff, 0, int(math.Floor(float64(max_rows / 2))))
+
+	// Scroll up
+	sel := m.state.game_review.selected_turn
+	if sel < m.state.game_review.visible_row_start + scrolloff_clamped {
+		m.state.game_review.visible_row_start = utils.Clamp(sel - scrolloff_clamped, 0, sel - scrolloff_clamped)
+	}
 
 	// Scroll down
-	if sel >= m.state.game_review.visible_row_start + max_rows {
-		m.state.game_review.visible_row_start = sel - max_rows + 1
+	if sel >= m.state.game_review.visible_row_start + max_rows - scrolloff_clamped {
+		m.state.game_review.visible_row_start = sel - max_rows + 1 + scrolloff_clamped
 	}
 
 	clamped := utils.Clamp(m.state.game_review.visible_row_start, 0, m.state.game.TurnCount() - max_rows)
