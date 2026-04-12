@@ -438,7 +438,7 @@ func (m model) View() string {
 	if m.debug {
 		m.debug_map["viewSize"] = strconv.Itoa(len(v) - len(debug_view))
 		renderTimeMicros := float64(time.Since(start).Microseconds())
-		m.debug_map["fps"] = fmt.Sprintf("renderTime: %.1fms", renderTimeMicros / 1000)
+		m.debug_map["renderTime"] = fmt.Sprintf("renderTime: %.1fms", renderTimeMicros / 1000)
 	}
 
 	return v
