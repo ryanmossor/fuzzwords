@@ -47,6 +47,7 @@ type GameUIState struct {
 	prev_answer				string
 	validation_msg			string
 	game_over_msg			string
+	game_over_seen			bool
 	player_damaged			bool
 	input_restricted		bool
 }
@@ -89,6 +90,7 @@ type UIContext struct {
 
 	// ?
 	// anim?
+	// debug map? to allow pages/components to write to it
 }
 
 type model struct {

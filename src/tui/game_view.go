@@ -64,6 +64,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game_ui.input_restricted = false
 	m.state.game_ui.prev_answer = ""
 	m.state.game_ui.validation_msg = ""
+	m.state.game_ui.game_over_seen = false
 
 	m.state.game_review.selected_turn = 0
 	m.state.game_review.visible_row_start = 0

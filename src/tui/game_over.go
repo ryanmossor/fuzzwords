@@ -49,9 +49,11 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 		m.state.game_ui.game_over_msg = red.Bold(true).Render("☠️ GAME OVER ☠️")
 	}
 
-	if !m.state.game.EarlyQuit && !m.state.game.GameWon {
+	if !m.state.game.EarlyQuit && !m.state.game.GameWon && !m.state.game_ui.game_over_seen {
 		cmds = append(cmds, m.terminalBellCmd(false))
 	}
+
+	m.state.game_ui.game_over_seen = true
 
 	return m, tea.Batch(cmds...)
 }
