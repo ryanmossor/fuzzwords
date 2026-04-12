@@ -111,15 +111,16 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) GameReviewView() string {
+	height := m.height_content - 2 // -2 for top/bottom table border rows
 	current_turn := m.state.game.GetTurn(m.state.game_review.selected_turn)
 	return m.theme.Base().Height(m.height_content).Render(
 		lipgloss.JoinHorizontal(
 			lipgloss.Top,
-			m.renderTurnSummaryList(),
-			m.renderTurnDetailView(current_turn)))
+			m.renderTurnSummaryList(height),
+			m.renderTurnDetailView(current_turn, height)))
 }
 
-func (m model) renderTurnSummaryList() string {
+func (m model) renderTurnSummaryList(height int) string {
 	border := lipgloss.Border(lipgloss.RoundedBorder())
 	border_style := m.theme.Base().Foreground(m.theme.border).Render
 	width := m.state.game_review.summary_row_width
@@ -130,18 +131,32 @@ func (m model) renderTurnSummaryList() string {
 	list_header += border_style(strings.Repeat(border.Top, width - len(list_title) - 1))
 	list_header += border_style(border.TopRight)
 
-	visible_rows := min(m.state.game.TurnCount(), m.height_content - 2) // -2 rows for top/bottom borders
+	last_turn_idx := m.state.game.TurnCount() - 1
+	// 1 space always reserved for final turn
+	visible_rows := min(last_turn_idx, height - 1)
+
 	start := m.state.game_review.visible_row_start
+	show_divider := start + visible_rows < last_turn_idx
+	if show_divider {
+		visible_rows--
+	}
 	end := start + visible_rows
 
 	list_items := make([]string, 0, visible_rows)
 	for i := start; i < end; i++ {
 		list_items = append(list_items, m.renderReviewSummaryRow(m.state.game.GetTurn(i)))
 	}
+	if show_divider {
+		list_items = append(list_items, m.theme.TextDim().Render(strings.Repeat("─", width)))
+	}
+	// Pin last row to bottom
+	list_items = append(list_items,
+		m.renderReviewSummaryRow(m.state.game.GetTurn(last_turn_idx)),
+	)
 
 	// TODO: cache bigger styles like this so they only need to be created once
 	list := m.theme.Base().
-		Height(m.height_content - 2).
+		Height(height).
 		Width(width).
 		Border(border).
 		BorderTop(false).
@@ -152,7 +167,7 @@ func (m model) renderTurnSummaryList() string {
 	return lipgloss.JoinVertical(lipgloss.Top, list_header, list)
 }
 
-func (m model) renderTurnDetailView(turn *game.Turn) string {
+func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 	td, ok := m.state.game_review.view_cache[turn.TurnNumber]
 	if ok && td.detail_view != "" {
 		return td.detail_view
@@ -265,7 +280,7 @@ func (m model) renderTurnDetailView(turn *game.Turn) string {
 	border := lipgloss.Border(lipgloss.RoundedBorder())
 
 	table := m.theme.Base().
-		Height(m.height_content - 2). // -2 for border top/bottom
+		Height(height).
 		Width(m.width_content - m.state.game_review.summary_row_width).
 		PaddingLeft(3).
 		Border(border).
@@ -451,9 +466,9 @@ func (m *model) updateSummaryListState(sel int) {
 		m.state.game_review.visible_row_start = utils.Clamp(sel - scrolloff_clamped, 0, sel - scrolloff_clamped)
 	}
 
-	// Scroll down
-	if sel >= m.state.game_review.visible_row_start + max_rows - scrolloff_clamped {
-		m.state.game_review.visible_row_start = sel - max_rows + 1 + scrolloff_clamped
+	// Scroll down; add 2 to scrolloff to account for pinned last row (separator + last row)
+	if sel >= m.state.game_review.visible_row_start + max_rows - (scrolloff_clamped + 2) {
+		m.state.game_review.visible_row_start = sel - max_rows + 1 + (scrolloff_clamped + 2)
 	}
 
 	clamped := utils.Clamp(m.state.game_review.visible_row_start, 0, m.state.game.TurnCount() - max_rows)
