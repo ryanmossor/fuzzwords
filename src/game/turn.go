@@ -60,7 +60,7 @@ func (g *GameState) NewTurn(first_turn bool) {
 
 	switch g.Settings.PromptMode {
 	case enums.PromptModeFuzzy:
-		prompt = CreateFuzzyPrompt(word, prompt_len, g.Settings.Dictionary)
+		prompt = createFuzzyPrompt(word, prompt_len, g.Settings.Dictionary)
 	case enums.PromptModeClassic:
 		if len(word) <= g.Settings.PromptLenMax {
 			prompt = word
@@ -133,13 +133,13 @@ func (g GameState) TimeRemaining() time.Duration {
 
 func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 	is_valid := true
-	inc_guess_count := true
+	incr_guess_count := true
 	answer_upper := strings.ToUpper(answer)
 	msg := fmt.Sprintf("✓ %s", answer_upper)
 
 	if len(answer) == 0 {
 		is_valid = false
-		inc_guess_count = false
+		incr_guess_count = false
 		msg = "No answer given"
 	}
 
@@ -190,7 +190,7 @@ func (g *GameState) ValidateAnswer(answer string) (bool, string) {
 		g.WordLists.Used[answer] = true
 	}
 
-	if inc_guess_count {
+	if incr_guess_count {
 		g.CurrentTurn().Guesses++
 	}
 
@@ -204,7 +204,7 @@ func (g GameState) GetTurnFailureMessage() string {
 	return ""
 }
 
-func CreateFuzzyPrompt(word string, prompt_len int, dict enums.Dictionary) string {
+func createFuzzyPrompt(word string, prompt_len int, dict enums.Dictionary) string {
 	stripped_word := word
 	if dict == enums.Pokemon {
 		stripped_word = utils.StripNumbersAndSymbols(word)

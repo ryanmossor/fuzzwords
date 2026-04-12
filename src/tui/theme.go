@@ -50,7 +50,6 @@ func BasicTheme(renderer *lipgloss.Renderer) theme {
 	base.orange = lipgloss.AdaptiveColor{Dark: "#FAB387", Light: "#FE640B"}
 	base.yellow = lipgloss.AdaptiveColor{Dark: "#F9E2AF", Light: "#DF8E1D"}
 	base.green = lipgloss.AdaptiveColor{Dark: "#A6E3A1", Light: "#40A02B"}
-	// base.blue = lipgloss.AdaptiveColor{Dark: "#74C7EC", Light: "#209FB5"}
 	base.blue = lipgloss.AdaptiveColor{Dark: "#89B4FA", Light: "#1E66F5"}
 	base.indigo = lipgloss.AdaptiveColor{Dark: "#7287FD", Light: "#8839EF"} // swapped indigo/purple light values
 	base.purple = lipgloss.AdaptiveColor{Dark: "#CBA6F7", Light: "#7287FD"}
