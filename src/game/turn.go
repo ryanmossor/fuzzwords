@@ -32,7 +32,7 @@ type Turn struct {
 	ExtraLifeGained		bool
 
 	LettersRemaining	map[rune]bool
-	NewLettersUsed		[]rune // TODO ensure letters remaining updated properly on final turn win
+	NewLettersUsed		[]rune
 	UniqueLetterCount	int
 	Streak				int
 	Health				int
@@ -62,6 +62,7 @@ func (g *GameState) NewTurn(first_turn bool) {
 	case enums.PromptModeFuzzy:
 		prompt = createFuzzyPrompt(word, prompt_len, g.Settings.Dictionary)
 	case enums.PromptModeClassic:
+		// TODO: classic prompts can contain hyphens/symbols in pokemon names bc it's just a substring
 		if len(word) <= g.Settings.PromptLenMax {
 			prompt = word
 		} else {
