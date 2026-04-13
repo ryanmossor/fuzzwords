@@ -43,8 +43,8 @@ type Turn struct {
 
 // TODO: ensure next prompt is different from previous if previous prompt was failed
 func (g *GameState) NewTurn(first_turn bool) {
-	word_idx := rand.Intn(len(g.WordLists.Available))
-	word := g.WordLists.Available[word_idx]
+	word_idx := rand.Intn(len(g.wordLists.Available))
+	word := g.wordLists.Available[word_idx]
 
 	assert.Assert(word != "", "Random word must not be empty", "word", word, "wordIdx", word_idx)
 
@@ -176,7 +176,7 @@ func (g *GameState) validateAnswer(answer string) (bool, string) {
 		msg = "No answer given"
 	}
 
-	if is_valid && !g.WordLists.FULL_MAP[answer] {
+	if is_valid && !g.wordLists.FULL_MAP[answer] {
 		is_valid = false
 		msg = fmt.Sprintf("Invalid word: %s", answer_upper)
 	}
@@ -194,7 +194,7 @@ func (g *GameState) validateAnswer(answer string) (bool, string) {
 		msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
 	}
 
-	if is_valid && g.WordLists.Used[answer] {
+	if is_valid && g.wordLists.Used[answer] {
 		is_valid = false
 		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
 	}
@@ -209,18 +209,18 @@ func (g *GameState) validateAnswer(answer string) (bool, string) {
 		"promptMode", g.Settings.PromptMode.String())
 
 	if is_valid {
-		word_idx, found := slices.BinarySearch(g.WordLists.Available, answer)
+		word_idx, found := slices.BinarySearch(g.wordLists.Available, answer)
 		assert.Assert(found, "Validated answer not found in available word list",
 			"startUnixTs", g.StartUnixTs,
 			"prompt", g.CurrentTurn().Prompt,
 			"answer", answer,
 			"wordIdx", word_idx,
-			"actualWordAtIdx", g.WordLists.Available[word_idx],
-			"remainingWords", len(g.WordLists.Available),
-			"alreadyUsed", g.WordLists.Used[answer])
+			"actualWordAtIdx", g.wordLists.Available[word_idx],
+			"remainingWords", len(g.wordLists.Available),
+			"alreadyUsed", g.wordLists.Used[answer])
 
-		g.WordLists.Available = utils.Remove(g.WordLists.Available, word_idx)
-		g.WordLists.Used[answer] = true
+		g.wordLists.Available = utils.Remove(g.wordLists.Available, word_idx)
+		g.wordLists.Used[answer] = true
 	}
 
 	if incr_guess_count {

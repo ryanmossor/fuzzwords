@@ -16,7 +16,7 @@ type GameState struct {
 	GameStart			time.Time
 	GameStop			time.Time
 	Settings			GameSettings
-	WordLists			WordLists
+	wordLists			WordLists
 	Player				Player
 	// TODO: consider making this a map[int]*Turn? key is turn number/idx
 	// Would make accessing failed turns by idx easier
@@ -52,7 +52,7 @@ func InitializeGame(settings *GameSettings) GameState {
 
 		Settings: 			*settings,
 		Alphabet: 			alphabet,
-		WordLists: 			word_lists,
+		wordLists: 			word_lists,
 
 		Player: 			InitializePlayer(settings, alphabet),
 		GameActive: 		true,
@@ -94,7 +94,7 @@ func (g *GameState) EndGame(won, early_quit bool) {
 }
 
 func (g *GameState) EndGameIfOver() bool {
-	all_words_used := len(g.WordLists.Available) == 0
+	all_words_used := len(g.wordLists.Available) == 0
 	max_lives_win := g.Settings.WinCondition == enums.WinConditionMaxLives &&
 					 g.Player.HealthCurrent == g.Settings.HealthMax
 

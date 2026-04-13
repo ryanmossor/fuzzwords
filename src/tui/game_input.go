@@ -12,10 +12,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m model) wordInDictionary(answer string) bool {
-	return m.state.game.WordLists.FULL_MAP[strings.ToLower(answer)]
-}
-
 // Highlight prompt letters in current answer
 func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.PromptMode) string {
 	accent := styles.TextAccent.Render
@@ -68,7 +64,7 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 	}
 
 	if m.state.game.Settings.HighlightInput {
-		valid_word := m.wordInDictionary(answer_upper)
+		valid_word := m.state.game.WordInDictionary(answer_upper)
 		if is_match && valid_word {
 			return theme.Green
 		} else if is_match && !valid_word {
