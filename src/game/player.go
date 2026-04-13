@@ -5,18 +5,20 @@ import (
 )
 
 type Player struct {
-	HealthCurrent 			int
-	LettersUsed				[]rune
-	LettersRemaining 		map[rune]bool
-	Streak					int
-	Stats					PlayerStats
+	HealthCurrent   	int
+	LettersUsed     	[]rune
+	LettersRemaining	map[rune]bool
+	Streak          	int
+	Stats           	PlayerStats
 }
 
-func InitializePlayer(cfg *GameSettings, alphabet string) Player {
+func (g *GameState) InitializePlayer() Player {
 	player := Player{
-		HealthCurrent: cfg.HealthInitial,
-		LettersRemaining: utils.StringToCharMap(alphabet),
+		HealthCurrent:    g.Settings.HealthInitial,
+		LettersRemaining: utils.StringToCharMap(g.Alphabet),
+		LettersUsed:      make([]rune, len(g.Alphabet)),
+		Streak:           0,
+		Stats:            PlayerStats{},
 	}
-
 	return player
 }

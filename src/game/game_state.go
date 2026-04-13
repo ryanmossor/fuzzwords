@@ -54,7 +54,6 @@ func InitializeGame(settings *GameSettings) GameState {
 		Alphabet: 			alphabet,
 		wordLists: 			word_lists,
 
-		Player: 			InitializePlayer(settings, alphabet),
 		GameActive: 		true,
 		GameWon:			false,
 		GameStart: 			time.Now(),
@@ -64,6 +63,7 @@ func InitializeGame(settings *GameSettings) GameState {
 		FailedTurns:		[]int{},
 	}
 	g.NewTurn(true)
+	g.Player = g.InitializePlayer()
 
 	slog.Info("Initialized game",
 		"startUnixTs", g.StartUnixTs,

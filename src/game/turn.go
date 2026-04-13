@@ -279,7 +279,7 @@ func (g *GameState) handleCorrectAnswer(answer string) {
 	}
 
 	if len(g.Player.LettersUsed) >= len(g.Alphabet) {
-		g.Player.LettersUsed = nil
+		g.Player.LettersUsed = make([]rune, len(g.Alphabet))
 		// TODO having letters remaining AND letters used seems redundant? consider consolidating into single map
 		g.Player.LettersRemaining = utils.StringToCharMap(g.Alphabet)
 
