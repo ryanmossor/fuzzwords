@@ -49,7 +49,7 @@ func (m model) GameReviewSwitch() (model, tea.Cmd) {
 	m.footer_keymaps = []FooterKeymap {
 		{key: "↑/↓", value: "scroll"},
 		{key: "n/p", value: "next/prev strike"},
-        {key: "esc", value: "game over"},
+        {key: "esc", value: "back"},
 	}
 
 	m = m.SwitchPage(game_review_page)

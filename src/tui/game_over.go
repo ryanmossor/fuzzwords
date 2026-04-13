@@ -21,10 +21,10 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_over_page)
 
 	m.footer_keymaps = []FooterKeymap {
-		{key: lipgloss.NewStyle().Foreground(theme.Black).Background(theme.Blue).Bold(true).Render(" r review "), value: ""},
+		{key: "r", value: "review"},
 		{key: "enter", value: "new game"},
+		{key: "s", value: "settings"},
 		{key: "m", value: "main menu"},
-        {key: "s", value: "change settings"},
 		{key: "q", value: "quit"},
 	}
 
