@@ -176,16 +176,16 @@ func (g *GameState) HandleTurnTimeout() StrikeResult {
 	turn.Health--
 
 	turn.Strikes++
+
+	if g.EndGameIfOver() {
+		result.GameOver = true
+		return result
+	}
+
 	if turn.Strikes == g.Settings.PromptStrikes {
 		turn.TotalTurnDuration = time.Since(turn.TurnStart)
 		result.Msg = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.Prompt))
 		result.Strikeout = true
-
-		if g.EndGameIfOver() {
-			result.GameOver = true
-			return result
-		}
-
 		g.NewTurn(false)
 	} else {
 		g.StartStrikeTimer()
