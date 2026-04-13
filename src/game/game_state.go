@@ -59,8 +59,8 @@ func InitializeGame(settings *GameSettings) GameState {
 		GameWon:			false,
 		GameStart: 			time.Now(),
 
-		// Prealloc 500 turns; should cover most games before slice needs to expand
-		turns:				make([]Turn, 0, 500),
+		// Prealloc 300 turns; should cover most games before slice needs to expand
+		turns:				make([]Turn, 0, 300),
 		FailedTurns:		[]int{},
 	}
 	g.NewTurn(true)
