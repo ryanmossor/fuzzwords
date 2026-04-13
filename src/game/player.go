@@ -6,7 +6,7 @@ import (
 
 type Player struct {
 	HealthCurrent 			int
-	LettersUsed				[]string
+	LettersUsed				[]rune
 	LettersRemaining 		map[rune]bool
 	Streak					int
 	Stats					PlayerStats

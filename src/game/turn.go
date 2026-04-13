@@ -269,11 +269,9 @@ func (g *GameState) handleCorrectAnswer(answer string) {
 	turn.Streak = g.Player.Streak
 
 	for _, c := range strings.ToUpper(answer) {
-		ch := string(c)
-
 		// TODO: consolidate LettersUsed/LettersRemaining, make []rune instead of []string?
-		if strings.Contains(g.Alphabet, ch) && !slices.Contains(g.Player.LettersUsed, ch) {
-			g.Player.LettersUsed = append(g.Player.LettersUsed, ch)
+		if !slices.Contains(g.Player.LettersUsed, c) && strings.ContainsRune(g.Alphabet, c) {
+			g.Player.LettersUsed = append(g.Player.LettersUsed, c)
 			turn.NewLettersUsed = append(turn.NewLettersUsed, c)
 		}
 
@@ -291,8 +289,6 @@ func (g *GameState) handleCorrectAnswer(answer string) {
 		}
 		turn.ExtraLifeGained = true
 	}
-
-	slices.Sort(g.Player.LettersUsed)
 }
 
 type StrikeResult struct {
