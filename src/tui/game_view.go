@@ -87,8 +87,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.terminalBellCmd(false),
 		)
 
-		if m.state.game.IsGameOver() {
-			m.state.game.EndGame(m.state.game.DetermineWon(), false)
+        if m.state.game.EndGameIfOver() {
 			return m.GameOverSwitch()
 		}
 
@@ -159,9 +158,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 			m.state.game_ui.player_damaged = false
 
-			// Check if win condition met (no more available words, max lives)
-			if m.state.game.IsGameOver() {
-				m.state.game.EndGame(m.state.game.DetermineWon(), false)
+			if m.state.game.EndGameIfOver() {
 				return m.GameOverSwitch()
 			}
 
