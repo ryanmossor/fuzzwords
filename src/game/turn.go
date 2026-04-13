@@ -151,6 +151,7 @@ func (g *GameState) SubmitAnswer(answer string) AnswerResult {
 	return AnswerResult{
 		IsValid: true,
 		ExtraLifeGained: g.CurrentTurn().ExtraLifeGained,
+		ValidationMsg: msg,
 	}
 }
 
