@@ -36,15 +36,12 @@ type Turn struct {
 	UniqueLetterCount	int
 	Streak				int
 	Health				int
-	// may be able to get rid of validation_msg on ui state? maybe store on game state instead?
-	// - don't need to colorize in UI if not showing possible answer anymore, so maybe
-	// just use PrevTurn().Solved w/ GameState.ValidationMsg instead? entirely red/green depending on if solved
 }
 
 // TODO: ensure next prompt is different from previous if previous prompt was failed
 func (g *GameState) NewTurn(first_turn bool) {
-	word_idx := rand.Intn(len(g.wordLists.Available))
-	word := g.wordLists.Available[word_idx]
+	word_idx := rand.Intn(len(g.wordLists.available))
+	word := g.wordLists.available[word_idx]
 
 	assert.Assert(word != "", "Random word must not be empty", "word", word, "wordIdx", word_idx)
 
@@ -176,7 +173,7 @@ func (g *GameState) validateAnswer(answer string) (bool, string) {
 		msg = "No answer given"
 	}
 
-	if is_valid && !g.wordLists.FULL_MAP[answer] {
+	if is_valid && !g.wordLists.fullDict[answer] {
 		is_valid = false
 		msg = fmt.Sprintf("Invalid word: %s", answer_upper)
 	}
@@ -194,7 +191,7 @@ func (g *GameState) validateAnswer(answer string) (bool, string) {
 		msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
 	}
 
-	if is_valid && g.wordLists.Used[answer] {
+	if is_valid && g.wordLists.used[answer] {
 		is_valid = false
 		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
 	}
@@ -209,18 +206,18 @@ func (g *GameState) validateAnswer(answer string) (bool, string) {
 		"promptMode", g.Settings.PromptMode.String())
 
 	if is_valid {
-		word_idx, found := slices.BinarySearch(g.wordLists.Available, answer)
+		word_idx, found := slices.BinarySearch(g.wordLists.available, answer)
 		assert.Assert(found, "Validated answer not found in available word list",
 			"startUnixTs", g.StartUnixTs,
 			"prompt", g.CurrentTurn().Prompt,
 			"answer", answer,
 			"wordIdx", word_idx,
-			"actualWordAtIdx", g.wordLists.Available[word_idx],
-			"remainingWords", len(g.wordLists.Available),
-			"alreadyUsed", g.wordLists.Used[answer])
+			"actualWordAtIdx", g.wordLists.available[word_idx],
+			"remainingWords", len(g.wordLists.available),
+			"alreadyUsed", g.wordLists.used[answer])
 
-		g.wordLists.Available = utils.Remove(g.wordLists.Available, word_idx)
-		g.wordLists.Used[answer] = true
+		g.wordLists.available = utils.Remove(g.wordLists.available, word_idx)
+		g.wordLists.used[answer] = true
 	}
 
 	if incr_guess_count {
