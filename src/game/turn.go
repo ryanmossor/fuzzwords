@@ -145,10 +145,10 @@ func (g *GameState) SubmitAnswer(answer string) AnswerResult {
 		return AnswerResult{ IsValid: false, Msg: msg }
 	}
 
-	g.handleCorrectAnswer(answer)
+	extraLifeGained := g.handleCorrectAnswer(answer)
 	result := AnswerResult{
 		IsValid: true,
-		ExtraLifeGained: g.CurrentTurn().ExtraLifeGained,
+		ExtraLifeGained: extraLifeGained,
 		Msg: msg,
 	}
 
@@ -255,7 +255,7 @@ func createFuzzyPrompt(word string, prompt_len int, dict enums.Dictionary) strin
 	return prompt
 }
 
-func (g *GameState) handleCorrectAnswer(answer string) {
+func (g *GameState) handleCorrectAnswer(answer string) bool {
 	turn := g.CurrentTurn()
 	turn.TotalTurnDuration = time.Since(turn.TurnStart)
 	turn.Solved = true
@@ -286,6 +286,8 @@ func (g *GameState) handleCorrectAnswer(answer string) {
 		}
 		turn.ExtraLifeGained = true
 	}
+
+	return turn.ExtraLifeGained
 }
 
 type StrikeResult struct {
