@@ -62,8 +62,8 @@ func InitializeGame(settings *GameSettings) GameState {
 		turns:				make([]Turn, 0, 300),
 		FailedTurns:		[]int{},
 	}
-	g.NewTurn(true)
 	g.Player = g.InitializePlayer()
+	g.NewTurn(true)
 
 	slog.Info("Initialized game",
 		"startUnixTs", g.StartUnixTs,
