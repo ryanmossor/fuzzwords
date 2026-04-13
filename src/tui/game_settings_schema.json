@@ -161,9 +161,8 @@
     },
     {
       "propName": "HealthInitial",
-      "displayName": "Initial health",
+      "displayName": "Starting health",
       "type": "int",
-      "description": "Starting number of lives",
       "default": 2,
       "min": 1,
       "max": 10,
@@ -174,7 +173,6 @@
       "propName": "HealthMax",
       "displayName": "Max health",
       "type": "int",
-      "description": "Maxmimum lives that can be earned",
       "default": 3,
       "min": 1,
       "max": 10,
