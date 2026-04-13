@@ -138,6 +138,7 @@ func (g GameState) TimeRemaining() time.Duration {
 type AnswerResult struct {
 	IsValid				bool
 	ExtraLifeGained		bool
+	GameOver			bool
 	Msg					string
 }
 
@@ -148,11 +149,19 @@ func (g *GameState) SubmitAnswer(answer string) AnswerResult {
 	}
 
 	g.handleCorrectAnswer(answer)
-	return AnswerResult{
+	result := AnswerResult{
 		IsValid: true,
 		ExtraLifeGained: g.CurrentTurn().ExtraLifeGained,
 		Msg: msg,
 	}
+
+	if g.EndGameIfOver() {
+		result.GameOver = true
+		return result
+	}
+
+	g.NewTurn(false)
+	return result
 }
 
 func (g *GameState) validateAnswer(answer string) (bool, string) {

@@ -134,6 +134,10 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             m.text_input.Reset()
 
 			result := m.state.game.SubmitAnswer(answer)
+			if result.GameOver {
+				return m.GameOverSwitch()
+			}
+
 			m.state.game_ui.validation_msg = result.Msg
 			if !result.IsValid {
 				m.state.game_ui.prev_answer = answer
@@ -148,12 +152,6 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			// Reset damage animation to ensure it doesn't keep playing from previous failed turn
 			m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 			m.state.game_ui.player_damaged = false
-
-			if m.state.game.EndGameIfOver() {
-				return m.GameOverSwitch()
-			}
-
-			m.state.game.NewTurn(false)
 
 			return m, m.debounceInputCmd(300)
 		}
