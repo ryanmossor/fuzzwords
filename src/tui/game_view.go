@@ -80,29 +80,24 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case TurnTimerExpiredMsg:
 		var cmds []tea.Cmd
-		m.state.game.HandleFailedTurn()
 		cmds = append(cmds,
 			m.setPlayerDamagedStateCmd(),
 			m.terminalBellCmd(false),
 		)
 
-        if m.state.game.EndGameIfOver() {
+		result := m.state.game.HandleTurnTimeout()
+        if result.GameOver {
 			return m.GameOverSwitch()
 		}
 
-		turn_failure_msg := m.state.game.GetTurnFailureMessage()
-		if turn_failure_msg == "" {
-			m.anim_mgr.InitAnimations(animations.StrikeCounter)
-			m.state.game.StartTurn()
-		} else {
+		if result.Strikeout {
 			m.anim_mgr.InitAnimations(animations.ValidationMessage)
-
 			m.text_input.Reset()
 			cmds = append(cmds, m.debounceInputCmd(500))
-
-			m.state.game.NewTurn(false)
+		} else {
+			m.anim_mgr.InitAnimations(animations.StrikeCounter)
 		}
-		m.state.game_ui.validation_msg = turn_failure_msg
+		m.state.game_ui.validation_msg = result.Msg
 
         return m, tea.Batch(cmds...)
 
@@ -139,7 +134,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
             m.text_input.Reset()
 
 			result := m.state.game.SubmitAnswer(answer)
-			m.state.game_ui.validation_msg = result.ValidationMsg
+			m.state.game_ui.validation_msg = result.Msg
 			if !result.IsValid {
 				m.state.game_ui.prev_answer = answer
 				break

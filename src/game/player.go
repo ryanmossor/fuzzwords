@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"fzwds/src/utils"
 	"slices"
 	"strings"
@@ -62,17 +63,39 @@ func (g *GameState) handleCorrectAnswer(answer string) {
 	slices.Sort(g.Player.LettersUsed)
 }
 
-func (g *GameState) HandleFailedTurn() {
+type StrikeResult struct {
+	Strikeout 		bool
+	GameOver		bool
+	Msg				string
+}
+
+// Handle timer expiry. Will increment strike counter, advance to
+// next turn, or end the game depending on current game state.
+func (g *GameState) HandleTurnTimeout() StrikeResult {
 	turn := g.CurrentTurn()
+	result := StrikeResult{}
 
 	g.Player.Streak = 0
 	turn.Streak = 0
 
+	g.Player.HealthCurrent--
+	turn.Health--
+
 	turn.Strikes++
 	if turn.Strikes == g.Settings.PromptStrikes {
 		turn.TotalTurnDuration = time.Since(turn.TurnStart)
+		result.Msg = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.Prompt))
+		result.Strikeout = true
+
+		if g.EndGameIfOver() {
+			result.GameOver = true
+			return result
+		}
+
+		g.NewTurn(false)
+	} else {
+		g.StartStrikeTimer()
 	}
 
-	g.Player.HealthCurrent--
-	turn.Health--
+	return result
 }

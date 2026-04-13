@@ -121,7 +121,7 @@ func (g *GameState) NewTurn(first_turn bool) {
 	})
 }
 
-func (g *GameState) StartTurn() {
+func (g *GameState) StartStrikeTimer() {
 	turn_duration_min := max(15, g.Settings.TurnDurationMin)
 	duration_sec := utils.RandomBetween(turn_duration_min, 30)
 
@@ -138,20 +138,20 @@ func (g GameState) TimeRemaining() time.Duration {
 type AnswerResult struct {
 	IsValid				bool
 	ExtraLifeGained		bool
-	ValidationMsg		string
+	Msg					string
 }
 
 func (g *GameState) SubmitAnswer(answer string) AnswerResult {
 	is_valid, msg := g.validateAnswer(answer)
 	if !is_valid {
-		return AnswerResult{ IsValid: false, ValidationMsg: msg }
+		return AnswerResult{ IsValid: false, Msg: msg }
 	}
 
 	g.handleCorrectAnswer(answer)
 	return AnswerResult{
 		IsValid: true,
 		ExtraLifeGained: g.CurrentTurn().ExtraLifeGained,
-		ValidationMsg: msg,
+		Msg: msg,
 	}
 }
 
@@ -219,13 +219,6 @@ func (g *GameState) validateAnswer(answer string) (bool, string) {
 	}
 
 	return is_valid, msg
-}
-
-func (g GameState) GetTurnFailureMessage() string {
-	if g.CurrentTurn().Strikes == g.Settings.PromptStrikes {
-		return fmt.Sprintf("Prompt %s failed", strings.ToUpper(g.CurrentTurn().Prompt))
-	}
-	return ""
 }
 
 func createFuzzyPrompt(word string, prompt_len int, dict enums.Dictionary) string {

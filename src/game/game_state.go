@@ -96,8 +96,9 @@ func (g *GameState) EndGameIfOver() bool {
 	all_words_used := len(g.WordLists.Available) == 0
 	max_lives_win := g.Settings.WinCondition == enums.WinConditionMaxLives &&
 					 g.Player.HealthCurrent == g.Settings.HealthMax
-					 won := all_words_used || max_lives_win
-					 player_dead := g.Player.HealthCurrent == 0
+
+	won := all_words_used || max_lives_win
+	player_dead := g.Player.HealthCurrent == 0
 
 	over := player_dead || won
 	if !over {
