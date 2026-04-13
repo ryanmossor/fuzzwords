@@ -1,16 +1,11 @@
 package game
 
 import (
-	"fmt"
 	"fzwds/src/utils"
-	"slices"
-	"strings"
-	"time"
 )
 
 type Player struct {
 	HealthCurrent 			int
-	HealthDisplay			string
 	LettersUsed				[]string
 	LettersRemaining 		map[rune]bool
 	Streak					int
@@ -24,78 +19,4 @@ func InitializePlayer(cfg *GameSettings, alphabet string) Player {
 	}
 
 	return player
-}
-
-func (g *GameState) handleCorrectAnswer(answer string) {
-	turn := g.CurrentTurn()
-	turn.TotalTurnDuration = time.Since(turn.TurnStart)
-	turn.Solved = true
-	turn.Answer = answer
-	turn.UniqueLetterCount = utils.CountUniqueLetters(answer)
-
-	g.Player.Streak++
-	turn.Streak = g.Player.Streak
-
-	for _, c := range strings.ToUpper(answer) {
-		ch := string(c)
-
-		// TODO: consolidate LettersUsed/LettersRemaining, make []rune instead of []string?
-		if strings.Contains(g.Alphabet, ch) && !slices.Contains(g.Player.LettersUsed, ch) {
-			g.Player.LettersUsed = append(g.Player.LettersUsed, ch)
-			turn.NewLettersUsed = append(turn.NewLettersUsed, c)
-		}
-
-		g.Player.LettersRemaining[c] = true
-	}
-
-	if len(g.Player.LettersUsed) >= len(g.Alphabet) {
-		g.Player.LettersUsed = nil
-		// TODO having letters remaining AND letters used seems redundant? consider consolidating into single map
-		g.Player.LettersRemaining = utils.StringToCharMap(g.Alphabet)
-
-		if g.Player.HealthCurrent < g.Settings.HealthMax {
-			g.Player.HealthCurrent++
-			turn.Health++
-		}
-		turn.ExtraLifeGained = true
-	}
-
-	slices.Sort(g.Player.LettersUsed)
-}
-
-type StrikeResult struct {
-	Strikeout 		bool
-	GameOver		bool
-	Msg				string
-}
-
-// Handle timer expiry. Will increment strike counter, advance to
-// next turn, or end the game depending on current game state.
-func (g *GameState) HandleTurnTimeout() StrikeResult {
-	turn := g.CurrentTurn()
-	result := StrikeResult{}
-
-	g.Player.Streak = 0
-	turn.Streak = 0
-
-	g.Player.HealthCurrent--
-	turn.Health--
-
-	turn.Strikes++
-	if turn.Strikes == g.Settings.PromptStrikes {
-		turn.TotalTurnDuration = time.Since(turn.TurnStart)
-		result.Msg = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.Prompt))
-		result.Strikeout = true
-
-		if g.EndGameIfOver() {
-			result.GameOver = true
-			return result
-		}
-
-		g.NewTurn(false)
-	} else {
-		g.StartStrikeTimer()
-	}
-
-	return result
 }
