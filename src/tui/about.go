@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fzwds/src/enums"
+	"fzwds/src/tui/styles"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -20,9 +21,9 @@ func (m model) AboutUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) AboutView() string {
-	base := m.theme.Base().Render
-	accent := m.theme.TextAccent().Render
-	yellow_bold := m.theme.TextYellow().Bold(true).Render
+	base := styles.TextBody.Render
+	accent := styles.TextAccent.Render
+	yellow_bold := styles.TextYellow.Bold(true).Render
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,

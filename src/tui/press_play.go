@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fzwds/src/tui/styles"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -35,7 +36,7 @@ func (m model) PressPlayView() string {
 		return ""
 	}
 
-	base := m.theme.Base().Render
-	accent := m.theme.TextAccent().Bold(true).Render 
+	base := styles.TextBody.Render
+	accent := styles.TextAccent.Bold(true).Render
 	return base("Press ") + accent("ENTER") + base(" to play")
 }

@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"fzwds/src/tui/animations"
+	"fzwds/src/tui/styles"
 )
 
 func (m model) GameStrikeCounterView() string {
@@ -10,9 +11,11 @@ func (m model) GameStrikeCounterView() string {
 		return ""
 	}
 
-	strike_counter := "Strikes: " + m.theme.TextRed().Render(fmt.Sprintf("%d/%d",
+	strike_counter := styles.TextBody.Render("Strikes: ")
+	strike_counter += styles.TextRed.Render(fmt.Sprintf("%d/%d",
 		m.state.game.CurrentTurn().Strikes,
 		m.state.game.Settings.PromptStrikes))
+
 	strike_counter, _ = m.anim_mgr.ApplyAnimations(
 		string(animations.StrikeCounter),
 		strike_counter)

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"fzwds/src/dictionary"
 	"fzwds/src/game"
+	"fzwds/src/tui/styles"
 	"log/slog"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -74,7 +76,9 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			if len(selected_gens) == 0 {
-				m.state.footer.footer_msg = m.theme.TextRed().Bold(true).Render("You must select at least one generation")
+				m.state.footer.footer_msg = styles.
+					TextRed.
+					Render("You must select at least one generation")
 				return m, nil
 			}
 
@@ -102,9 +106,9 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) PokemonGenSelectorView() string {
-	base := m.theme.Base().Render
-	dim := m.theme.TextDim().Render
-	accent := m.theme.TextAccent().Bold(true).Render
+	base := styles.TextBody.Render
+	dim := styles.TextDim.Render
+	accent := styles.TextAccent.Bold(true).Render
 
 	var lines []string
 	for i := range len(dictionary.PokemonDictionary) {
@@ -142,19 +146,20 @@ func (m model) PokemonGenSelectorView() string {
 				lipgloss.JoinHorizontal(
 					lipgloss.Center,
 					accent(display_name),
-					m.theme.Base().Width(row_space).Render(),
+					strings.Repeat(" ", row_space),
 					row_text),
 				base(desc))
 		} else {
 			content = lipgloss.JoinHorizontal(
 				lipgloss.Center,
 				dim(display_name),
-				m.theme.TextDim().Width(row_space).Render(),
+				strings.Repeat(" ", row_space),
 				row_text)
 		}
 
 		apply_bottom_border := gen != len(dictionary.PokemonDictionary)
-		line := m.CreatePokemonMenuItem(content, is_selected, apply_bottom_border)
+		// TODO: better width calculation
+		line := styles.CreatePokemonMenuItem(content, is_selected, apply_bottom_border, m.width_content - 26)
 		lines = append(lines, line)
 	}
 

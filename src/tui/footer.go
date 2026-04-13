@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"fzwds/src/tui/styles"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -21,12 +22,12 @@ func (m model) FooterView() string {
 	footer_line := strings.Repeat("─", max_footer_width) + footer_text_right + strings.Repeat("─", pad)
 
 	if m.state.game_ui.player_damaged {
-		footer_line = m.theme.TextRed().Render(footer_line)
+		footer_line = styles.TextRed.Render(footer_line)
 	} else {
-		footer_line = m.theme.TextDim().Render(footer_line)
+		footer_line = styles.TextDim.Render(footer_line)
 	}
 
-	table := m.theme.Base().
+	table := lipgloss.NewStyle().
 		Width(m.width_container).
 		PaddingBottom(1).
 		Align(lipgloss.Center)
@@ -35,8 +36,8 @@ func (m model) FooterView() string {
 	for _, k := range m.footer_keymaps {
 		keymaps = append(keymaps,
 			fmt.Sprintf(" %s %s  ",
-				m.theme.TextAccent().Bold(true).Render(k.key),
-				m.theme.Base().Render(k.value)),
+				styles.TextAccent.Bold(true).Render(k.key),
+				styles.TextBody.Render(k.value)),
 		)
 	}
 

@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"fzwds/src/game"
+	"fzwds/src/tui/styles"
 	"fzwds/src/utils"
 	"slices"
 	"strings"
@@ -24,9 +25,7 @@ func (m model) GameReviewHudView() string {
 func (m model) renderTurnInfo(turn *game.Turn) string {
 	health_display := m.renderHealthDisplay(turn.Health)
 	health_change_info := m.renderHealthChangeInfo(turn)
-
-	border_style := m.theme.Base().Foreground(m.theme.Border())
-	line := border_style.Render(strings.Repeat("─", m.width_container))
+	line := styles.TextBorder.Render(strings.Repeat("─", m.width_container))
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -40,11 +39,11 @@ func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
 
 	for i, c := range m.state.game.Alphabet {
 		if slices.Contains(turn.NewLettersUsed, c) {
-			out.WriteString(m.theme.TextHighlight().Bold(true).Underline(true).Render(string(c)))
+			out.WriteString(styles.TextHighlight.Bold(true).Underline(true).Render(string(c)))
 		} else if turn.LettersRemaining[c] {
-			out.WriteString(m.theme.TextDim().Render(string(c)))
+			out.WriteString(styles.TextDim.Render(string(c)))
 		} else {
-			out.WriteString(m.theme.TextYellow().Bold(true).Render(string(c)))
+			out.WriteString(styles.TextYellow.Bold(true).Render(string(c)))
 		}
 
 		if i < len(m.state.game.Alphabet) - 1 {
@@ -59,11 +58,11 @@ func (m model) renderHealthChangeInfo(turn *game.Turn) string {
 	var health_change_info string
 
 	if turn.Strikes > 0 {
-		health_change_info += m.theme.TextRed().Render(fmt.Sprintf(" -%d", turn.Strikes))
+		health_change_info += styles.TextRed.Render(fmt.Sprintf(" -%d", turn.Strikes))
 	}
 
 	if turn.ExtraLifeGained {
-		health_change_info += m.theme.TextHighlight().Render(" +1")
+		health_change_info += styles.TextHighlight.Render(" +1")
 	}
 
 	return health_change_info

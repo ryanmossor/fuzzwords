@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fzwds/src/enums"
 	"fzwds/src/game"
+	"fzwds/src/tui/styles"
 	"fzwds/src/utils"
 	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -145,9 +147,9 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) SettingsView() string {
-	base := m.theme.Base().Render
-	dim := m.theme.TextDim().Render
-	accent := m.theme.TextAccent().Bold(true).Render
+	base := styles.TextBody.Render
+	dim := styles.TextDim.Render
+	accent := styles.TextAccent.Bold(true).Render
 
 	var lines []string
 	for i, setting := range m.state.settings.schema_list {
@@ -210,8 +212,8 @@ func (m model) SettingsView() string {
 			if setting.Description != "n/a" {
 				row_2 = lipgloss.JoinHorizontal(
 					lipgloss.Top,
-					description,
-					m.theme.Base().Width(row_2_space).Render(),
+					base(description),
+					strings.Repeat(" ", row_2_space),
 					base(sub_desc),
 				)
 			} else {
@@ -226,7 +228,7 @@ func (m model) SettingsView() string {
 				lipgloss.JoinHorizontal(
 					lipgloss.Top,
 					display_name,
-					m.theme.Base().Width(row_1_space).Render(),
+					strings.Repeat(" ", row_1_space),
 					default_text,
 				),
 				row_2,
@@ -237,7 +239,7 @@ func (m model) SettingsView() string {
 				lipgloss.JoinHorizontal(
 					lipgloss.Top,
 					display_name,
-					m.theme.Base().Width(row_1_space).Render(),
+					strings.Repeat(" ", row_1_space),
 					default_text,
 				),
 			)
@@ -245,7 +247,7 @@ func (m model) SettingsView() string {
 
 		// Don't apply border to final setting box
 		apply_bottom_border := i != len(m.state.settings.schema_list) - 1
-		line := m.CreateSettingsMenuItem(content, is_selected, apply_bottom_border)
+		line := styles.CreateSettingsMenuItem(content, is_selected, apply_bottom_border, m.width_content - 2)
 		lines = append(lines, line)
 	}
 

@@ -3,6 +3,8 @@ package tui
 import (
 	"fmt"
 	"fzwds/src/tui/animations"
+	"fzwds/src/tui/styles"
+	"fzwds/src/tui/theme"
 	"fzwds/src/utils"
 	"strconv"
 	"strings"
@@ -19,7 +21,7 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_over_page)
 
 	m.footer_keymaps = []FooterKeymap {
-		{key: m.theme.Base().Foreground(m.theme.black).Background(m.theme.blue).Bold(true).Render(" r review "), value: ""},
+		{key: lipgloss.NewStyle().Foreground(theme.Black).Background(theme.Blue).Bold(true).Render(" r review "), value: ""},
 		{key: "enter", value: "new game"},
 		{key: "m", value: "main menu"},
         {key: "s", value: "change settings"},
@@ -37,7 +39,7 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 		m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
 	} else {
-		red := m.theme.TextRed()
+		red := styles.TextRed
 		m.state.game_ui.validation_msg = red.Render(fmt.Sprintf(
 			"Possible solve for final prompt %s: ",
 			strings.ToUpper(m.state.game.CurrentTurn().Prompt)))
@@ -138,15 +140,15 @@ func (m model) GameOverView() string {
 	stats_table := table.New().
 		Border(lipgloss.HiddenBorder()).
 		BorderColumn(false).
-		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
+		BorderStyle(lipgloss.NewStyle().Foreground(theme.Border)).
 		Rows(rows...).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			var style lipgloss.Style
 
 			if row % 2 == 0 {
-				style = m.theme.TextAccent()
+				style = styles.TextAccent
 			} else {
-				style = m.theme.Base()
+				style = styles.TextBody
 			}
 
 			if col == 0 && stats.PromptsSolved > 0 {
@@ -167,7 +169,7 @@ func (m model) GameOverView() string {
 		string(animations.GameOverWin),
 		m.state.game_ui.game_over_msg)
 	if !changed {
-		game_over_msg = m.theme.TextYellow().Bold(true).Render(game_over_msg)
+		game_over_msg = styles.TextYellow.Bold(true).Render(game_over_msg)
 	}
 
 	return lipgloss.JoinVertical(

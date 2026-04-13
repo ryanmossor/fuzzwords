@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"fzwds/src/game"
 	anim "fzwds/src/tui/animations"
+	"fzwds/src/tui/styles"
+	"fzwds/src/tui/theme"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -86,8 +88,6 @@ type UIContext struct {
 	viewportWidth		int
 	viewportHeight		int
 
-	Theme				theme
-
 	// ?
 	// anim?
 	// debug map? to allow pages/components to write to it
@@ -113,8 +113,6 @@ type model struct {
 	height_container 	int
 	width_content    	int
 	height_content   	int
-	renderer        	*lipgloss.Renderer
-	theme 				theme
 	size				size
 	footer_keymaps		[]FooterKeymap
 
@@ -171,13 +169,11 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		slog.Error("Error writing settings.json", "error", err)
 	}
 
-	theme := BasicTheme(renderer)
-
-	title_logo_anim := anim.NewTitleScreenLogoAnim(theme.GetRainbowColors())
-	extra_life_anim := anim.NewRainbowScrollAnim(anim.ExtraLife, 30, false, theme.GetRainbowColors())
+	title_logo_anim := anim.NewTitleScreenLogoAnim(styles.GetRainbowColors())
+	extra_life_anim := anim.NewRainbowScrollAnim(anim.ExtraLife, 30, false, styles.GetRainbowColors())
 	validation_msg_dmg_anim := anim.NewDamageShakeAnim(anim.ValidationMessage, 10)
 	strike_dmg_anim := anim.NewDamageShakeAnim(anim.StrikeCounter, 8)
-	win_anim := anim.NewRainbowScrollAnim(anim.GameOverWin, 0, true, theme.GetRainbowColors())
+	win_anim := anim.NewRainbowScrollAnim(anim.GameOverWin, 0, true, styles.GetRainbowColors())
 
 	mgr := anim.NewAnimationManager(game_settings.Prefs.AnimationsEnabled)
 	mgr.Register(
@@ -191,9 +187,6 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 	return model {
 		debug: debug,
 		debug_map: make(map[string]string),
-
-		renderer: renderer,
-		theme: theme,
 
 		footer_keymaps: []FooterKeymap {
 			{key: "ctrl+p", value: "preferences"},
@@ -381,7 +374,7 @@ func (m model) View() string {
 	footer := m.FooterView()
 
 	height := m.height_container - lipgloss.Height(header) - lipgloss.Height(footer)
-	content_style := m.theme.Base().
+	content_style := lipgloss.NewStyle().
 		Height(height).
 		Padding(0, 1).
 		AlignVertical(lipgloss.Center) // center all content on screen
@@ -399,7 +392,7 @@ func (m model) View() string {
 		view = lipgloss.JoinHorizontal(
 			lipgloss.Top,
 			content,
-			m.theme.Base().Width(1).Render(), // space between content and scrollbar
+			lipgloss.NewStyle().Foreground(theme.Body).Width(1).Render(), // space between content and scrollbar
 			m.getScrollbar(),
 		)
 	} else {
@@ -415,12 +408,12 @@ func (m model) View() string {
 		footer,
 	)
 
-	v := m.renderer.Place(
+	v := lipgloss.Place(
 		m.viewport_width,
 		m.viewport_height,
 		lipgloss.Center,
 		lipgloss.Center,
-		m.theme.Base().
+		lipgloss.NewStyle().
 			MaxWidth(m.viewport_width).
 			MaxHeight(m.viewport_height).
 			Render(child),
@@ -521,13 +514,13 @@ func (m model) getScrollbar() string {
 		scrollbar_pos = 0
 	}
 
-	bar := m.theme.Base().
+	bar := lipgloss.NewStyle().
 		Height(scrollbar_height).
 		Width(1).
-		Background(m.theme.Accent()).
+		Background(theme.Accent).
 		Render()
 
-	style := m.theme.Base().Width(1).Height(viewport_height)
+	style := lipgloss.NewStyle().Width(1).Height(viewport_height)
 	return style.Render(
 		lipgloss.PlaceVertical(
 			viewport_height,

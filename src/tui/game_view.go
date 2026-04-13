@@ -3,6 +3,7 @@ package tui
 import (
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
+	"fzwds/src/tui/styles"
 	"fzwds/src/utils"
 	"strings"
 
@@ -12,7 +13,7 @@ import (
 )
 
 func (m model) GameView() string {
-	prompt := m.theme.TextAccent().
+	prompt := styles.TextAccent.
 		Bold(true).
 		Render(strings.ToUpper(m.state.game.CurrentTurn().Prompt))
 

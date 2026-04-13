@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
+	"fzwds/src/tui/styles"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -28,11 +29,11 @@ func (m model) renderHealthDisplay(health_current int) string {
 
 	var full_style, bracket_style lipgloss.Style
 	if m.state.game_ui.player_damaged {
-		full_style = m.theme.TextRed()
-		bracket_style = m.theme.TextRed()
+		full_style = styles.TextRed
+		bracket_style = styles.TextRed
 	} else {
-		full_style = m.theme.TextHighlight()
-		bracket_style = m.theme.Base()
+		full_style = styles.TextHighlight
+		bracket_style = styles.TextBody
 	}
 
 	var sb strings.Builder
@@ -42,7 +43,7 @@ func (m model) renderHealthDisplay(health_current int) string {
 
 	health_max := m.state.game.Settings.HealthMax
 	sb.WriteString(full_style.Render(strings.Repeat(health_icon_full, health_current)))
-	sb.WriteString(m.theme.Base().Render(strings.Repeat(health_icon_empty, health_max - health_current)))
+	sb.WriteString(styles.TextBody.Render(strings.Repeat(health_icon_empty, health_max - health_current)))
 
 	if strings.HasPrefix(health_icon_full, "#") {
 		sb.WriteString(bracket_style.Render("]"))
@@ -52,7 +53,7 @@ func (m model) renderHealthDisplay(health_current int) string {
 }
 
 func (m model) renderTopBar() string {
-	red := m.theme.TextRed().Render
+	red := styles.TextRed.Render
 
     var timer_display string
 	if m.state.game_ui.player_damaged || !m.state.game.GameActive {
@@ -70,11 +71,11 @@ func (m model) renderTopBar() string {
 
 	var text_style, border_style lipgloss.Style
 	if m.state.game_ui.player_damaged {
-		text_style = m.theme.TextRed()
-		border_style = m.theme.Base().Foreground(m.theme.red)
+		text_style = styles.TextRed
+		border_style = styles.TextRed
 	} else {
-		text_style = m.theme.TextBody()
-		border_style = m.theme.Base().Foreground(m.theme.Border())
+		text_style = styles.TextBody
+		border_style = styles.TextBorder
 	}
 
 	row_items := []string {
@@ -92,9 +93,9 @@ func (m model) renderTopBar() string {
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			if col == 0 {
-				return m.theme.Base().Align(lipgloss.Left).PaddingLeft(8)
+				return lipgloss.NewStyle().Align(lipgloss.Left).PaddingLeft(8)
 			}
-			return m.theme.Base().Align(lipgloss.Right).PaddingRight(8)
+			return lipgloss.NewStyle().Align(lipgloss.Right).PaddingRight(8)
 		}).
 		Render()
 
@@ -116,11 +117,11 @@ func (m model) renderRemainingLetters() string {
 	var out strings.Builder
 	for i, c := range m.state.game.Alphabet {
 		if m.state.game.Player.LettersRemaining[c] {
-			out.WriteString(m.theme.TextDim().Render(string(c)))
+			out.WriteString(styles.TextDim.Render(string(c)))
 		} else if m.state.game_ui.player_damaged {
-			out.WriteString(m.theme.TextRed().Bold(true).Render(string(c)))
+			out.WriteString(styles.TextRed.Bold(true).Render(string(c)))
 		} else {
-			out.WriteString(m.theme.TextYellow().Bold(true).Render(string(c)))
+			out.WriteString(styles.TextYellow.Bold(true).Render(string(c)))
 		}
 
 		if i < len(m.state.game.Alphabet) - 1 {

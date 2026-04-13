@@ -1,6 +1,10 @@
 package tui
 
 import (
+	"fzwds/src/tui/styles"
+	"fzwds/src/tui/theme"
+	"strings"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
@@ -41,24 +45,22 @@ func (m model) HeaderView() string {
 		return m.GameReviewHudView()
 	}
 
-	bold := m.theme.TextAccent().Bold(true).Render
-	accent := m.theme.TextAccent().Render
-	base := m.theme.Base().Render
+	bold := styles.TextAccent.Bold(true).Render
+	accent := styles.TextAccent.Render
+	body := styles.TextBody.Render
 
+	// TODO: entire header could probably be top line, custom text from model state, bottom line
 	if m.page == settings_page || m.page == pokemon_gen_selector {
-		return m.theme.Base().
-			Border(lipgloss.NormalBorder()).
-			BorderForeground(m.theme.Border()).
-			BorderLeft(false).
-			BorderRight(false).
-			Width(m.width_container).
-			AlignHorizontal(lipgloss.Center).
-			Render(m.theme.TextYellow().Bold(true).Render(m.state.settings.title))
+		return lipgloss.JoinVertical(
+			lipgloss.Center,
+			styles.TextBorder.Render(strings.Repeat("─", m.width_container)),
+			styles.TextYellow.Bold(true).Render(m.state.settings.title),
+			styles.TextBorder.Render(strings.Repeat("─", m.width_container)))
 	}
 
-	menu := accent("m") + base(" main menu")
-	about := accent("a") + base(" about")
-	stats := accent("s") + base(" stats")
+	menu := accent("m") + body(" main menu")
+	about := accent("a") + body(" about")
+	stats := accent("s") + body(" stats")
 
 	switch m.page {
 	case splash_page:
@@ -80,11 +82,11 @@ func (m model) HeaderView() string {
 		BorderLeft(false).
 		BorderRight(false).
 		BorderColumn(false).
-		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
+		BorderStyle(lipgloss.NewStyle().Foreground(theme.Border)).
 		Row(tabs...).
 		Width(m.width_container).
 		StyleFunc(func(row, col int) lipgloss.Style {
-			return m.theme.Base().Padding(0, 1).AlignHorizontal(lipgloss.Center)
+			return lipgloss.NewStyle().Padding(0, 1).AlignHorizontal(lipgloss.Center)
 		}).
 		Render()
 }

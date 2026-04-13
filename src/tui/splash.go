@@ -3,6 +3,7 @@ package tui
 import (
 	"fzwds/src/constants"
 	"fzwds/src/tui/animations"
+	"fzwds/src/tui/styles"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -103,7 +104,7 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) MainMenuView() string {
-	yellow := m.theme.TextYellow()
+	yellow := styles.TextYellow
 
 	// Initialize []string of size equal to height of each "glyph".
 	// This maintains consistent vertical spacing on title screen even when no glyphs are displayed.
@@ -133,8 +134,8 @@ func (m model) MainMenuView() string {
 			}
 
 		case animations.TypingFullTitlePhase, animations.FullTitlePausePhase:
-			base := m.theme.Base()
-			highlight := m.theme.TextHighlight()
+			base := styles.TextBody
+			highlight := styles.TextHighlight
 
 			prompt_idx := 0
 			for i := range anim.TypedLetters {

@@ -3,6 +3,8 @@ package tui
 import (
 	"fzwds/src/enums"
 	"fzwds/src/tui/animations"
+	"fzwds/src/tui/styles"
+	"fzwds/src/tui/theme"
 	"fzwds/src/utils"
 	"strings"
 
@@ -16,8 +18,8 @@ func (m model) wordInDictionary(answer string) bool {
 
 // Highlight prompt letters in current answer
 func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.PromptMode) string {
-	accent := m.theme.TextAccent().Render
-	highlight := m.theme.TextHighlight().Render
+	accent := styles.TextAccent.Render
+	highlight := styles.TextHighlight.Render
 
 	prompt_upper := strings.ToUpper(prompt)
 	answer_upper := strings.ToUpper(answer)
@@ -68,14 +70,14 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 	if m.state.game.Settings.HighlightInput {
 		valid_word := m.wordInDictionary(answer_upper)
 		if is_match && valid_word {
-			return m.theme.green
+			return theme.Green
 		} else if is_match && !valid_word {
-			return m.theme.red
+			return theme.Red
 		}
 	}
 
 	if m.state.game_ui.player_damaged {
-		return m.theme.red
+		return theme.Red
 	}
 
 	return default_color
@@ -83,7 +85,7 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 
 func (m *model) renderValidationMsg() string {
 	if strings.HasPrefix(m.state.game_ui.validation_msg, "✓") {
-		return m.theme.TextGreen().Render(utils.RightPad(m.state.game_ui.validation_msg, 2))
+		return styles.TextGreen.Render(utils.RightPad(m.state.game_ui.validation_msg, 2))
 	}
 
 	var msg string
@@ -101,7 +103,7 @@ func (m *model) renderValidationMsg() string {
 		}
 	}
 
-	return m.theme.TextRed().Render(msg)
+	return styles.TextRed.Render(msg)
 }
 
 // Initialize text input for use with rounded borders
@@ -118,8 +120,10 @@ func (m model) initRoundedTextInput() textinput.Model {
 
 // Get text input with rounded border styling applied
 func (m model) GetRoundedInputView() string {
-	border_color := m.getInputAccentColor(m.theme.Border())
-	input := m.TextInputRoundedBorderStyle(border_color).Render(m.text_input.View())
+	border_color := m.getInputAccentColor(theme.Border)
+	input := styles.
+		TextInputRoundedBorderStyle(border_color, m.text_input.CharLimit).
+		Render(m.text_input.View())
 
 	return lipgloss.JoinHorizontal(lipgloss.Center, input)
 }
@@ -131,14 +135,14 @@ func (m model) initBlockTextInput() textinput.Model {
 	text_input.CharLimit = 40
 	text_input.Width = text_input.CharLimit - len(text_input.Prompt) - 1
 
-	input_bg_style := lipgloss.NewStyle().Background(m.theme.input_bg)
+	input_bg_style := lipgloss.NewStyle().Background(theme.InputBg)
 
 	text_input.TextStyle = input_bg_style
 	text_input.PromptStyle = input_bg_style.
-		Foreground(m.theme.body).
-		BorderLeftForeground(m.theme.highlight)
+		Foreground(theme.Body).
+		BorderLeftForeground(theme.Highlight)
 	text_input.Cursor.TextStyle = input_bg_style
-	text_input.PlaceholderStyle = input_bg_style.Foreground(m.theme.dim)
+	text_input.PlaceholderStyle = input_bg_style.Foreground(theme.Dim)
 
 	text_input.Focus()
 
@@ -148,6 +152,6 @@ func (m model) initBlockTextInput() textinput.Model {
 // Get text input with block border styling applied
 func (m model) GetBlockInputView() string {
 	border_color := m.getInputAccentColor(m.text_input.PromptStyle.GetBorderLeftForeground())
-	return m.TextInputBlockBorderStyle(border_color).
+	return styles.TextInputBlockBorderStyle(border_color, m.text_input.CharLimit).
 		Render(m.text_input.View())
 }
