@@ -16,7 +16,7 @@ func (g *GameState) InitializePlayer() Player {
 	player := Player{
 		HealthCurrent:    g.Settings.HealthInitial,
 		LettersRemaining: utils.StringToCharMap(g.Alphabet),
-		LettersUsed:      make([]rune, len(g.Alphabet)),
+		LettersUsed:      make([]rune, 0, len(g.Alphabet)),
 		Streak:           0,
 		Stats:            PlayerStats{},
 	}
