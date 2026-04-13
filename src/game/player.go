@@ -25,10 +25,6 @@ func InitializePlayer(cfg *GameSettings, alphabet string) Player {
 	return player
 }
 
-type TurnResult struct {
-	ExtraLifeGranted	bool
-}
-
 func (g *GameState) handleCorrectAnswer(answer string) {
 	turn := g.CurrentTurn()
 	turn.TotalTurnDuration = time.Since(turn.TurnStart)

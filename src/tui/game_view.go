@@ -4,7 +4,6 @@ import (
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
 	"fzwds/src/tui/styles"
-	"fzwds/src/utils"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -94,8 +93,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		turn_failure_msg := m.state.game.GetTurnFailureMessage()
 		if turn_failure_msg == "" {
 			m.anim_mgr.InitAnimations(animations.StrikeCounter)
-			turn_duration_min := max(10, m.app_settings.Game.TurnDurationMin)
-			m.state.game.StartTurn(utils.RandomBetween(turn_duration_min, 30))
+			m.state.game.StartTurn()
 		} else {
 			m.anim_mgr.InitAnimations(animations.ValidationMessage)
 

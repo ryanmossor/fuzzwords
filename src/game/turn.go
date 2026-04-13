@@ -121,7 +121,10 @@ func (g *GameState) NewTurn(first_turn bool) {
 	})
 }
 
-func (g *GameState) StartTurn(duration_sec int) {
+func (g *GameState) StartTurn() {
+	turn_duration_min := max(15, g.Settings.TurnDurationMin)
+	duration_sec := utils.RandomBetween(turn_duration_min, 30)
+
 	g.CurrentTurn().StrikeStart = time.Now()
 	g.CurrentTurn().StrikeDuration = time.Duration(duration_sec) * time.Second
 }
