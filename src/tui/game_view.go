@@ -140,17 +140,15 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			answer := strings.ToLower(strings.TrimSpace(m.text_input.Value()))
             m.text_input.Reset()
 
-			var is_valid bool
-			is_valid, m.state.game_ui.validation_msg = m.state.game.ValidateAnswer(answer)
-			if !is_valid {
+			result := m.state.game.SubmitAnswer(answer)
+			m.state.game_ui.validation_msg = result.ValidationMsg
+			if !result.IsValid {
 				m.state.game_ui.prev_answer = answer
 				break
-			} else {
-				m.state.game_ui.prev_answer = ""
 			}
+			m.state.game_ui.prev_answer = ""
 
-			m.state.game.HandleCorrectAnswer(answer)
-			if m.state.game.CurrentTurn().ExtraLifeGained {
+			if result.ExtraLifeGained {
 				m.anim_mgr.InitAnimations(animations.ExtraLife)
 			}
 

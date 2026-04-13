@@ -132,7 +132,26 @@ func (g GameState) TimeRemaining() time.Duration {
 		Sub(time.Now())
 }
 
-func (g *GameState) ValidateAnswer(answer string) (bool, string) {
+type AnswerResult struct {
+	IsValid				bool
+	ExtraLifeGained		bool
+	ValidationMsg		string
+}
+
+func (g *GameState) SubmitAnswer(answer string) AnswerResult {
+	is_valid, msg := g.validateAnswer(answer)
+	if !is_valid {
+		return AnswerResult{ IsValid: false, ValidationMsg: msg }
+	}
+
+	g.handleCorrectAnswer(answer)
+	return AnswerResult{
+		IsValid: true,
+		ExtraLifeGained: g.CurrentTurn().ExtraLifeGained,
+	}
+}
+
+func (g *GameState) validateAnswer(answer string) (bool, string) {
 	is_valid := true
 	incr_guess_count := true
 	answer_upper := strings.ToUpper(answer)

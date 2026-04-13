@@ -29,7 +29,7 @@ type TurnResult struct {
 	ExtraLifeGranted	bool
 }
 
-func (g *GameState) HandleCorrectAnswer(answer string) {
+func (g *GameState) handleCorrectAnswer(answer string) {
 	turn := g.CurrentTurn()
 	turn.TotalTurnDuration = time.Since(turn.TurnStart)
 	turn.Solved = true
