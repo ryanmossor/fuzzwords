@@ -69,7 +69,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game_review.selected_turn = 0
 	m.state.game_review.visible_row_start = 0
 	m.state.game_review.view_cache = make(map[int]*TurnDisplay, 0)
-	m.state.game = game.InitializeGame(&m.app_settings.Game)
+	m.state.game = game.NewGame(&m.app_settings.Game)
 
 	m.text_input = m.initBlockTextInput()
 	return m, textinput.Blink

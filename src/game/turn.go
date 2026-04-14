@@ -16,7 +16,7 @@ import (
 type Turn struct {
 	TurnNumber			int
 	FinalTurn			bool
-	TurnStart			time.Time
+	turnStart			time.Time
 	TotalTurnDuration	time.Duration
 
 	SourceWord 			string
@@ -25,8 +25,8 @@ type Turn struct {
 	Guesses				int
 
 	Strikes	   			int
-	StrikeStart			time.Time
-	StrikeDuration		time.Duration
+	strikeStart			time.Time
+	strikeDuration		time.Duration
 
 	Solved				bool
 	ExtraLifeGained		bool
@@ -39,7 +39,7 @@ type Turn struct {
 }
 
 // TODO: ensure next prompt is different from previous if previous prompt was failed
-func (g *GameState) NewTurn(first_turn bool) {
+func (g *GameState) newTurn(first_turn bool) {
 	word_idx := rand.Intn(len(g.wordLists.available))
 	word := g.wordLists.available[word_idx]
 
@@ -98,7 +98,7 @@ func (g *GameState) NewTurn(first_turn bool) {
 	now := time.Now()
 	g.turns = append(g.turns, Turn {
 		TurnNumber: g.CurrentTurnNumber() + 1,
-		TurnStart: now,
+		turnStart: now,
 
 		SourceWord: word,
 		Prompt: prompt,
@@ -106,8 +106,8 @@ func (g *GameState) NewTurn(first_turn bool) {
 		Guesses: 0,
 
 		Strikes: 0,
-		StrikeStart: now,
-		StrikeDuration: turn_duration,
+		strikeStart: now,
+		strikeDuration: turn_duration,
 
 		Solved: false,
 		ExtraLifeGained: false,
@@ -118,17 +118,17 @@ func (g *GameState) NewTurn(first_turn bool) {
 	})
 }
 
-func (g *GameState) StartStrikeTimer() {
+func (g *GameState) startStrikeTimer() {
 	turn_duration_min := max(15, g.Settings.TurnDurationMin)
 	duration_sec := utils.RandomBetween(turn_duration_min, 30)
 
-	g.CurrentTurn().StrikeStart = time.Now()
-	g.CurrentTurn().StrikeDuration = time.Duration(duration_sec) * time.Second
+	g.CurrentTurn().strikeStart = time.Now()
+	g.CurrentTurn().strikeDuration = time.Duration(duration_sec) * time.Second
 }
 
 func (g GameState) TimeRemaining() time.Duration {
-	return g.CurrentTurn().StrikeStart.
-		Add(g.CurrentTurn().StrikeDuration).
+	return g.CurrentTurn().strikeStart.
+		Add(g.CurrentTurn().strikeDuration).
 		Sub(time.Now())
 }
 
@@ -152,12 +152,12 @@ func (g *GameState) SubmitAnswer(answer string) AnswerResult {
 		Msg: msg,
 	}
 
-	if g.EndGameIfOver() {
+	if g.endGameIfOver() {
 		result.GameOver = true
 		return result
 	}
 
-	g.NewTurn(false)
+	g.newTurn(false)
 	return result
 }
 
@@ -197,7 +197,7 @@ func (g *GameState) validateAnswer(answer string) (bool, string) {
 	}
 
 	slog.Debug("Answer validated",
-		"startUnixTs", g.StartUnixTs,
+		"startUnixTs", g.startUnixTs,
 		"prompt", g.CurrentTurn().Prompt,
 		"sourceWord", g.CurrentTurn().SourceWord,
 		"answer", answer,
@@ -208,7 +208,7 @@ func (g *GameState) validateAnswer(answer string) (bool, string) {
 	if is_valid {
 		word_idx, found := slices.BinarySearch(g.wordLists.available, answer)
 		assert.Assert(found, "Validated answer not found in available word list",
-			"startUnixTs", g.StartUnixTs,
+			"startUnixTs", g.startUnixTs,
 			"prompt", g.CurrentTurn().Prompt,
 			"answer", answer,
 			"wordIdx", word_idx,
@@ -257,13 +257,13 @@ func createFuzzyPrompt(word string, prompt_len int, dict enums.Dictionary) strin
 
 func (g *GameState) handleCorrectAnswer(answer string) bool {
 	turn := g.CurrentTurn()
-	turn.TotalTurnDuration = time.Since(turn.TurnStart)
+	turn.TotalTurnDuration = time.Since(turn.turnStart)
 	turn.Solved = true
 	turn.Answer = answer
 	turn.UniqueLetterCount = utils.CountUniqueLetters(answer)
 
-	g.Player.Streak++
-	turn.Streak = g.Player.Streak
+	g.Player.streak++
+	turn.Streak = g.Player.streak
 
 	for _, c := range strings.ToUpper(answer) {
 		// TODO: consolidate LettersUsed/LettersRemaining, make []rune instead of []string?
@@ -302,7 +302,7 @@ func (g *GameState) HandleTurnTimeout() StrikeResult {
 	turn := g.CurrentTurn()
 	result := StrikeResult{}
 
-	g.Player.Streak = 0
+	g.Player.streak = 0
 	turn.Streak = 0
 
 	g.Player.HealthCurrent--
@@ -310,18 +310,18 @@ func (g *GameState) HandleTurnTimeout() StrikeResult {
 
 	turn.Strikes++
 
-	if g.EndGameIfOver() {
+	if g.endGameIfOver() {
 		result.GameOver = true
 		return result
 	}
 
 	if turn.Strikes == g.Settings.PromptStrikes {
-		turn.TotalTurnDuration = time.Since(turn.TurnStart)
+		turn.TotalTurnDuration = time.Since(turn.turnStart)
 		result.Msg = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.Prompt))
 		result.Strikeout = true
-		g.NewTurn(false)
+		g.newTurn(false)
 	} else {
-		g.StartStrikeTimer()
+		g.startStrikeTimer()
 	}
 
 	return result

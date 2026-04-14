@@ -23,7 +23,7 @@ func (g *GameState) CalculateGameStats() PlayerStats {
 	start := time.Now()
 
 	stats := PlayerStats{}
-	stats.TimePlayed = int(g.GameStop.Sub(g.GameStart).Seconds())
+	stats.TimePlayed = int(g.gameEnd.Sub(g.gameStart).Seconds())
 
 	solve_lengths := make([]int, 0, len(g.turns))
 	solve_len_idx := 0
@@ -62,7 +62,7 @@ func (g *GameState) CalculateGameStats() PlayerStats {
 			}
 		} else {
 			stats.PromptsFailed++
-			g.FailedTurns = append(g.FailedTurns, i)
+			g.failedTurns = append(g.failedTurns, i)
 		}
 	}
 
@@ -72,9 +72,9 @@ func (g *GameState) CalculateGameStats() PlayerStats {
 	elapsed := time.Since(start)
 
 	slog.Debug("Calculated stats for game",
-		"startUnixTx", g.StartUnixTs,
+		"startUnixTx", g.startUnixTs,
 		"turns", len(g.turns),
-		"gameDuration", utils.FormatTime(int(g.GameStop.Sub(g.GameStart).Seconds())),
+		"gameDuration", utils.FormatTime(int(g.gameEnd.Sub(g.gameStart).Seconds())),
 		"calcTimeMs", elapsed.Milliseconds(),
 	)
 

@@ -13,8 +13,8 @@ type GameState struct {
 	Alphabet			string
 	GameActive			bool
 	EarlyQuit			bool
-	GameStart			time.Time
-	GameStop			time.Time
+	gameStart			time.Time
+	gameEnd				time.Time
 	Settings			GameSettings
 	wordLists			wordLists
 	Player				Player
@@ -22,12 +22,12 @@ type GameState struct {
 	// Would make accessing failed turns by idx easier
 	turns				[]Turn
 	// Indexes of failed turns
-	FailedTurns			[]int
-	StartUnixTs			int64
+	failedTurns			[]int
+	startUnixTs			int64
 	GameWon				bool
 }
 
-func InitializeGame(settings *GameSettings) GameState {
+func NewGame(settings *GameSettings) GameState {
 	var full_map map[string]bool
 	var available []string
 
@@ -48,7 +48,7 @@ func InitializeGame(settings *GameSettings) GameState {
 	alphabet := enums.Alphabets[settings.Alphabet]
 
 	g := GameState {
-		StartUnixTs:		time.Now().UnixMilli(),
+		startUnixTs:		time.Now().UnixMilli(),
 
 		Settings: 			*settings,
 		Alphabet: 			alphabet,
@@ -56,17 +56,17 @@ func InitializeGame(settings *GameSettings) GameState {
 
 		GameActive: 		true,
 		GameWon:			false,
-		GameStart: 			time.Now(),
+		gameStart: 			time.Now(),
 
 		// Prealloc 300 turns; should cover most games before slice needs to expand
 		turns:				make([]Turn, 0, 300),
-		FailedTurns:		[]int{},
+		failedTurns:		[]int{},
 	}
-	g.Player = g.InitializePlayer()
-	g.NewTurn(true)
+	g.Player = g.newPlayer()
+	g.newTurn(true)
 
 	slog.Info("Initialized game",
-		"startUnixTs", g.StartUnixTs,
+		"startUnixTs", g.startUnixTs,
 		"alphabet", g.Alphabet,
 		"settings", g.Settings)
 
@@ -86,19 +86,19 @@ func (g *GameState) EndGame(early_quit bool) {
 		return
 	}
 
-	g.GameStop = time.Now()
+	g.gameEnd = time.Now()
 	g.GameActive = false
 	g.EarlyQuit = early_quit
 	g.GameWon = g.determineWon()
 
 	turn := g.CurrentTurn()
-	turn.TotalTurnDuration = time.Since(turn.TurnStart)
+	turn.TotalTurnDuration = time.Since(turn.turnStart)
 	turn.FinalTurn = true
 
 	g.Player.Stats = g.CalculateGameStats()
 }
 
-func (g *GameState) EndGameIfOver() bool {
+func (g *GameState) endGameIfOver() bool {
 	if g.Player.HealthCurrent == 0 || g.determineWon() {
 		return false
 	}

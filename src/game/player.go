@@ -8,16 +8,16 @@ type Player struct {
 	HealthCurrent   	int
 	LettersUsed     	[]rune
 	LettersRemaining	map[rune]bool
-	Streak          	int
+	streak          	int
 	Stats           	PlayerStats
 }
 
-func (g *GameState) InitializePlayer() Player {
+func (g *GameState) newPlayer() Player {
 	player := Player{
 		HealthCurrent:    g.Settings.HealthInitial,
 		LettersRemaining: utils.StringToCharMap(g.Alphabet),
 		LettersUsed:      make([]rune, 0, len(g.Alphabet)),
-		Streak:           0,
+		streak:           0,
 		Stats:            PlayerStats{},
 	}
 	return player
