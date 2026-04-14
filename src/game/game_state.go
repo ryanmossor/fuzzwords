@@ -87,9 +87,6 @@ func (g *GameState) EndGame(won, early_quit bool) {
 	turn.TotalTurnDuration = time.Since(turn.TurnStart)
 	turn.FinalTurn = true
 
-	if !won {
-		g.Player.HealthCurrent = 0
-	}
 	g.Player.Stats = g.CalculateGameStats()
 }
 
