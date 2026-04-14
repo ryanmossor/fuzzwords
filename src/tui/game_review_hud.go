@@ -13,7 +13,7 @@ import (
 
 func (m model) GameReviewHudView() string {
 	// TODO: refactor review state to have ref to current turn rather than idx
-	turn := m.state.game.GetTurn(m.state.game_review.selected_turn)
+	turn := m.game.GetTurn(m.state.game_review.selected_turn)
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		m.renderTurnInfo(turn),
@@ -37,7 +37,7 @@ func (m model) renderTurnInfo(turn *game.Turn) string {
 func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
 	var out strings.Builder
 
-	for i, c := range m.state.game.Alphabet {
+	for i, c := range m.game.Settings.Alphabet.Letters() {
 		if slices.Contains(turn.NewLettersUsed, c) {
 			out.WriteString(styles.TextHighlight.Bold(true).Underline(true).Render(string(c)))
 		} else if turn.LettersRemaining[c] {
@@ -46,7 +46,7 @@ func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
 			out.WriteString(styles.TextYellow.Bold(true).Render(string(c)))
 		}
 
-		if i < len(m.state.game.Alphabet) - 1 {
+		if i < len(m.game.Settings.Alphabet.Letters()) - 1 {
 			out.WriteRune(' ')
 		}
 	}

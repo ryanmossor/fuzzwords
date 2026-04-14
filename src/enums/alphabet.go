@@ -33,8 +33,14 @@ var (
 	}
 )
 
+
+
 func (a Alphabet) String() string {
 	return AlphabetName[int(a)]
+}
+
+func (a Alphabet) Letters() string {
+	return Alphabets[a]
 }
 
 func ParseAlphabet(s string) Alphabet {

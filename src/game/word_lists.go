@@ -8,6 +8,6 @@ type wordLists struct {
 	fullDict   map[string]bool
 }
 
-func (g *GameState) WordInDictionary(answer string) bool {
+func (g *Game) WordInDictionary(answer string) bool {
 	return g.wordLists.fullDict[strings.ToLower(answer)]
 }

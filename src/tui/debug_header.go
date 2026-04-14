@@ -53,7 +53,7 @@ func (m model) DebugView() string {
 		// fmt.Sprintf("heightContainer %d", m.height_container),
 		// fmt.Sprintf("heightContent %d", m.height_content),
 
-		fmt.Sprintf("Turn %d", m.state.game.CurrentTurnNumber()),
+		fmt.Sprintf("Turn %d", m.game.CurrentTurnNumber()),
 
 		// m.size.String(),
 	}

@@ -44,7 +44,7 @@ func (m model) renderHealthDisplay(health_current int) string {
 		sb.WriteString(bracket_style.Render("["))
 	}
 
-	health_max := m.state.game.Settings.HealthMax
+	health_max := m.game.Settings.HealthMax
 	sb.WriteString(full_style.Render(strings.Repeat(health_icon_full, health_current)))
 	sb.WriteString(styles.TextBody.Render(strings.Repeat(health_icon_empty, health_max - health_current)))
 
@@ -59,15 +59,15 @@ func (m model) renderTopBar() string {
 	red := styles.TextRed.Render
 
     var timer_display string
-	if m.state.game_ui.player_damaged || !m.state.game.GameActive {
+	if m.state.game_ui.player_damaged || !m.game.GameActive {
 		timer_display = "⌛️ 0.0s"
-	} else if m.state.game.TimeRemaining().Seconds() <= 9.9 {
-		timer_display = fmt.Sprintf("⏳ %.1fs", m.state.game.TimeRemaining().Seconds())
+	} else if m.game.TimeRemaining().Seconds() <= 9.9 {
+		timer_display = fmt.Sprintf("⏳ %.1fs", m.game.TimeRemaining().Seconds())
 	} else {
-		timer_display = fmt.Sprintf("⏳  %.0fs", m.state.game.TimeRemaining().Seconds())
+		timer_display = fmt.Sprintf("⏳  %.0fs", m.game.TimeRemaining().Seconds())
     }
 
-    if m.state.game.GameActive && (m.state.game.TimeRemaining().Seconds() < 5 || m.state.game_ui.player_damaged) {
+    if m.game.GameActive && (m.game.TimeRemaining().Seconds() < 5 || m.state.game_ui.player_damaged) {
 		// TODO: pulsing yellow/orange/red anim when below 5s; red 0.0 on damaged
         timer_display = red(timer_display)
     }
@@ -82,7 +82,7 @@ func (m model) renderTopBar() string {
 	}
 
 	row_items := []string {
-		m.renderHealthDisplay(m.state.game.Player.HealthCurrent),
+		m.renderHealthDisplay(m.game.Player.HealthCurrent),
 		text_style.Render(timer_display),
 	}
 
@@ -106,20 +106,20 @@ func (m model) renderTopBar() string {
 }
 
 func (m model) renderRemainingLetters() string {
-	if !m.state.game.GameActive {
+	if !m.game.GameActive {
 		return ""
 	}
 
 	letters, changed := m.anim_mgr.ApplyAnimations(
 		string(animations.ExtraLife),
-		strings.Join(strings.Split(m.state.game.Alphabet, ""), " "))
+		strings.Join(strings.Split(m.game.Settings.Alphabet.Letters(), ""), " "))
 	if changed {
 		return letters
 	}
 
 	var out strings.Builder
-	for i, c := range m.state.game.Alphabet {
-		if m.state.game.Player.LettersRemaining[c] {
+	for i, c := range m.game.Settings.Alphabet.Letters() {
+		if m.game.Player.LettersRemaining[c] {
 			out.WriteString(styles.TextDim.Render(string(c)))
 		} else if m.state.game_ui.player_damaged {
 			out.WriteString(styles.TextRed.Bold(true).Render(string(c)))
@@ -127,7 +127,7 @@ func (m model) renderRemainingLetters() string {
 			out.WriteString(styles.TextYellow.Bold(true).Render(string(c)))
 		}
 
-		if i < len(m.state.game.Alphabet) - 1 {
+		if i < len(m.game.Settings.Alphabet.Letters()) - 1 {
 			out.WriteRune(' ')
 		}
 	}

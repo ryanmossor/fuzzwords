@@ -59,7 +59,6 @@ type FooterState struct {
 }
 
 type State struct {
-	game					game.GameState
 	game_ui					GameUIState
 	game_review				GameReviewState
 	press_play				PressPlayState
@@ -118,6 +117,7 @@ type model struct {
 
 	text_input			textinput.Model
 
+	game				game.Game
 	state				State
 	app_settings		*game.Settings
 	app_settings_copy	game.Settings
@@ -262,7 +262,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmds []tea.Cmd
 		now := msg.Time
 
-		if m.state.game.GameActive && m.state.game.TimeRemaining() <= 0 {
+		if m.game.GameActive && m.game.TimeRemaining() <= 0 {
 			cmds = append(cmds, m.turnTimerExpiredCmd())
 		}
 

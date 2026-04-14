@@ -14,16 +14,16 @@ import (
 func (m model) GameView() string {
 	prompt := styles.TextAccent.
 		Bold(true).
-		Render(strings.ToUpper(m.state.game.CurrentTurn().Prompt))
+		Render(strings.ToUpper(m.game.CurrentTurn().Prompt))
 
 	var colorized_input string
 	if m.state.game_ui.validation_msg != "" {
 		colorized_input = m.renderValidationMsg()
 	} else {
 		colorized_input = m.highlightPromptAnswer(
-			m.state.game.CurrentTurn().Prompt,
+			m.game.CurrentTurn().Prompt,
 			m.text_input.Value(),
-			m.state.game.Settings.PromptMode)
+			m.game.Settings.PromptMode)
 	}
 
 	return lipgloss.JoinVertical(
@@ -69,7 +69,8 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.state.game_review.selected_turn = 0
 	m.state.game_review.visible_row_start = 0
 	m.state.game_review.view_cache = make(map[int]*TurnDisplay, 0)
-	m.state.game = game.NewGame(&m.app_settings.Game)
+
+	m.game = game.NewGame(&m.app_settings.Game)
 
 	m.text_input = m.initBlockTextInput()
 	return m, textinput.Blink
@@ -85,7 +86,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.terminalBellCmd(false),
 		)
 
-		result := m.state.game.HandleTurnTimeout()
+		result := m.game.HandleTurnTimeout()
         if result.GameOver {
 			return m.GameOverSwitch()
 		}
@@ -126,14 +127,14 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m, nil
 
 		case "ctrl+q":
-			m.state.game.EndGame(true)
+			m.game.EndGame(true)
 			return m.GameOverSwitch()
 
 		case "enter":
 			answer := strings.ToLower(strings.TrimSpace(m.text_input.Value()))
             m.text_input.Reset()
 
-			result := m.state.game.SubmitAnswer(answer)
+			result := m.game.SubmitAnswer(answer)
 			if result.GameOver {
 				return m.GameOverSwitch()
 			}

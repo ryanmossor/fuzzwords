@@ -39,7 +39,7 @@ type Turn struct {
 }
 
 // TODO: ensure next prompt is different from previous if previous prompt was failed
-func (g *GameState) newTurn(first_turn bool) {
+func (g *Game) newTurn(first_turn bool) {
 	word_idx := rand.Intn(len(g.wordLists.available))
 	word := g.wordLists.available[word_idx]
 
@@ -118,7 +118,7 @@ func (g *GameState) newTurn(first_turn bool) {
 	})
 }
 
-func (g *GameState) startStrikeTimer() {
+func (g *Game) startStrikeTimer() {
 	turn_duration_min := max(15, g.Settings.TurnDurationMin)
 	duration_sec := utils.RandomBetween(turn_duration_min, 30)
 
@@ -126,7 +126,7 @@ func (g *GameState) startStrikeTimer() {
 	g.CurrentTurn().strikeDuration = time.Duration(duration_sec) * time.Second
 }
 
-func (g GameState) TimeRemaining() time.Duration {
+func (g Game) TimeRemaining() time.Duration {
 	return g.CurrentTurn().strikeStart.
 		Add(g.CurrentTurn().strikeDuration).
 		Sub(time.Now())
@@ -139,7 +139,7 @@ type AnswerResult struct {
 	Msg					string
 }
 
-func (g *GameState) SubmitAnswer(answer string) AnswerResult {
+func (g *Game) SubmitAnswer(answer string) AnswerResult {
 	is_valid, msg := g.validateAnswer(answer)
 	if !is_valid {
 		return AnswerResult{ IsValid: false, Msg: msg }
@@ -161,7 +161,7 @@ func (g *GameState) SubmitAnswer(answer string) AnswerResult {
 	return result
 }
 
-func (g *GameState) validateAnswer(answer string) (bool, string) {
+func (g *Game) validateAnswer(answer string) (bool, string) {
 	is_valid := true
 	incr_guess_count := true
 	answer_upper := strings.ToUpper(answer)
@@ -255,7 +255,7 @@ func createFuzzyPrompt(word string, prompt_len int, dict enums.Dictionary) strin
 	return prompt
 }
 
-func (g *GameState) handleCorrectAnswer(answer string) bool {
+func (g *Game) handleCorrectAnswer(answer string) bool {
 	turn := g.CurrentTurn()
 	turn.TotalTurnDuration = time.Since(turn.turnStart)
 	turn.Solved = true
@@ -267,7 +267,7 @@ func (g *GameState) handleCorrectAnswer(answer string) bool {
 
 	for _, c := range strings.ToUpper(answer) {
 		// TODO: consolidate LettersUsed/LettersRemaining, make []rune instead of []string?
-		if !slices.Contains(g.Player.LettersUsed, c) && strings.ContainsRune(g.Alphabet, c) {
+		if !slices.Contains(g.Player.LettersUsed, c) && strings.ContainsRune(g.Settings.Alphabet.Letters(), c) {
 			g.Player.LettersUsed = append(g.Player.LettersUsed, c)
 			turn.NewLettersUsed = append(turn.NewLettersUsed, c)
 		}
@@ -275,10 +275,10 @@ func (g *GameState) handleCorrectAnswer(answer string) bool {
 		g.Player.LettersRemaining[c] = true
 	}
 
-	if len(g.Player.LettersUsed) >= len(g.Alphabet) {
-		g.Player.LettersUsed = make([]rune, 0, len(g.Alphabet))
+	if len(g.Player.LettersUsed) >= len(g.Settings.Alphabet.Letters()) {
+		g.Player.LettersUsed = make([]rune, 0, len(g.Settings.Alphabet.Letters()))
 		// TODO having letters remaining AND letters used seems redundant? consider consolidating into single map
-		g.Player.LettersRemaining = utils.StringToCharMap(g.Alphabet)
+		g.Player.LettersRemaining = utils.StringToCharMap(g.Settings.Alphabet.Letters())
 
 		if g.Player.HealthCurrent < g.Settings.HealthMax {
 			g.Player.HealthCurrent++
@@ -298,7 +298,7 @@ type StrikeResult struct {
 
 // Handle timer expiry. Will increment strike counter, advance to
 // next turn, or end the game depending on current game state.
-func (g *GameState) HandleTurnTimeout() StrikeResult {
+func (g *Game) HandleTurnTimeout() StrikeResult {
 	turn := g.CurrentTurn()
 	result := StrikeResult{}
 

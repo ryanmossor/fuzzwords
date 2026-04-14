@@ -28,13 +28,13 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 		{key: "q", value: "quit"},
 	}
 
-	if m.state.game.GameWon {
+	if m.game.GameWon {
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
 	}
 
 	m.state.game_ui.player_damaged = false
 
-	if m.state.game.GameWon {
+	if m.game.GameWon {
 		m.state.game_ui.validation_msg = ""
 		m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
@@ -42,16 +42,16 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 		red := styles.TextRed
 		m.state.game_ui.validation_msg = red.Render(fmt.Sprintf(
 			"Possible solve for final prompt %s: ",
-			strings.ToUpper(m.state.game.CurrentTurn().Prompt)))
+			strings.ToUpper(m.game.CurrentTurn().Prompt)))
 		m.state.game_ui.validation_msg += m.highlightPromptAnswer(
-			m.state.game.CurrentTurn().Prompt,
-			m.state.game.CurrentTurn().SourceWord,
-			m.state.game.Settings.PromptMode)
+			m.game.CurrentTurn().Prompt,
+			m.game.CurrentTurn().SourceWord,
+			m.game.Settings.PromptMode)
 
 		m.state.game_ui.game_over_msg = red.Bold(true).Render("☠️ GAME OVER ☠️")
 	}
 
-	if !m.state.game.EarlyQuit && !m.state.game.GameWon && !m.state.game_ui.game_over_seen {
+	if !m.game.EarlyQuit && !m.game.GameWon && !m.state.game_ui.game_over_seen {
 		cmds = append(cmds, m.terminalBellCmd(false))
 	}
 
@@ -88,7 +88,7 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) GameOverView() string {
-	stats := m.state.game.Player.Stats
+	stats := m.game.Player.Stats
 
 	var longest_streak string
 	if stats.LongestStreak == 0 {

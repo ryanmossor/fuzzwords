@@ -56,19 +56,19 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 		return theme.Red
 	}
 
-	prompt_upper := strings.ToUpper(m.state.game.CurrentTurn().Prompt)
+	prompt_upper := strings.ToUpper(m.game.CurrentTurn().Prompt)
 	answer_upper := strings.ToUpper(m.text_input.Value())
 
 	is_match := false
-	switch m.state.game.Settings.PromptMode {
+	switch m.game.Settings.PromptMode {
 	case enums.PromptModeFuzzy:
 		is_match = utils.IsFuzzyMatch(answer_upper, prompt_upper)
 	case enums.PromptModeClassic:
 		is_match = strings.Contains(answer_upper, prompt_upper)
 	}
 
-	if m.state.game.Settings.HighlightInput {
-		valid_word := m.state.game.WordInDictionary(answer_upper)
+	if m.game.Settings.HighlightInput {
+		valid_word := m.game.WordInDictionary(answer_upper)
 		if is_match && valid_word {
 			return theme.Green
 		} else if is_match && !valid_word {

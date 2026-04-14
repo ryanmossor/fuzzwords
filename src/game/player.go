@@ -2,23 +2,102 @@ package game
 
 import (
 	"fzwds/src/utils"
+	"log/slog"
+	"time"
 )
 
-type Player struct {
-	HealthCurrent   	int
-	LettersUsed     	[]rune
-	LettersRemaining	map[rune]bool
-	streak          	int
-	Stats           	PlayerStats
+type PlayerStats struct {
+	TimePlayed            time.Duration
+	PromptsSolved         int
+	PromptsFailed         int
+	SolvesPerMinute       float64
+	AverageSolveLength    float64
+	LongestStreak         int
+	ExtraLivesGained      int
+	FewestExtraLifeSolves int
+	MostUniqueCount       int
+	MostUniqueWord        string
+	LongestSolve          string
 }
 
-func (g *GameState) newPlayer() Player {
+type Player struct {
+	HealthCurrent    int
+	LettersUsed      []rune
+	LettersRemaining map[rune]bool
+	streak           int
+	Stats            PlayerStats
+}
+
+func newPlayer(settings GameSettings) Player {
 	player := Player{
-		HealthCurrent:    g.Settings.HealthInitial,
-		LettersRemaining: utils.StringToCharMap(g.Alphabet),
-		LettersUsed:      make([]rune, 0, len(g.Alphabet)),
+		HealthCurrent:    settings.HealthInitial,
+		LettersRemaining: utils.StringToCharMap(settings.Alphabet.Letters()),
+		LettersUsed:      make([]rune, 0, len(settings.Alphabet.Letters())),
 		streak:           0,
 		Stats:            PlayerStats{},
 	}
 	return player
+}
+
+func (g *Game) CalculateGameStats() PlayerStats {
+	start := time.Now()
+
+	stats := PlayerStats{}
+	stats.TimePlayed = g.gameEnd.Sub(g.gameStart)
+
+	solve_lengths := make([]int, 0, len(g.turns))
+	solve_len_idx := 0
+
+	turns_since_last_extra_life := 0
+	longest_streak := 0
+
+	for i, turn := range g.turns {
+		turns_since_last_extra_life++
+
+		if turn.Solved {
+			stats.PromptsSolved++
+
+			if turn.Streak > longest_streak {
+				longest_streak = turn.Streak
+			}
+
+			solve_lengths = append(solve_lengths, len(turn.Answer))
+			solve_len_idx++
+
+			if len(turn.Answer) > len(stats.LongestSolve) {
+				stats.LongestSolve = turn.Answer
+			}
+
+			if turn.UniqueLetterCount > stats.MostUniqueCount {
+				stats.MostUniqueWord = turn.Answer
+				stats.MostUniqueCount = turn.UniqueLetterCount
+			}
+
+			if turn.ExtraLifeGained {
+				stats.ExtraLivesGained++
+				if stats.FewestExtraLifeSolves == 0 || turns_since_last_extra_life < stats.FewestExtraLifeSolves {
+					stats.FewestExtraLifeSolves = turns_since_last_extra_life
+				}
+				turns_since_last_extra_life = 0
+			}
+		} else {
+			stats.PromptsFailed++
+			g.failedTurns = append(g.failedTurns, i)
+		}
+	}
+
+	stats.AverageSolveLength = utils.Average(solve_lengths)
+	stats.SolvesPerMinute = float64(stats.PromptsSolved) / (float64(stats.TimePlayed) / 60.0)
+	stats.LongestStreak = longest_streak
+
+	elapsed := time.Since(start)
+
+	slog.Debug("Calculated stats for game",
+		"startUnixTx", g.startUnixTs,
+		"turns", len(g.turns),
+		"gameDuration", utils.FormatTime(stats.TimePlayed),
+		"calcTimeMs", elapsed.Milliseconds(),
+	)
+
+	return stats
 }

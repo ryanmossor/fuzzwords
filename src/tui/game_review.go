@@ -34,8 +34,8 @@ type GameReviewState struct {
 func (m model) GameReviewSwitch() (model, tea.Cmd) {
 	summary_row_width := fmt.Sprintf("%s %d. %s %s %s",
 		"v", // validated symbol
-		m.state.game.TurnCount(),
-		strings.Repeat("_", m.state.game.Settings.PromptLenMax),
+		m.game.TurnCount(),
+		strings.Repeat("_", m.game.Settings.PromptLenMax),
 		"-s", // strike count
 		"+l", // extra life
 	)
@@ -66,10 +66,10 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.updateSummaryListState(0)
 
 		case "G", "end":
-			m.updateSummaryListState(m.state.game.TurnCount() - 1)
+			m.updateSummaryListState(m.game.TurnCount() - 1)
 
 		case "j", "down", "tab":
-			if m.state.game_review.selected_turn < m.state.game.TurnCount() - 1 {
+			if m.state.game_review.selected_turn < m.game.TurnCount() - 1 {
 				m.updateSummaryListState(m.state.game_review.selected_turn + 1)
 			}
 
@@ -79,11 +79,11 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 		case "n":
-			sel := m.state.game.NextFailedTurnIdx(m.state.game_review.selected_turn)
+			sel := m.game.NextFailedTurnIdx(m.state.game_review.selected_turn)
 			m.updateSummaryListState(sel)
 
 		case "p":
-			sel := m.state.game.PrevFailedTurnIdx(m.state.game_review.selected_turn)
+			sel := m.game.PrevFailedTurnIdx(m.state.game_review.selected_turn)
 			m.updateSummaryListState(sel)
 
 		case "ctrl+u", "pgup":
@@ -101,7 +101,7 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 			clamped := utils.Clamp(
 				m.state.game_review.selected_turn + scroll,
 				m.state.game_review.selected_turn + scroll,
-				m.state.game.TurnCount() - 1)
+				m.game.TurnCount() - 1)
 			m.updateSummaryListState(clamped)
 
 		case "esc":
@@ -114,7 +114,7 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) GameReviewView() string {
 	height := m.height_content - 2 // -2 for top/bottom table border rows
-	current_turn := m.state.game.GetTurn(m.state.game_review.selected_turn)
+	current_turn := m.game.GetTurn(m.state.game_review.selected_turn)
 	return lipgloss.NewStyle().Height(m.height_content).Render(
 		lipgloss.JoinHorizontal(
 			lipgloss.Top,
@@ -133,7 +133,7 @@ func (m model) renderTurnSummaryList(height int) string {
 	list_header += border_style(strings.Repeat(border.Top, width - len(list_title) - 1))
 	list_header += border_style(border.TopRight)
 
-	last_turn_idx := m.state.game.TurnCount() - 1
+	last_turn_idx := m.game.TurnCount() - 1
 	// 1 space always reserved for final turn
 	visible_rows := min(last_turn_idx, height - 1)
 
@@ -147,14 +147,14 @@ func (m model) renderTurnSummaryList(height int) string {
 
 	list_items := make([]string, 0, visible_rows)
 	for i := start; i < end; i++ {
-		list_items = append(list_items, m.renderReviewSummaryRow(m.state.game.GetTurn(i)))
+		list_items = append(list_items, m.renderReviewSummaryRow(m.game.GetTurn(i)))
 	}
 	if show_divider {
 		list_items = append(list_items, styles.TextDim.Render(strings.Repeat("─", width)))
 	}
 	// Pin last row to bottom
 	list_items = append(list_items,
-		m.renderReviewSummaryRow(m.state.game.GetTurn(last_turn_idx)),
+		m.renderReviewSummaryRow(m.game.GetTurn(last_turn_idx)),
 	)
 
 	// TODO: cache bigger styles like this so they only need to be created once
@@ -188,12 +188,12 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 	if turn.Solved {
 		rows = append(rows, []string{
 			"Answer",
-			m.highlightPromptAnswer(turn.Prompt, turn.Answer, m.state.game.Settings.PromptMode),
+			m.highlightPromptAnswer(turn.Prompt, turn.Answer, m.game.Settings.PromptMode),
 		})
 	} else {
 		rows = append(rows, []string{
 			"Possible answer",
-			m.highlightPromptAnswer(turn.Prompt, turn.SourceWord, m.state.game.Settings.PromptMode),
+			m.highlightPromptAnswer(turn.Prompt, turn.SourceWord, m.game.Settings.PromptMode),
 		})
 	}
 
@@ -217,7 +217,7 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 		red := styles.TextRed.Render
 		rows = append(rows, []string{
 			"Strikes",
-			red(fmt.Sprintf("%d/%d", turn.Strikes, m.state.game.Settings.PromptStrikes)),
+			red(fmt.Sprintf("%d/%d", turn.Strikes, m.game.Settings.PromptStrikes)),
 		})
 	}
 
@@ -326,7 +326,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 	} else {
 		solved_indicator_style = styles.TextRed.Bold(true)
 		if turn.FinalTurn {
-			if m.state.game.EarlyQuit {
+			if m.game.EarlyQuit {
 				solved_indicator_text = "Q "
 			} else {
 				solved_indicator_text = "L "
@@ -336,12 +336,12 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 		}
 	}
 
-	final_turn_num_str := fmt.Sprintf("%d.", m.state.game.TurnCount())
+	final_turn_num_str := fmt.Sprintf("%d.", m.game.TurnCount())
 	turn_num_str := fmt.Sprintf("%d.", turn.TurnNumber)
 	turn_num_padding := strings.Repeat(" ", len(final_turn_num_str) - len(turn_num_str))
 
 	prompt := strings.ToLower(turn.Prompt)
-	prompt_padding := strings.Repeat(" ", m.state.game.Settings.PromptLenMax - len(prompt))
+	prompt_padding := strings.Repeat(" ", m.game.Settings.PromptLenMax - len(prompt))
 
 	var strikes string
 	if turn.Strikes > 0 {
@@ -419,15 +419,15 @@ func (m model) getTurnBadges(turn *game.Turn) string {
 		badges = append(badges, base_badge_style.Background(theme.Highlight).Render(" extra life "))
 	}
 
-	if turn.Solved && len(turn.Answer) == len(m.state.game.Player.Stats.LongestSolve) {
+	if turn.Solved && len(turn.Answer) == len(m.game.Player.Stats.LongestSolve) {
 		badges = append(badges, base_badge_style.Background(theme.Yellow).Render(" longest answer "))
 	}
 
-	if turn.Solved && turn.UniqueLetterCount == m.state.game.Player.Stats.MostUniqueCount {
+	if turn.Solved && turn.UniqueLetterCount == m.game.Player.Stats.MostUniqueCount {
 		badges = append(badges, base_badge_style.Background(theme.Purple).Render(" most unique "))
 	}
 
-	if m.state.game.Player.Stats.LongestStreak > 0 && turn.Streak == m.state.game.Player.Stats.LongestStreak {
+	if m.game.Player.Stats.LongestStreak > 0 && turn.Streak == m.game.Player.Stats.LongestStreak {
 		badges = append(badges, base_badge_style.Background(theme.Orange).Render(" longest streak "))
 	}
 
@@ -443,7 +443,7 @@ func (m *model) updateSummaryListState(sel int) {
 
 	scrolloff := 2
 	// TODO: this is also calculated in view; need to consolidate/store as struct prop
-	max_rows := min(m.state.game.TurnCount(), m.height_content - 2) // -2 rows for top/bottom borders
+	max_rows := min(m.game.TurnCount(), m.height_content - 2) // -2 rows for top/bottom borders
 	scrolloff_clamped := utils.Clamp(scrolloff, 0, int(math.Floor(float64(max_rows / 2))))
 
 	// Scroll up
@@ -456,7 +456,7 @@ func (m *model) updateSummaryListState(sel int) {
 		m.state.game_review.visible_row_start = sel - max_rows + 1 + (scrolloff_clamped + 2)
 	}
 
-	clamped := utils.Clamp(m.state.game_review.visible_row_start, 0, m.state.game.TurnCount() - max_rows)
+	clamped := utils.Clamp(m.state.game_review.visible_row_start, 0, m.game.TurnCount() - max_rows)
 	if m.state.game_review.visible_row_start > clamped {
 		m.state.game_review.visible_row_start = clamped
 	}
