@@ -7,23 +7,24 @@ import (
 )
 
 type PlayerStats struct {
+	TimePlayed				time.Duration
 	PromptsSolved 			int
 	PromptsFailed			int
+	SolvesPerMinute			float64
+	AverageSolveLength		float64
 	LongestStreak			int
 	ExtraLivesGained		int
 	FewestExtraLifeSolves	int
-	LongestSolve			string
-	MostUniqueWord			string
 	MostUniqueCount			int
-	AverageSolveLength		float64
-	TimePlayed				int
+	MostUniqueWord			string
+	LongestSolve			string
 }
 
 func (g *GameState) CalculateGameStats() PlayerStats {
 	start := time.Now()
 
 	stats := PlayerStats{}
-	stats.TimePlayed = int(g.gameEnd.Sub(g.gameStart).Seconds())
+	stats.TimePlayed = g.gameEnd.Sub(g.gameStart)
 
 	solve_lengths := make([]int, 0, len(g.turns))
 	solve_len_idx := 0
@@ -67,6 +68,7 @@ func (g *GameState) CalculateGameStats() PlayerStats {
 	}
 
 	stats.AverageSolveLength = utils.Average(solve_lengths)
+	stats.SolvesPerMinute = float64(stats.PromptsSolved) / (float64(stats.TimePlayed) / 60.0)
 	stats.LongestStreak = longest_streak
 
 	elapsed := time.Since(start)
@@ -74,7 +76,7 @@ func (g *GameState) CalculateGameStats() PlayerStats {
 	slog.Debug("Calculated stats for game",
 		"startUnixTx", g.startUnixTs,
 		"turns", len(g.turns),
-		"gameDuration", utils.FormatTime(int(g.gameEnd.Sub(g.gameStart).Seconds())),
+		"gameDuration", utils.FormatTime(stats.TimePlayed),
 		"calcTimeMs", elapsed.Milliseconds(),
 	)
 

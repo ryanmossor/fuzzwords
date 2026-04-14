@@ -205,7 +205,7 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 	} else {
 		rows = append(rows, []string{
 			"Total duration",
-			utils.FormatTime(int(turn.TotalTurnDuration.Seconds())),
+			utils.FormatTime(turn.TotalTurnDuration),
 		})
     }
 

@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func Average(arr []int) float64 {
@@ -64,7 +65,8 @@ func FilterWordList(words []string, min_len int) []string {
 	return filtered
 }
 
-func FormatTime(seconds int) string {
+func FormatTime(t time.Duration) string {
+	seconds := int(t.Seconds())
 	if seconds < 3600 {
 		m := seconds / 60
 		s := seconds % 60

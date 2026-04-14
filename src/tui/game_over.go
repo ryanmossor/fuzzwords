@@ -120,8 +120,7 @@ func (m model) GameOverView() string {
 
 	solves_per_min := "0"
     if stats.PromptsSolved > 0 {
-		spm := float64(stats.PromptsSolved) / (float64(stats.TimePlayed) / 60.0)
-		solves_per_min = fmt.Sprintf("%.1f", spm)
+		solves_per_min = fmt.Sprintf("%.1f", stats.SolvesPerMinute)
 	}
 
 	rows := [][]string {

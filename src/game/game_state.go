@@ -10,21 +10,22 @@ import (
 )
 
 type GameState struct {
-	Alphabet			string
 	GameActive			bool
+	GameWon				bool
 	EarlyQuit			bool
+	startUnixTs			int64
 	gameStart			time.Time
 	gameEnd				time.Time
+	Alphabet			string
+	// Indexes of failed turns
+	failedTurns			[]int
+
 	Settings			GameSettings
 	wordLists			wordLists
 	Player				Player
 	// TODO: consider making this a map[int]*Turn? key is turn number/idx
 	// Would make accessing failed turns by idx easier
 	turns				[]Turn
-	// Indexes of failed turns
-	failedTurns			[]int
-	startUnixTs			int64
-	GameWon				bool
 }
 
 func NewGame(settings *GameSettings) GameState {
@@ -48,19 +49,17 @@ func NewGame(settings *GameSettings) GameState {
 	alphabet := enums.Alphabets[settings.Alphabet]
 
 	g := GameState {
-		startUnixTs:		time.Now().UnixMilli(),
-
-		Settings: 			*settings,
-		Alphabet: 			alphabet,
-		wordLists: 			word_lists,
-
 		GameActive: 		true,
 		GameWon:			false,
 		gameStart: 			time.Now(),
+		startUnixTs:		time.Now().UnixMilli(),
 
-		// Prealloc 300 turns; should cover most games before slice needs to expand
-		turns:				make([]Turn, 0, 300),
+		Alphabet: 			alphabet,
 		failedTurns:		[]int{},
+
+		Settings: 			*settings,
+		wordLists: 			word_lists,
+		turns:				make([]Turn, 0, 300), // 300 should cover most games before realloc needed
 	}
 	g.Player = g.newPlayer()
 	g.newTurn(true)
