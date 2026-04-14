@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"fzwds/src/assert"
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
 	"fzwds/src/tui/styles"
@@ -19,6 +20,8 @@ func (m model) GameHudView() string {
 }
 
 func (m model) renderHealthDisplay(health_current int) string {
+	assert.Assert(health_current >= 0, "Health cannot be less than 0", "health", health_current)
+
 	// TODO: perform this check once on game startup rather than per redraw?
 	health_icons := strings.Split(m.app_settings.Game.HealthDisplay, ";")
 	if len(health_icons) != 2 {
