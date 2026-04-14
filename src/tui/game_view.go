@@ -126,7 +126,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m, nil
 
 		case "ctrl+q":
-			m.state.game.EndGame(false, true)
+			m.state.game.EndGame(true)
 			return m.GameOverSwitch()
 
 		case "enter":
