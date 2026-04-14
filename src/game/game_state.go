@@ -99,11 +99,12 @@ func (g *GameState) EndGame(early_quit bool) {
 }
 
 func (g *GameState) endGameIfOver() bool {
-	if g.Player.HealthCurrent == 0 || g.determineWon() {
-		return false
+	over := g.Player.HealthCurrent == 0 || g.determineWon()
+	if over {
+		g.EndGame(false)
+		return true
 	}
-	g.EndGame(false)
-	return true
+	return false
 }
 
 func (g GameState) TurnCount() int {
