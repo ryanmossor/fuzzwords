@@ -14,10 +14,11 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (m model) GameOverSwitch() (model, tea.Cmd) {
-	// Briefly prevent key presses on game over screen
-	cmds := []tea.Cmd{ m.debounceInputCmd(500) }
+type GameOverState struct {
+	viewCache		map[string]string
+}
 
+func (m model) GameOverSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_over_page)
 
 	m.footer_keymaps = []FooterKeymap {
@@ -32,38 +33,14 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
 	}
 
-	m.state.game_ui.player_damaged = false
-
-	if m.game.GameWon {
-		m.state.game_ui.validation_msg = ""
-		m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
-		m.anim_mgr.InitAnimations(animations.GameOverWin)
-	} else {
-		red := styles.TextRed
-		m.state.game_ui.validation_msg = red.Render(fmt.Sprintf(
-			"Possible solve for final prompt %s: ",
-			strings.ToUpper(m.game.CurrentTurn().Prompt)))
-		m.state.game_ui.validation_msg += m.highlightPromptAnswer(
-			m.game.CurrentTurn().Prompt,
-			m.game.CurrentTurn().SourceWord,
-			m.game.Settings.PromptMode)
-
-		m.state.game_ui.game_over_msg = red.Bold(true).Render("☠️ GAME OVER ☠️")
-	}
-
-	if !m.game.EarlyQuit && !m.game.GameWon && !m.state.game_ui.game_over_seen {
-		cmds = append(cmds, m.terminalBellCmd(false))
-	}
-
-	m.state.game_ui.game_over_seen = true
-
-	return m, tea.Batch(cmds...)
+	return m, nil
 }
 
 func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.state.game_ui.input_restricted {
+		// TODO can this check be in main model? or maybe just keep here since i want to refactor pages/components
+		if m.state.game.inputRestricted {
 			return m, nil
 		}
 
@@ -75,6 +52,7 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.SettingsSwitch(game_settings)
 		case "r":
+			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.GameReviewSwitch()
 		case "enter":
 			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
@@ -87,7 +65,60 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) GameOverView() string {
+func (m *model) GameOverView() string {
+	if m.state.gameOver.viewCache["fullView"] != "" {
+		return m.state.gameOver.viewCache["fullView"]
+	}
+
+	view := lipgloss.JoinVertical(
+		lipgloss.Center,
+		m.renderGameOverTitleMsg(),
+		"",
+		m.renderGameOverStatTable(),
+	)
+
+	if !m.game.GameWon || !m.app_settings.Prefs.AnimationsEnabled {
+		m.state.gameOver.viewCache["fullView"] = view
+	}
+
+	return view
+}
+
+func (m *model) renderGameOverTitleMsg() string {
+	if cached := m.state.gameOver.viewCache["title"]; cached != "" {
+		return cached
+	}
+
+	var title string
+
+	if m.game.GameWon {
+		var changed bool
+		title, changed = m.anim_mgr.ApplyAnimations(
+			string(animations.GameOverWin),
+			"===== YOU WIN! =====")
+
+		if !changed {
+			title = styles.TextYellow.Bold(true).Render(title)
+		}
+
+		// Don't cache animated title
+		if m.app_settings.Prefs.AnimationsEnabled {
+			return title
+		}
+	} else {
+		title = styles.TextRed.Bold(true).Render("☠️ GAME OVER ☠️")
+	}
+
+	m.state.gameOver.viewCache["title"] = title
+
+	return title
+}
+
+func (m *model) renderGameOverStatTable() string {
+	if m.state.gameOver.viewCache["stats"] != "" {
+		return m.state.gameOver.viewCache["stats"]
+	}
+
 	stats := m.game.Player.Stats
 
 	var longest_streak string
@@ -125,8 +156,7 @@ func (m model) GameOverView() string {
 
 	rows := [][]string {
 		{"Time played", utils.FormatTime(stats.TimePlayed)},
-		{"Prompts solved", strconv.Itoa(stats.PromptsSolved)},
-		{"Prompts failed", strconv.Itoa(stats.PromptsFailed)},
+		{"Prompts solved", fmt.Sprintf("%d / %d", stats.PromptsSolved, m.game.TurnCount())},
 		{"Solves per minute", solves_per_min},
 		{"Longest streak", longest_streak},
 		{"Average solve length", fmt.Sprintf("%.1f letters", stats.AverageSolveLength)},
@@ -164,19 +194,24 @@ func (m model) GameOverView() string {
 		}).
 		Render()
 
-	game_over_msg, changed := m.anim_mgr.ApplyAnimations(
-		string(animations.GameOverWin),
-		m.state.game_ui.game_over_msg)
-	if !changed {
-		game_over_msg = styles.TextYellow.Bold(true).Render(game_over_msg)
+	var msg string
+	if !m.game.GameWon {
+		msg = styles.TextRed.Render(fmt.Sprintf(
+			"Possible solve for final prompt %s: ",
+			strings.ToUpper(m.game.CurrentTurn().Prompt)))
+		msg += m.highlightPromptAnswer(
+			m.game.CurrentTurn().Prompt,
+			m.game.CurrentTurn().SourceWord,
+			m.game.Settings.PromptMode)
 	}
 
-	return lipgloss.JoinVertical(
+	view := lipgloss.JoinVertical(
 		lipgloss.Center,
-		game_over_msg,
-		"",
 		stats_table,
 		"",
-        m.state.game_ui.validation_msg,
+        msg,
 	)
+	m.state.gameOver.viewCache["stats"] = view
+
+	return view
 }

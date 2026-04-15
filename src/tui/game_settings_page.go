@@ -18,7 +18,8 @@ import (
 type SettingsState struct {
 	selected 		int
 	category		SettingsMenuCategory
-	schema_list		[]game.SettingsSchemaItem
+	schemaList		[]game.SettingsSchemaItem
+	lastSel			map[SettingsMenuCategory]int
 	title			string
 }
 
@@ -30,12 +31,12 @@ const (
 
 func (m model) SettingsSwitch(category SettingsMenuCategory) (model, tea.Cmd) {
 	m = m.SwitchPage(settings_page)
-	m.state.settings.selected = 0
 	m.state.settings.category = category
+	m.state.settings.selected = m.state.settings.lastSel[category]
 
 	switch category {
 	case preferences:
-		m.state.settings.schema_list = m.app_settings_schema.Prefs
+		m.state.settings.schemaList = m.app_settings_schema.Prefs
 		m.state.settings.title = "General Preferences"
 
 		m.footer_keymaps = []FooterKeymap {
@@ -46,7 +47,7 @@ func (m model) SettingsSwitch(category SettingsMenuCategory) (model, tea.Cmd) {
 			{key: "m", value: "menu"},
 		}
 	case game_settings:
-		m.state.settings.schema_list = m.app_settings_schema.Game
+		m.state.settings.schemaList = m.app_settings_schema.Game
 		m.state.settings.title = "Game Settings"
 
 		m.footer_keymaps = []FooterKeymap {
@@ -72,32 +73,34 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down", "tab":
-			m.state.settings.selected = (m.state.settings.selected + 1 + len(m.state.settings.schema_list)) % len(m.state.settings.schema_list)
+			m.state.settings.selected = (m.state.settings.selected + 1 + len(m.state.settings.schemaList)) % len(m.state.settings.schemaList)
+			m.state.settings.lastSel[m.state.settings.category] = m.state.settings.selected
 			if m.state.settings.selected == 0 {
 				m.goto_top = true
 			}
 
 		case "k", "up", "shift+tab":
-			m.state.settings.selected = (m.state.settings.selected - 1 + len(m.state.settings.schema_list)) % len(m.state.settings.schema_list)
-			if m.state.settings.selected == len(m.state.settings.schema_list) - 1 {
+			m.state.settings.selected = (m.state.settings.selected - 1 + len(m.state.settings.schemaList)) % len(m.state.settings.schemaList)
+			m.state.settings.lastSel[m.state.settings.category] = m.state.settings.selected
+			if m.state.settings.selected == len(m.state.settings.schemaList) - 1 {
 				m.goto_bottom = true
 			}
 
 		case "+", "=", "right", "l":
-			setting := m.state.settings.schema_list[m.state.settings.selected]
+			setting := m.state.settings.schemaList[m.state.settings.selected]
 			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.app_settings_copy.Prefs.BellEnabled
 
-			m.changeCurrentSetting(Next, m.state.settings.schema_list)
+			m.changeCurrentSetting(Next, m.state.settings.schemaList)
 
 			if is_bell_being_enabled {
 				cmds = append(cmds, m.terminalBellCmd(true))
 			}
 
 		case "-", "left", "h":
-			setting := m.state.settings.schema_list[m.state.settings.selected]
+			setting := m.state.settings.schemaList[m.state.settings.selected]
 			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.app_settings_copy.Prefs.BellEnabled
 
-			m.changeCurrentSetting(Prev, m.state.settings.schema_list)
+			m.changeCurrentSetting(Prev, m.state.settings.schemaList)
 
 			if is_bell_being_enabled {
 				cmds = append(cmds, m.terminalBellCmd(true))
@@ -152,7 +155,7 @@ func (m model) SettingsView() string {
 	accent := styles.TextAccent.Bold(true).Render
 
 	var lines []string
-	for i, setting := range m.state.settings.schema_list {
+	for i, setting := range m.state.settings.schemaList {
 		if setting.Disabled {
 			continue
 		}
@@ -246,7 +249,7 @@ func (m model) SettingsView() string {
 		}
 
 		// Don't apply border to final setting box
-		apply_bottom_border := i != len(m.state.settings.schema_list) - 1
+		apply_bottom_border := i != len(m.state.settings.schemaList) - 1
 		line := styles.CreateSettingsMenuItem(content, is_selected, apply_bottom_border, m.width_content - 2)
 		lines = append(lines, line)
 	}

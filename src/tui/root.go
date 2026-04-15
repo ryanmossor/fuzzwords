@@ -20,16 +20,16 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type page int
+type page string
 const (
-	about_page page = iota
-	game_over_page
-	game_page
-	game_review_page
-	pokemon_gen_selector
-	settings_page
-	splash_page
-    stats_page
+	about_page 				page = "about"
+	game_over_page 			page = "game over"
+	game_page 				page = "game"
+	game_review_page 		page = "review"
+	pokemon_gen_selector 	page = "pokemon gens"
+	settings_page 			page = "settings"
+	splash_page 			page = "title screen"
+    stats_page 				page = "stats"
 )
 
 type size int
@@ -46,12 +46,11 @@ type FooterKeymap struct {
 }
 
 type GameUIState struct {
-	prev_answer				string
-	validation_msg			string
-	game_over_msg			string
-	game_over_seen			bool
-	player_damaged			bool
-	input_restricted		bool
+	playerDamaged			bool
+	inputRestricted			bool
+	gameOver				bool
+	gameMsg					string
+	prevAnswer				string
 }
 
 type FooterState struct {
@@ -59,11 +58,12 @@ type FooterState struct {
 }
 
 type State struct {
-	game_ui					GameUIState
-	game_review				GameReviewState
-	press_play				PressPlayState
+	game					GameUIState
+	gameReview				GameReviewState
+	gameOver				GameOverState
+	pressPlay				PressPlayState
 	settings				SettingsState
-	pokemon_gen_selector	PokemonGenSelectorState
+	pokemonMenu				PokemonMenuState
 	footer					FooterState
 }
 
@@ -99,7 +99,6 @@ type model struct {
 
     ready               bool
 	switched			bool
-    has_scroll          bool
 
 	goto_top			bool
 	goto_bottom			bool
@@ -201,30 +200,19 @@ func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
 		page: splash_page,
 
 		state: State {
-			press_play: PressPlayState {
+			pressPlay: PressPlayState {
 				visible: true,
 			},
 
 			settings: SettingsState {
 				selected: 0,
+				lastSel: make(map[SettingsMenuCategory]int),
 			},
 
-			pokemon_gen_selector: PokemonGenSelectorState {
+			pokemonMenu: PokemonMenuState {
 				gen_list: []int{},
 				gen_state: initSelectedPokemonGens(&game_settings),
 				selected: 1,
-			},
-
-			game_ui: GameUIState {
-				prev_answer: 		"",
-				validation_msg: 	"",
-				game_over_msg: 		"",
-				player_damaged: 	false,
-				input_restricted: 	false,
-			},
-
-			game_review: GameReviewState {
-				selected_turn: 0,
 			},
 		},
 
@@ -255,16 +243,11 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-
 	// TODO: animations/timer only enabled on title screen/game
 	// should probably not render other screens at 30fps
 	case TickMsg:
 		var cmds []tea.Cmd
 		now := msg.Time
-
-		if m.game.GameActive && m.game.TimeRemaining() <= 0 {
-			cmds = append(cmds, m.turnTimerExpiredCmd())
-		}
 
 		if m.app_settings.Prefs.AnimationsEnabled {
 			m.anim_mgr.Update(now)
@@ -302,16 +285,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width_content = m.width_container - 4
 		m = m.updateViewport()
 
-	//TODO move these commands to relevant views
-	case PressPlayTickMsg:
-		m, cmd := m.PressPlayUpdate(msg)
-		return m, cmd
-
+	// Currently these need to stay in main model so input is enabled again on game over screen
+	// Better way to do this?
 	case EnableInputMsg:
-		m.state.game_ui.input_restricted = false
+		m.state.game.inputRestricted = false
 
 	case TogglePlayerDamagedMsg:
-		m.state.game_ui.player_damaged = false
+		m.state.game.playerDamaged = false
 
 	case tea.KeyMsg:
 		m.debug_map["keyPress"] = msg.String()
@@ -354,6 +334,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 	m.viewport.SetContent(m.getContent())
 	m.viewport, cmd = m.viewport.Update(msg)
+	cmds = append(cmds, cmd)
 
 	if m.goto_top {
 		m.viewport.GotoTop()
@@ -363,7 +344,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.goto_bottom = false
 	}
 
-	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
 
@@ -385,13 +365,17 @@ func (m model) View() string {
 			AlignVertical(lipgloss.Top).
 			PaddingTop(1)
 	}
-	content := m.viewport.View()
+
+	has_scroll := false
+	if m.page == settings_page {
+		has_scroll = m.viewport.VisibleLineCount() < m.viewport.TotalLineCount()
+	}
 
 	var view string
-	if m.has_scroll {
+	if has_scroll {
 		view = lipgloss.JoinHorizontal(
 			lipgloss.Top,
-			content,
+			m.viewport.View(),
 			lipgloss.NewStyle().Foreground(theme.Body).Width(1).Render(), // space between content and scrollbar
 			m.getScrollbar(),
 		)
@@ -481,19 +465,6 @@ func (m model) updateViewport() model {
 		m.viewport.Height = m.height_content
 		m.viewport.GotoTop()
     }
-
-	if m.page == game_page || m.page == game_review_page {
-		m.has_scroll = false
-	} else {
-		m.has_scroll = m.viewport.VisibleLineCount() < m.viewport.TotalLineCount()
-	}
-
-	// if m.has_scroll {
-	// 	m.width_content = m.width_container - 4
-	// } else {
-	// 	// m.width_content = m.width_container - 2
-	// 	m.width_content = m.width_container - 4
-	// }
 
     return m
 }

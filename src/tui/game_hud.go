@@ -31,7 +31,7 @@ func (m model) renderHealthDisplay(health_current int) string {
 	health_icon_empty := health_icons[1]
 
 	var full_style, bracket_style lipgloss.Style
-	if m.state.game_ui.player_damaged {
+	if m.state.game.playerDamaged {
 		full_style = styles.TextRed
 		bracket_style = styles.TextRed
 	} else {
@@ -59,7 +59,9 @@ func (m model) renderTopBar() string {
 	red := styles.TextRed.Render
 
     var timer_display string
-	if m.state.game_ui.player_damaged || !m.game.GameActive {
+	if !m.game.GameActive {
+		timer_display = "⌛️  ─  "
+	} else if m.state.game.playerDamaged {
 		timer_display = "⌛️ 0.0s"
 	} else if m.game.TimeRemaining().Seconds() <= 9.9 {
 		timer_display = fmt.Sprintf("⏳ %.1fs", m.game.TimeRemaining().Seconds())
@@ -67,13 +69,13 @@ func (m model) renderTopBar() string {
 		timer_display = fmt.Sprintf("⏳  %.0fs", m.game.TimeRemaining().Seconds())
     }
 
-    if m.game.GameActive && (m.game.TimeRemaining().Seconds() < 5 || m.state.game_ui.player_damaged) {
+    if m.game.GameActive && (m.game.TimeRemaining().Seconds() < 5 || m.state.game.playerDamaged) {
 		// TODO: pulsing yellow/orange/red anim when below 5s; red 0.0 on damaged
         timer_display = red(timer_display)
     }
 
 	var text_style, border_style lipgloss.Style
-	if m.state.game_ui.player_damaged {
+	if m.state.game.playerDamaged {
 		text_style = styles.TextRed
 		border_style = styles.TextRed
 	} else {
@@ -121,7 +123,7 @@ func (m model) renderRemainingLetters() string {
 	for i, c := range m.game.Settings.Alphabet.Letters() {
 		if m.game.Player.LettersRemaining[c] {
 			out.WriteString(styles.TextDim.Render(string(c)))
-		} else if m.state.game_ui.player_damaged {
+		} else if m.state.game.playerDamaged {
 			out.WriteString(styles.TextRed.Bold(true).Render(string(c)))
 		} else {
 			out.WriteString(styles.TextYellow.Bold(true).Render(string(c)))

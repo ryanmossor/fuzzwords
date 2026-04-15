@@ -86,7 +86,7 @@ func (m model) MainMenuSwitch() (model, tea.Cmd) {
 	}
 	m.anim_mgr.InitAnimations(animations.TitleLogo)
 
-	return m, nil
+	return m, m.pressPlayFlashCmd()
 }
 
 func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
@@ -98,6 +98,10 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "ctrl+p":
 			return m.SettingsSwitch(preferences)
 		}
+
+	case PressPlayTickMsg:
+		m.state.pressPlay.visible = !m.state.pressPlay.visible
+		return m, m.pressPlayFlashCmd()
 	}
 
 	return m, nil

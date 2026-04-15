@@ -54,7 +54,7 @@ func (m model) HeaderView() string {
 		return lipgloss.JoinVertical(
 			lipgloss.Center,
 			styles.TextBorder.Render(strings.Repeat("─", m.width_container)),
-			styles.TextYellow.Bold(true).Render(m.state.settings.title),
+			styles.TextBlue.Bold(true).Render(m.state.settings.title),
 			styles.TextBorder.Render(strings.Repeat("─", m.width_container)))
 	}
 

@@ -8,6 +8,7 @@ import (
 	"fzwds/src/utils"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -34,6 +35,7 @@ func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.Pr
 				sb.WriteString(accent(curr_char))
 			}
 		}
+
 	case enums.PromptModeClassic:
 		if !strings.Contains(answer_upper, prompt_upper) {
 			sb.WriteString(accent(answer_upper))
@@ -52,7 +54,7 @@ func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.Pr
 // Get accent color for input box based on HighlightInput setting, damage state, etc.
 // Style applied to border if rounded-style input box, or left accent bar if block-style input box.
 func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipgloss.TerminalColor {
-	if m.state.game_ui.player_damaged {
+	if m.state.game.playerDamaged {
 		return theme.Red
 	}
 
@@ -80,14 +82,12 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 }
 
 func (m *model) renderValidationMsg() string {
-	if strings.HasPrefix(m.state.game_ui.validation_msg, "✓") {
-		return styles.TextGreen.Render(utils.RightPad(m.state.game_ui.validation_msg, 2))
+	if strings.HasPrefix(m.state.game.gameMsg, "✓") {
+		return styles.TextGreen.Render(m.state.game.gameMsg)
 	}
 
 	var msg string
-	msg, _ = m.anim_mgr.ApplyAnimations(
-		string(animations.ValidationMessage),
-		m.state.game_ui.validation_msg)
+	msg, _ = m.anim_mgr.ApplyAnimations(string(animations.ValidationMessage), m.state.game.gameMsg)
 
 	// Prevent input box from shaking by ensuring msg and input width are both even/odd
 	raw_str := utils.StripANSICodes(msg)
@@ -108,6 +108,10 @@ func (m model) initRoundedTextInput() textinput.Model {
 	text_input.Prompt = " "
 	text_input.CharLimit = 40
 	text_input.Width = 40
+
+	if !m.app_settings.Prefs.AnimationsEnabled {
+		text_input.Cursor.SetMode(cursor.CursorStatic)
+	}
 
 	text_input.Focus()
 
@@ -130,6 +134,10 @@ func (m model) initBlockTextInput() textinput.Model {
 	text_input.Prompt = "  "
 	text_input.CharLimit = 40
 	text_input.Width = text_input.CharLimit - len(text_input.Prompt) - 1
+
+	if !m.app_settings.Prefs.AnimationsEnabled {
+		text_input.Cursor.SetMode(cursor.CursorStatic)
+	}
 
 	input_bg_style := lipgloss.NewStyle().Background(theme.InputBg)
 

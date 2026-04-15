@@ -21,7 +21,7 @@ func (m model) FooterView() string {
 	max_footer_width := max(0, m.width_container - lipgloss.Width(footer_text_right) - pad)
 	footer_line := strings.Repeat("─", max_footer_width) + footer_text_right + strings.Repeat("─", pad)
 
-	if m.state.game_ui.player_damaged {
+	if m.state.game.playerDamaged {
 		footer_line = styles.TextRed.Render(footer_line)
 	} else {
 		footer_line = styles.TextDim.Render(footer_line)

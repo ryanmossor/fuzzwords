@@ -19,6 +19,7 @@ type Turn struct {
 	turnStart			time.Time
 	TotalTurnDuration	time.Duration
 
+	// TODO: make private and getter returns nothing if game is active
 	SourceWord 			string
 	Prompt 	   			string
 	Answer				string
@@ -116,6 +117,7 @@ func (g *Game) newTurn(first_turn bool) {
 		NewLettersUsed: make([]rune, 0, 16),
 		Health: g.Player.HealthCurrent,
 	})
+	g.timerId++
 }
 
 func (g *Game) startStrikeTimer() {
@@ -124,6 +126,7 @@ func (g *Game) startStrikeTimer() {
 
 	g.CurrentTurn().strikeStart = time.Now()
 	g.CurrentTurn().strikeDuration = time.Duration(duration_sec) * time.Second
+	g.timerId++
 }
 
 func (g Game) TimeRemaining() time.Duration {
@@ -132,50 +135,24 @@ func (g Game) TimeRemaining() time.Duration {
 		Sub(time.Now())
 }
 
-type AnswerResult struct {
-	IsValid				bool
-	ExtraLifeGained		bool
-	GameOver			bool
-	Msg					string
+type answerResult struct {
+	accepted	bool
+	reason		string
 }
 
-func (g *Game) SubmitAnswer(answer string) AnswerResult {
-	is_valid, msg := g.validateAnswer(answer)
-	if !is_valid {
-		return AnswerResult{ IsValid: false, Msg: msg }
-	}
-
-	extraLifeGained := g.handleCorrectAnswer(answer)
-	result := AnswerResult{
-		IsValid: true,
-		ExtraLifeGained: extraLifeGained,
-		Msg: msg,
-	}
-
-	if g.endGameIfOver() {
-		result.GameOver = true
-		return result
-	}
-
-	g.newTurn(false)
-	return result
-}
-
-func (g *Game) validateAnswer(answer string) (bool, string) {
-	is_valid := true
+func (g *Game) validateAnswer(answer string) answerResult {
+	result := answerResult{ accepted: true }
 	incr_guess_count := true
-	answer_upper := strings.ToUpper(answer)
-	msg := fmt.Sprintf("✓ %s", answer_upper)
 
 	if len(answer) == 0 {
-		is_valid = false
 		incr_guess_count = false
-		msg = "No answer given"
+		result.accepted = false
+		result.reason = "No answer given"
 	}
 
-	if is_valid && !g.wordLists.fullDict[answer] {
-		is_valid = false
-		msg = fmt.Sprintf("Invalid word: %s", answer_upper)
+	if result.accepted && !g.wordLists.fullDict[answer] {
+		result.accepted = false
+		result.reason = fmt.Sprintf("Invalid word: %s", strings.ToUpper(answer))
 	}
 
 	is_match := false
@@ -186,14 +163,14 @@ func (g *Game) validateAnswer(answer string) (bool, string) {
 		is_match = strings.Contains(answer, g.CurrentTurn().Prompt)
 	}
 
-	if is_valid && !is_match {
-		is_valid = false
-		msg = fmt.Sprintf("%s does not satisfy prompt", answer_upper)
+	if result.accepted && !is_match {
+		result.accepted = false
+		result.reason = fmt.Sprintf("%s does not satisfy prompt", strings.ToUpper(answer))
 	}
 
-	if is_valid && g.wordLists.used[answer] {
-		is_valid = false
-		msg = fmt.Sprintf("🔒 %s already used", answer_upper)
+	if result.accepted && g.wordLists.used[answer] {
+		result.accepted = false
+		result.reason = fmt.Sprintf("🔒 %s already used", strings.ToUpper(answer))
 	}
 
 	slog.Debug("Answer validated",
@@ -201,11 +178,11 @@ func (g *Game) validateAnswer(answer string) (bool, string) {
 		"prompt", g.CurrentTurn().Prompt,
 		"sourceWord", g.CurrentTurn().SourceWord,
 		"answer", answer,
-		"isValid", is_valid,
-		"validationMsg", msg,
+		"accepted", result.accepted,
+		"reason", result.reason,
 		"promptMode", g.Settings.PromptMode.String())
 
-	if is_valid {
+	if result.accepted {
 		word_idx, found := slices.BinarySearch(g.wordLists.available, answer)
 		assert.Assert(found, "Validated answer not found in available word list",
 			"startUnixTs", g.startUnixTs,
@@ -224,7 +201,7 @@ func (g *Game) validateAnswer(answer string) (bool, string) {
 		g.CurrentTurn().Guesses++
 	}
 
-	return is_valid, msg
+	return result
 }
 
 func createFuzzyPrompt(word string, prompt_len int, dict enums.Dictionary) string {
@@ -284,45 +261,9 @@ func (g *Game) handleCorrectAnswer(answer string) bool {
 			g.Player.HealthCurrent++
 			turn.Health++
 		}
+
 		turn.ExtraLifeGained = true
 	}
 
 	return turn.ExtraLifeGained
-}
-
-type StrikeResult struct {
-	Strikeout 		bool
-	GameOver		bool
-	Msg				string
-}
-
-// Handle timer expiry. Will increment strike counter, advance to
-// next turn, or end the game depending on current game state.
-func (g *Game) HandleTurnTimeout() StrikeResult {
-	turn := g.CurrentTurn()
-	result := StrikeResult{}
-
-	g.Player.streak = 0
-	turn.Streak = 0
-
-	g.Player.HealthCurrent--
-	turn.Health--
-
-	turn.Strikes++
-
-	if g.endGameIfOver() {
-		result.GameOver = true
-		return result
-	}
-
-	if turn.Strikes == g.Settings.PromptStrikes {
-		turn.TotalTurnDuration = time.Since(turn.turnStart)
-		result.Msg = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.Prompt))
-		result.Strikeout = true
-		g.newTurn(false)
-	} else {
-		g.startStrikeTimer()
-	}
-
-	return result
 }
