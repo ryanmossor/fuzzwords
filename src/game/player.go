@@ -87,7 +87,7 @@ func (g *Game) CalculateGameStats() PlayerStats {
 	}
 
 	stats.AverageSolveLength = utils.Average(solve_lengths)
-	stats.SolvesPerMinute = float64(stats.PromptsSolved) / (float64(stats.TimePlayed) / 60.0)
+	stats.SolvesPerMinute = float64(stats.PromptsSolved) / (float64(stats.TimePlayed.Seconds()) / 60.0)
 	stats.LongestStreak = longest_streak
 
 	elapsed := time.Since(start)
