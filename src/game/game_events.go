@@ -23,6 +23,8 @@ type GameOverEvent struct {
 	PossibleAnswer	string
 }
 
+type GameQuitEvent struct{}
+
 type GameWonEvent struct{}
 
 type StrikeEvent struct {

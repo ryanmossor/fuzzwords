@@ -211,6 +211,9 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 		m.state.game.health = e.Health
 		m.anim_mgr.InitAnimations(animations.ExtraLife)
 
+	case game.GameQuitEvent:
+		m.state.game.gameQuit = true
+
 	case game.GameOverEvent:
 		cmds = append(cmds, m.debounceInputCmd(500))
 		m.state.game.gameOver = true

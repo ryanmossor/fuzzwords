@@ -326,7 +326,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 	} else {
 		solved_indicator_style = styles.TextRed.Bold(true)
 		if turn.FinalTurn() {
-			if m.game.Quit {
+			if m.state.game.gameQuit {
 				solved_indicator_text = "Q "
 			} else {
 				solved_indicator_text = "L "

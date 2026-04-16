@@ -55,6 +55,7 @@ type GameUIState struct {
 	playerDamaged		bool
 	inputRestricted		bool
 	gameOver			bool
+	gameQuit			bool
 	health				uint
 	gameMsg				string
 	possibleFinalAnswer	string

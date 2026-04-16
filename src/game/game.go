@@ -14,7 +14,6 @@ import (
 type Game struct {
 	GameActive			bool
 	GameWon				bool
-	Quit				bool
 	startUnixTs			int64
 	gameStart			time.Time
 	gameEnd				time.Time
@@ -166,9 +165,11 @@ func (g *Game) QuitGame() []GameEvent {
 	if !g.GameActive {
 		return nil
 	}
-	g.Quit = true
 	g.endGame()
-	return []GameEvent{ GameOverEvent{ g.currentTurn().sourceWord } }
+	return []GameEvent {
+		GameOverEvent{ PossibleAnswer: g.currentTurn().sourceWord },
+		GameQuitEvent{},
+	}
 }
 
 func (g *Game) endGame() {
@@ -178,7 +179,7 @@ func (g *Game) endGame() {
 
 	g.gameEnd = time.Now()
 	g.GameActive = false
-	g.GameWon = !g.Quit && g.determineWon()
+	g.GameWon = g.determineWon()
 
 	turn := g.currentTurn()
 	turn.totalTurnDuration = time.Since(turn.turnStart)
