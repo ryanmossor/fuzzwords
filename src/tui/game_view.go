@@ -86,14 +86,12 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
-	case TurnTimerExpiredMsg:
-		if msg.timerId != m.game.TimerId() {
+	case TickMsg:
+		events := m.game.AdvanceTime(msg.Time)
+		if len(events) == 0 {
 			return m, nil
 		}
 
-		cmds = append(cmds, m.terminalBellCmd(false))
-
-		events := m.game.HandleTurnTimeout()
 		for _, e := range events {
 			cmds = append(cmds, m.handleGameEvent(e)...)
 		}
@@ -172,9 +170,6 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 	var cmds []tea.Cmd
 
 	switch e := e.(type) {
-	case game.TimerTickEvent:
-		cmds = append(cmds, m.turnTimerExpiredCmd(e.TimerId, e.Duration))
-
 	case game.NewTurnEvent:
 		m.state.game.turn = TurnUIState {
 			prompt: e.Prompt,

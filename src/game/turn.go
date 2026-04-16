@@ -177,7 +177,6 @@ func (g *Game) newTurn(first_turn bool) {
 		newLettersUsed: make([]rune, 0, 16),
 		health: g.Player.HealthCurrent,
 	})
-	g.timerId++
 }
 
 func (g *Game) startStrikeTimer() {
@@ -186,7 +185,6 @@ func (g *Game) startStrikeTimer() {
 
 	g.currentTurn().strikeStart = time.Now()
 	g.currentTurn().strikeDuration = time.Duration(duration_sec) * time.Second
-	g.timerId++
 }
 
 func (g Game) TimeRemaining() time.Duration {

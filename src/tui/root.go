@@ -250,19 +250,16 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 	// TODO: animations/timer only enabled on title screen/game
 	// should probably not render other screens at 30fps
 	case TickMsg:
-		var cmds []tea.Cmd
-		now := msg.Time
-
 		if m.app_settings.Prefs.AnimationsEnabled {
-			m.anim_mgr.Update(now)
+			m.anim_mgr.Update(msg.Time)
 		}
-
 		cmds = append(cmds, m.tickCmd())
-		return m, tea.Batch(cmds...)
 
 	case tea.WindowSizeMsg:
 		m.viewport_width = msg.Width
@@ -330,7 +327,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var header_cmd tea.Cmd
 	m, header_cmd = m.HeaderUpdate(msg)
-	cmds := []tea.Cmd{header_cmd}
+	cmds = append(cmds, header_cmd)
 
 	if cmd != nil {
 		cmds = append(cmds, cmd)

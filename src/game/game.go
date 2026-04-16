@@ -20,9 +20,6 @@ type Game struct {
 	gameEnd				time.Time
 	// Indexes of failed turns
 	failedTurns			[]int
-	// Incrementing timer id counter; allows caller to skip HandleTurnTimeout on stale timeouts
-	// TODO: replace with something better (eg, game controls timeouts, caller checks for events?)
-	timerId				uint
 
 	Settings			GameSettings
 	wordLists			wordLists
@@ -63,15 +60,7 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 	g.newTurn(true)
 
 	var events []GameEvent
-	events = append(events,
-		TimerTickEvent {
-			TimerId: g.timerId,
-			Duration: g.currentTurn().strikeDuration,
-		},
-		NewTurnEvent {
-			Prompt: g.currentTurn().prompt,
-		},
-	)
+	events = append(events, NewTurnEvent{ Prompt: g.currentTurn().prompt })
 
 	slog.Info("Initialized game",
 		"startUnixTs", g.startUnixTs,
@@ -79,10 +68,6 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 		"settings", g.Settings)
 
 	return g, events
-}
-
-func (g Game) TimerId() uint {
-	return g.timerId
 }
 
 func (g *Game) SubmitAnswer(answer string) []GameEvent {
@@ -111,24 +96,28 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 
 	g.newTurn(false)
 
-	events = append(events,
-		TimerTickEvent {
-			TimerId: g.timerId,
-			Duration: g.currentTurn().strikeDuration,
-		},
-		NewTurnEvent {
-			Prompt: g.currentTurn().prompt,
-		},
-	)
+	events = append(events, NewTurnEvent{ Prompt: g.currentTurn().prompt })
 
 	return events
 }
 
+func (g *Game) AdvanceTime(now time.Time) []GameEvent {
+	if !g.GameActive {
+		return nil
+	}
+
+	turn_end := g.currentTurn().strikeStart.Add(g.currentTurn().strikeDuration)
+	if now.After(turn_end) {
+		events := g.handleTimeout()
+		return events
+	}
+
+	return nil
+}
+
 // Handle timer expiry. Will increment strike counter, advance to
 // next turn, or end the game depending on current game state.
-// TODO: make this internal w/ AdvanceTime(time.Time) exposed to caller
-// Instead of caller drive turn timeouts, game engine manages them and caller polls for updates?
-func (g *Game) HandleTurnTimeout() []GameEvent {
+func (g *Game) handleTimeout() []GameEvent {
 	turn := g.currentTurn()
 	var events []GameEvent
 
@@ -155,19 +144,12 @@ func (g *Game) HandleTurnTimeout() []GameEvent {
 		strike_evt.Message = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.prompt))
 
 		g.newTurn(false)
-		events = append(events, NewTurnEvent {
-			Prompt: g.currentTurn().prompt,
-		})
+		events = append(events, NewTurnEvent{ Prompt: g.currentTurn().prompt })
 	} else {
 		g.startStrikeTimer()
 	}
 	strike_evt.StrikeCount = g.currentTurn().strikes
 	events = append(events, strike_evt)
-
-	events = append(events, TimerTickEvent {
-		TimerId: g.timerId,
-		Duration: g.currentTurn().strikeDuration,
-	})
 
 	return events
 }

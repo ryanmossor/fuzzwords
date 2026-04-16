@@ -1,7 +1,5 @@
 package game
 
-import "time"
-
 type GameEvent any
 
 type NewTurnEvent struct {
@@ -31,11 +29,6 @@ type StrikeEvent struct {
 	Strikeout	bool
 	StrikeCount	int
 	Message		string
-}
-
-type TimerTickEvent struct {
-	TimerId		uint
-	Duration	time.Duration
 }
 
 type PlayerDamagedEvent struct {
