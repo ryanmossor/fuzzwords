@@ -84,7 +84,7 @@ func (m model) renderTopBar() string {
 	}
 
 	row_items := []string {
-		m.renderHealthDisplay(m.game.Player.HealthCurrent),
+		m.renderHealthDisplay(int(m.state.game.health)),
 		text_style.Render(timer_display),
 	}
 

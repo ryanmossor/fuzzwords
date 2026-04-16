@@ -4,8 +4,12 @@ import "time"
 
 type GameEvent any
 
+type NewTurnEvent struct {
+	Prompt	string
+}
+
 type AnswerAcceptedEvent struct {
-	Answer		string
+	Answer	string
 }
 
 type AnswerRejectedEvent struct {
@@ -13,16 +17,19 @@ type AnswerRejectedEvent struct {
 	Reason	string
 }
 
-type ExtraLifeEvent struct{}
+type ExtraLifeEvent struct {
+	Health		uint
+}
 
-type GameQuitEvent struct{}
-
-type GameOverEvent struct{}
+type GameOverEvent struct {
+	PossibleAnswer	string
+}
 
 type GameWonEvent struct{}
 
 type StrikeEvent struct {
 	Strikeout	bool
+	StrikeCount	int
 	Message		string
 }
 
@@ -32,6 +39,6 @@ type TimerTickEvent struct {
 }
 
 type PlayerDamagedEvent struct {
-	EventType	string
 	Amount		uint
+	Health		uint
 }

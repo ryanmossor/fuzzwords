@@ -14,29 +14,89 @@ import (
 )
 
 type Turn struct {
-	TurnNumber			int
-	FinalTurn			bool
+	turnNumber			int
+	finalTurn			bool
 	turnStart			time.Time
-	TotalTurnDuration	time.Duration
+	totalTurnDuration	time.Duration
 
-	// TODO: make private and getter returns nothing if game is active
-	SourceWord 			string
-	Prompt 	   			string
-	Answer				string
-	Guesses				int
+	sourceWord 			string
+	prompt 	   			string
+	answer				string
+	guesses				int
 
-	Strikes	   			int
+	strikes	   			int
 	strikeStart			time.Time
 	strikeDuration		time.Duration
 
-	Solved				bool
-	ExtraLifeGained		bool
+	solved				bool
+	extraLifeGained		bool
 
-	LettersRemaining	map[rune]bool
-	NewLettersUsed		[]rune
-	UniqueLetterCount	int
-	Streak				int
-	Health				int
+	lettersRemaining	map[rune]bool
+	newLettersUsed		[]rune
+	uniqueLetterCount	int
+	streak				int
+	health				int
+}
+
+func (t Turn) TurnNumber() int {
+	return t.turnNumber
+}
+
+func (t Turn) FinalTurn() bool {
+	return t.finalTurn
+}
+
+func (t Turn) TotalTurnDuration() time.Duration {
+	return t.totalTurnDuration
+}
+
+// TODO: some way of preventing this if game is still active (but allow access in debug mode)?
+func (t Turn) SourceWord() string {
+	return t.sourceWord
+}
+
+func (t Turn) Prompt() string {
+	return t.prompt
+}
+
+func (t Turn) Answer() string {
+	return t.answer
+}
+
+func (t Turn) Guesses() int {
+	return t.guesses
+}
+
+func (t Turn) Strikes() int {
+	return t.strikes
+}
+
+func (t Turn) Solved() bool {
+	return t.solved
+}
+
+func (t Turn) ExtraLifeGained() bool {
+	return t.extraLifeGained
+}
+
+func (t Turn) LettersRemaining() map[rune]bool {
+	return t.lettersRemaining
+}
+
+func (t Turn) NewLettersUsed() []rune {
+	return t.newLettersUsed
+}
+
+func (t Turn) UniqueLetterCount() int {
+	return t.uniqueLetterCount
+}
+
+func (t Turn) Streak() int {
+	return t.streak
+}
+
+func (t Turn) Health() int {
+	return t.health
 }
 
 // TODO: ensure next prompt is different from previous if previous prompt was failed
@@ -98,24 +158,24 @@ func (g *Game) newTurn(first_turn bool) {
 
 	now := time.Now()
 	g.turns = append(g.turns, Turn {
-		TurnNumber: g.CurrentTurnNumber() + 1,
+		turnNumber: g.CurrentTurnNumber() + 1,
 		turnStart: now,
 
-		SourceWord: word,
-		Prompt: prompt,
-		Answer: "",
-		Guesses: 0,
+		sourceWord: word,
+		prompt: prompt,
+		answer: "",
+		guesses: 0,
 
-		Strikes: 0,
+		strikes: 0,
 		strikeStart: now,
 		strikeDuration: turn_duration,
 
-		Solved: false,
-		ExtraLifeGained: false,
+		solved: false,
+		extraLifeGained: false,
 
-		LettersRemaining: maps.Clone(g.Player.LettersRemaining),
-		NewLettersUsed: make([]rune, 0, 16),
-		Health: g.Player.HealthCurrent,
+		lettersRemaining: maps.Clone(g.Player.LettersRemaining),
+		newLettersUsed: make([]rune, 0, 16),
+		health: g.Player.HealthCurrent,
 	})
 	g.timerId++
 }
@@ -124,19 +184,20 @@ func (g *Game) startStrikeTimer() {
 	turn_duration_min := max(15, g.Settings.TurnDurationMin)
 	duration_sec := utils.RandomBetween(turn_duration_min, 30)
 
-	g.CurrentTurn().strikeStart = time.Now()
-	g.CurrentTurn().strikeDuration = time.Duration(duration_sec) * time.Second
+	g.currentTurn().strikeStart = time.Now()
+	g.currentTurn().strikeDuration = time.Duration(duration_sec) * time.Second
 	g.timerId++
 }
 
 func (g Game) TimeRemaining() time.Duration {
-	return g.CurrentTurn().strikeStart.
-		Add(g.CurrentTurn().strikeDuration).
+	return g.currentTurn().strikeStart.
+		Add(g.currentTurn().strikeDuration).
 		Sub(time.Now())
 }
 
 type answerResult struct {
 	accepted	bool
+	// TODO make this an enum which UI then generates display message from?
 	reason		string
 }
 
@@ -157,10 +218,10 @@ func (g *Game) validateAnswer(answer string) answerResult {
 
 	is_match := false
 	if g.Settings.PromptMode == enums.PromptModeFuzzy {
-		is_match = utils.IsFuzzyMatch(answer, g.CurrentTurn().Prompt)
+		is_match = utils.IsFuzzyMatch(answer, g.currentTurn().prompt)
 	}
 	if g.Settings.PromptMode == enums.PromptModeClassic {
-		is_match = strings.Contains(answer, g.CurrentTurn().Prompt)
+		is_match = strings.Contains(answer, g.currentTurn().prompt)
 	}
 
 	if result.accepted && !is_match {
@@ -175,8 +236,8 @@ func (g *Game) validateAnswer(answer string) answerResult {
 
 	slog.Debug("Answer validated",
 		"startUnixTs", g.startUnixTs,
-		"prompt", g.CurrentTurn().Prompt,
-		"sourceWord", g.CurrentTurn().SourceWord,
+		"prompt", g.currentTurn().prompt,
+		"sourceWord", g.currentTurn().sourceWord,
 		"answer", answer,
 		"accepted", result.accepted,
 		"reason", result.reason,
@@ -186,7 +247,7 @@ func (g *Game) validateAnswer(answer string) answerResult {
 		word_idx, found := slices.BinarySearch(g.wordLists.available, answer)
 		assert.Assert(found, "Validated answer not found in available word list",
 			"startUnixTs", g.startUnixTs,
-			"prompt", g.CurrentTurn().Prompt,
+			"prompt", g.currentTurn().prompt,
 			"answer", answer,
 			"wordIdx", word_idx,
 			"actualWordAtIdx", g.wordLists.available[word_idx],
@@ -198,7 +259,7 @@ func (g *Game) validateAnswer(answer string) answerResult {
 	}
 
 	if incr_guess_count {
-		g.CurrentTurn().Guesses++
+		g.currentTurn().guesses++
 	}
 
 	return result
@@ -233,20 +294,20 @@ func createFuzzyPrompt(word string, prompt_len int, dict enums.Dictionary) strin
 }
 
 func (g *Game) handleCorrectAnswer(answer string) bool {
-	turn := g.CurrentTurn()
-	turn.TotalTurnDuration = time.Since(turn.turnStart)
-	turn.Solved = true
-	turn.Answer = answer
-	turn.UniqueLetterCount = utils.CountUniqueLetters(answer)
+	turn := g.currentTurn()
+	turn.totalTurnDuration = time.Since(turn.turnStart)
+	turn.solved = true
+	turn.answer = answer
+	turn.uniqueLetterCount = utils.CountUniqueLetters(answer)
 
 	g.Player.streak++
-	turn.Streak = g.Player.streak
+	turn.streak = g.Player.streak
 
 	for _, c := range strings.ToUpper(answer) {
 		// TODO: consolidate LettersUsed/LettersRemaining, make []rune instead of []string?
 		if !slices.Contains(g.Player.LettersUsed, c) && strings.ContainsRune(g.Settings.Alphabet.Letters(), c) {
 			g.Player.LettersUsed = append(g.Player.LettersUsed, c)
-			turn.NewLettersUsed = append(turn.NewLettersUsed, c)
+			turn.newLettersUsed = append(turn.newLettersUsed, c)
 		}
 
 		g.Player.LettersRemaining[c] = true
@@ -259,11 +320,11 @@ func (g *Game) handleCorrectAnswer(answer string) bool {
 
 		if g.Player.HealthCurrent < g.Settings.HealthMax {
 			g.Player.HealthCurrent++
-			turn.Health++
+			turn.health++
 		}
 
-		turn.ExtraLifeGained = true
+		turn.extraLifeGained = true
 	}
 
-	return turn.ExtraLifeGained
+	return turn.extraLifeGained
 }

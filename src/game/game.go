@@ -63,16 +63,20 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 	g.newTurn(true)
 
 	var events []GameEvent
-	events = append(events, TimerTickEvent {
-		TimerId: g.timerId,
-		Duration: g.CurrentTurn().strikeDuration,
-	})
+	events = append(events,
+		TimerTickEvent {
+			TimerId: g.timerId,
+			Duration: g.currentTurn().strikeDuration,
+		},
+		NewTurnEvent {
+			Prompt: g.currentTurn().prompt,
+		},
+	)
 
 	slog.Info("Initialized game",
 		"startUnixTs", g.startUnixTs,
 		"alphabet", g.Settings.Alphabet.Letters(),
-		"settings", g.Settings,
-		"events", events)
+		"settings", g.Settings)
 
 	return g, events
 }
@@ -96,7 +100,7 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 
 	life_gained := g.handleCorrectAnswer(answer)
 	if life_gained {
-		events = append(events, ExtraLifeEvent{})
+		events = append(events, ExtraLifeEvent{ Health: uint(g.Player.HealthCurrent) })
 	}
 
 	if g.determineWon() {
@@ -107,10 +111,15 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 
 	g.newTurn(false)
 
-	events = append(events, TimerTickEvent {
-		TimerId: g.timerId,
-		Duration: g.CurrentTurn().strikeDuration,
-	})
+	events = append(events,
+		TimerTickEvent {
+			TimerId: g.timerId,
+			Duration: g.currentTurn().strikeDuration,
+		},
+		NewTurnEvent {
+			Prompt: g.currentTurn().prompt,
+		},
+	)
 
 	return events
 }
@@ -120,40 +129,44 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 // TODO: make this internal w/ AdvanceTime(time.Time) exposed to caller
 // Instead of caller drive turn timeouts, game engine manages them and caller polls for updates?
 func (g *Game) HandleTurnTimeout() []GameEvent {
-	turn := g.CurrentTurn()
+	turn := g.currentTurn()
 	var events []GameEvent
 
 	g.Player.streak = 0
-	turn.Streak = 0
+	turn.streak = 0
 
 	g.Player.HealthCurrent--
-	turn.Health--
-	events = append(events, PlayerDamagedEvent{})
+	turn.health--
+	events = append(events, PlayerDamagedEvent{ Health: uint(g.Player.HealthCurrent) })
 
-	turn.Strikes++
+	turn.strikes++
 	strike_evt := StrikeEvent{}
 
-	if g.Player.HealthCurrent == 0 {
+	if g.Player.HealthCurrent <= 0 {
 		g.endGame()
-		events = append(events, strike_evt, GameOverEvent{})
+		events = append(events, strike_evt, GameOverEvent{ PossibleAnswer: turn.sourceWord })
 		return events
 	}
 
-	if turn.Strikes == g.Settings.PromptStrikes {
-		turn.TotalTurnDuration = time.Since(turn.turnStart)
+	if turn.strikes == g.Settings.PromptStrikes {
+		turn.totalTurnDuration = time.Since(turn.turnStart)
 
 		strike_evt.Strikeout = true
-		strike_evt.Message = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.Prompt))
+		strike_evt.Message = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.prompt))
 
 		g.newTurn(false)
+		events = append(events, NewTurnEvent {
+			Prompt: g.currentTurn().prompt,
+		})
 	} else {
 		g.startStrikeTimer()
 	}
+	strike_evt.StrikeCount = g.currentTurn().strikes
 	events = append(events, strike_evt)
 
 	events = append(events, TimerTickEvent {
 		TimerId: g.timerId,
-		Duration: g.CurrentTurn().strikeDuration,
+		Duration: g.currentTurn().strikeDuration,
 	})
 
 	return events
@@ -173,7 +186,7 @@ func (g *Game) QuitGame() []GameEvent {
 	}
 	g.Quit = true
 	g.endGame()
-	return []GameEvent{ GameQuitEvent{} }
+	return []GameEvent{ GameOverEvent{ g.currentTurn().sourceWord } }
 }
 
 func (g *Game) endGame() {
@@ -185,9 +198,9 @@ func (g *Game) endGame() {
 	g.GameActive = false
 	g.GameWon = !g.Quit && g.determineWon()
 
-	turn := g.CurrentTurn()
-	turn.TotalTurnDuration = time.Since(turn.turnStart)
-	turn.FinalTurn = true
+	turn := g.currentTurn()
+	turn.totalTurnDuration = time.Since(turn.turnStart)
+	turn.finalTurn = true
 
 	g.Player.Stats = g.CalculateGameStats()
 }
@@ -200,7 +213,7 @@ func (g Game) CurrentTurnNumber() int {
 	return len(g.turns)
 }
 
-func (g Game) CurrentTurn() *Turn {
+func (g Game) currentTurn() *Turn {
 	assert.Assert(len(g.turns) > 0, "Attempted to access current turn before game initialized")
 	return &g.turns[len(g.turns) - 1]
 }
@@ -221,7 +234,7 @@ func (g Game) GetTurn(idx int) *Turn {
 
 func (g Game) NextFailedTurnIdx(turn_idx_cur int) int {
 	for i := turn_idx_cur; i < len(g.turns); i++ {
-		if (g.turns[i].Strikes > 0 || !g.turns[i].Solved) && i > turn_idx_cur {
+		if (g.turns[i].strikes > 0 || !g.turns[i].solved) && i > turn_idx_cur {
 			return i
 		}
 	}
@@ -230,7 +243,7 @@ func (g Game) NextFailedTurnIdx(turn_idx_cur int) int {
 
 func (g Game) PrevFailedTurnIdx(turn_idx_cur int) int {
 	for i := turn_idx_cur; i >= 0; i-- {
-		if (g.turns[i].Strikes > 0 || !g.turns[i].Solved) && i < turn_idx_cur {
+		if (g.turns[i].strikes > 0 || !g.turns[i].solved) && i < turn_idx_cur {
 			return i
 		}
 	}

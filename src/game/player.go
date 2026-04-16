@@ -54,26 +54,26 @@ func (g *Game) CalculateGameStats() PlayerStats {
 	for i, turn := range g.turns {
 		turns_since_last_extra_life++
 
-		if turn.Solved {
+		if turn.solved {
 			stats.PromptsSolved++
 
-			if turn.Streak > longest_streak {
-				longest_streak = turn.Streak
+			if turn.streak > longest_streak {
+				longest_streak = turn.streak
 			}
 
-			solve_lengths = append(solve_lengths, len(turn.Answer))
+			solve_lengths = append(solve_lengths, len(turn.answer))
 			solve_len_idx++
 
-			if len(turn.Answer) > len(stats.LongestSolve) {
-				stats.LongestSolve = turn.Answer
+			if len(turn.answer) > len(stats.LongestSolve) {
+				stats.LongestSolve = turn.answer
 			}
 
-			if turn.UniqueLetterCount > stats.MostUniqueCount {
-				stats.MostUniqueWord = turn.Answer
-				stats.MostUniqueCount = turn.UniqueLetterCount
+			if turn.uniqueLetterCount > stats.MostUniqueCount {
+				stats.MostUniqueWord = turn.answer
+				stats.MostUniqueCount = turn.uniqueLetterCount
 			}
 
-			if turn.ExtraLifeGained {
+			if turn.extraLifeGained {
 				stats.ExtraLivesGained++
 				if stats.FewestExtraLifeSolves == 0 || turns_since_last_extra_life < stats.FewestExtraLifeSolves {
 					stats.FewestExtraLifeSolves = turns_since_last_extra_life

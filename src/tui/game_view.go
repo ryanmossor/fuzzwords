@@ -17,14 +17,14 @@ import (
 func (m model) GameView() string {
 	prompt := styles.TextAccent.
 		Bold(true).
-		Render(strings.ToUpper(m.game.CurrentTurn().Prompt))
+		Render(strings.ToUpper(m.state.game.turn.prompt))
 
-	var colorized_input string
+	var game_msg string
 	if m.state.game.gameMsg != "" {
-		colorized_input = m.renderValidationMsg()
+		game_msg = m.renderValidationMsg()
 	} else {
-		colorized_input = m.highlightPromptAnswer(
-			m.game.CurrentTurn().Prompt,
+		game_msg = m.highlightPromptAnswer(
+			m.state.game.turn.prompt,
 			m.text_input.Value(),
 			m.game.Settings.PromptMode)
 	}
@@ -48,7 +48,7 @@ func (m model) GameView() string {
 		"",
 		"",
 		"",
-		colorized_input,
+		game_msg,
 		"",
 		m.GetBlockInputView(),
 	)
@@ -73,6 +73,8 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	for _, e := range events {
 		cmds = append(cmds, m.handleGameEvent(e)...)
 	}
+
+	m.state.game.health = uint(m.game.Settings.HealthInitial)
 
 	m.text_input = m.initBlockTextInput()
 	cmds = append(cmds, textinput.Blink)
@@ -119,8 +121,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		// TODO: mute key combo for alert sound in game?
 		switch key {
 		case "up":
-			if m.state.game.prevAnswer != "" {
-				m.text_input.SetValue(m.state.game.prevAnswer)
+			if m.state.game.turn.prevAnswer != "" {
+				m.text_input.SetValue(m.state.game.turn.prevAnswer)
 			}
 			return m, nil
 
@@ -173,19 +175,27 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 	case game.TimerTickEvent:
 		cmds = append(cmds, m.turnTimerExpiredCmd(e.TimerId, e.Duration))
 
+	case game.NewTurnEvent:
+		m.state.game.turn = TurnUIState {
+			prompt: e.Prompt,
+			strikes: 0,
+			prevAnswer: "",
+		}
+
 	case game.AnswerAcceptedEvent:
-		m.state.game.prevAnswer = ""
-		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
-		m.state.game.playerDamaged = false
 		msg := fmt.Sprintf("✓ %s  ", strings.ToUpper(e.Answer))
 		m.state.game.gameMsg = msg
+		m.state.game.playerDamaged = false
+		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 
 	case game.AnswerRejectedEvent:
-		m.state.game.prevAnswer = e.Answer
+		m.state.game.turn.prevAnswer = e.Answer
 		m.state.game.gameMsg = e.Reason
 
 	case game.StrikeEvent:
 		m.state.game.gameMsg = e.Message
+		m.state.game.turn.strikes = e.StrikeCount
+
 		if e.Strikeout {
 			m.anim_mgr.InitAnimations(animations.ValidationMessage)
 			m.text_input.Reset()
@@ -196,19 +206,20 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 
 	case game.PlayerDamagedEvent:
 		m.state.game.playerDamaged = true
+		m.state.game.health = e.Health
 		cmds = append(cmds,
 			m.togglePlayerDamagedCmd(),
 			m.terminalBellCmd(false),
 		)
 
 	case game.ExtraLifeEvent:
+		m.state.game.health = e.Health
 		m.anim_mgr.InitAnimations(animations.ExtraLife)
 
-	case game.GameQuitEvent:
-		m.state.game.gameOver = true
-
 	case game.GameOverEvent:
+		cmds = append(cmds, m.debounceInputCmd(500))
 		m.state.game.gameOver = true
+		m.state.game.possibleFinalAnswer = e.PossibleAnswer
 
 	case game.GameWonEvent:
 		m.state.game.playerDamaged = false
@@ -217,7 +228,7 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
 
 	default:
-		slog.Warn("Failed to handle game event", "type", reflect.TypeOf(e).String(), "event", e)
+		slog.Warn("Game event not handled", "type", reflect.TypeOf(e).String(), "event", e)
 	}
 
 	return cmds

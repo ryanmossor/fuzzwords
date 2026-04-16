@@ -45,12 +45,20 @@ type FooterKeymap struct {
 	value	string
 }
 
-type GameUIState struct {
-	playerDamaged			bool
-	inputRestricted			bool
-	gameOver				bool
-	gameMsg					string
+type TurnUIState struct {
+	prompt					string
+	strikes					int
 	prevAnswer				string
+}
+
+type GameUIState struct {
+	playerDamaged		bool
+	inputRestricted		bool
+	gameOver			bool
+	health				uint
+	gameMsg				string
+	possibleFinalAnswer	string
+	turn				TurnUIState
 }
 
 type FooterState struct {

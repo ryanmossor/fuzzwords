@@ -171,13 +171,13 @@ func (m model) renderTurnSummaryList(height int) string {
 }
 
 func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
-	td, ok := m.state.gameReview.viewCache[turn.TurnNumber]
+	td, ok := m.state.gameReview.viewCache[turn.TurnNumber()]
 	if ok && td.detail_view != "" {
 		return td.detail_view
 	}
 
 	var solved_style lipgloss.Style
-	if turn.Solved {
+	if turn.Solved() {
 		solved_style = lipgloss.NewStyle().Foreground(theme.Background).Background(theme.Green).Bold(true)
 	} else {
 		solved_style = lipgloss.NewStyle().Foreground(theme.Background).Background(theme.Red).Bold(true)
@@ -185,46 +185,46 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 
 	rows := [][]string{}
 
-	if turn.Solved {
+	if turn.Solved() {
 		rows = append(rows, []string{
 			"Answer",
-			m.highlightPromptAnswer(turn.Prompt, turn.Answer, m.game.Settings.PromptMode),
+			m.highlightPromptAnswer(turn.Prompt(), turn.Answer(), m.game.Settings.PromptMode),
 		})
 	} else {
 		rows = append(rows, []string{
 			"Possible answer",
-			m.highlightPromptAnswer(turn.Prompt, turn.SourceWord, m.game.Settings.PromptMode),
+			m.highlightPromptAnswer(turn.Prompt(), turn.SourceWord(), m.game.Settings.PromptMode),
 		})
 	}
 
-	if turn.TotalTurnDuration < time.Duration(time.Minute) {
+	if turn.TotalTurnDuration() < time.Duration(time.Minute) {
 		rows = append(rows, []string{
 			"Total duration",
-			fmt.Sprintf("%.1fs", turn.TotalTurnDuration.Seconds()),
+			fmt.Sprintf("%.1fs", turn.TotalTurnDuration().Seconds()),
 		})
 	} else {
 		rows = append(rows, []string{
 			"Total duration",
-			utils.FormatTime(turn.TotalTurnDuration),
+			utils.FormatTime(turn.TotalTurnDuration()),
 		})
     }
 
-	rows = append(rows, []string{ "Guesses", fmt.Sprintf("%d", turn.Guesses) })
+	rows = append(rows, []string{ "Guesses", fmt.Sprintf("%d", turn.Guesses()) })
 
-	if turn.Strikes == 0 {
+	if turn.Strikes() == 0 {
 		rows = append(rows, []string{ "Strikes", "-" })
 	} else {
 		red := styles.TextRed.Render
 		rows = append(rows, []string{
 			"Strikes",
-			red(fmt.Sprintf("%d/%d", turn.Strikes, m.game.Settings.PromptStrikes)),
+			red(fmt.Sprintf("%d/%d", turn.Strikes(), m.game.Settings.PromptStrikes)),
 		})
 	}
 
-	if turn.Solved {
+	if turn.Solved() {
 		rows = append(rows,
-			[]string{"Solve length", fmt.Sprintf("%d", len(turn.Answer)) },
-			[]string{"Unique letters", fmt.Sprintf("%d", turn.UniqueLetterCount) },
+			[]string{"Solve length", fmt.Sprintf("%d", len(turn.Answer())) },
+			[]string{"Unique letters", fmt.Sprintf("%d", turn.UniqueLetterCount()) },
 		)
 	} else {
 		rows = append(rows,
@@ -233,7 +233,7 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 		)
 	}
 
-	rows = append(rows, []string{ "Streak", fmt.Sprintf("%d", turn.Streak) })
+	rows = append(rows, []string{ "Streak", fmt.Sprintf("%d", turn.Streak()) })
 
 	stats_table := table.New().
 		Border(lipgloss.HiddenBorder()).
@@ -264,9 +264,9 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 		}).
 		Render()
 
-	title_line := solved_style.Render(fmt.Sprintf(" #%d ", turn.TurnNumber))
+	title_line := solved_style.Render(fmt.Sprintf(" #%d ", turn.TurnNumber()))
 	title_line += " "
-	title_line += styles.TextAccent.Bold(true).Render(strings.ToUpper(turn.Prompt))
+	title_line += styles.TextAccent.Bold(true).Render(strings.ToUpper(turn.Prompt()))
 
 	detail_table := lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -291,16 +291,16 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 		Render(detail_table)
 
 	if !ok {
-		m.state.gameReview.viewCache[turn.TurnNumber] = &TurnDisplay{}
+		m.state.gameReview.viewCache[turn.TurnNumber()] = &TurnDisplay{}
 	}
-	m.state.gameReview.viewCache[turn.TurnNumber].detail_view = view
+	m.state.gameReview.viewCache[turn.TurnNumber()].detail_view = view
 
 	return view
 }
 
 func (m model) renderReviewSummaryRow(turn *game.Turn) string {
-	is_turn_selected := m.state.gameReview.selected_turn == turn.TurnNumber - 1
-	td, ok := m.state.gameReview.viewCache[turn.TurnNumber]
+	is_turn_selected := m.state.gameReview.selected_turn == turn.TurnNumber() - 1
+	td, ok := m.state.gameReview.viewCache[turn.TurnNumber()]
 	if ok {
 		if !is_turn_selected && td.summary_row != "" {
 			return td.summary_row
@@ -315,8 +315,8 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 
 	var solved_indicator_text string
 	var solved_indicator_style lipgloss.Style
-	if turn.Solved {
-		if turn.FinalTurn {
+	if turn.Solved() {
+		if turn.FinalTurn() {
 			solved_indicator_style = styles.TextYellow.Bold(true)
 			solved_indicator_text = "W "
 		} else {
@@ -325,7 +325,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 		}
 	} else {
 		solved_indicator_style = styles.TextRed.Bold(true)
-		if turn.FinalTurn {
+		if turn.FinalTurn() {
 			if m.game.Quit {
 				solved_indicator_text = "Q "
 			} else {
@@ -337,21 +337,21 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 	}
 
 	final_turn_num_str := fmt.Sprintf("%d.", m.game.TurnCount())
-	turn_num_str := fmt.Sprintf("%d.", turn.TurnNumber)
+	turn_num_str := fmt.Sprintf("%d.", turn.TurnNumber())
 	turn_num_padding := strings.Repeat(" ", len(final_turn_num_str) - len(turn_num_str))
 
-	prompt := strings.ToLower(turn.Prompt)
+	prompt := strings.ToLower(turn.Prompt())
 	prompt_padding := strings.Repeat(" ", m.game.Settings.PromptLenMax - len(prompt))
 
 	var strikes string
-	if turn.Strikes > 0 {
-		strikes = fmt.Sprintf(" -%d", turn.Strikes)
+	if turn.Strikes() > 0 {
+		strikes = fmt.Sprintf(" -%d", turn.Strikes())
 	} else {
 		strikes = strings.Repeat(" ", len(strikes_width))
 	}
 
 	var extra_life string
-	if turn.ExtraLifeGained {
+	if turn.ExtraLifeGained() {
 		extra_life = " +1"
 	} else {
 		extra_life = strings.Repeat(" ", len(extra_lives_width))
@@ -383,10 +383,10 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 		out.WriteString(selection_style.Render(edge_pad_str))
 
 		s := out.String()
-		if _, ok := m.state.gameReview.viewCache[turn.TurnNumber]; !ok {
-			m.state.gameReview.viewCache[turn.TurnNumber] = &TurnDisplay{}
+		if _, ok := m.state.gameReview.viewCache[turn.TurnNumber()]; !ok {
+			m.state.gameReview.viewCache[turn.TurnNumber()] = &TurnDisplay{}
 		}
-		m.state.gameReview.viewCache[turn.TurnNumber].summary_row_hl = s
+		m.state.gameReview.viewCache[turn.TurnNumber()].summary_row_hl = s
 
 		return lipgloss.NewStyle().
 			Width(m.state.gameReview.summary_row_width).
@@ -403,10 +403,10 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 	out.WriteString(edge_pad_str)
 
 	s := out.String()
-	if _, ok := m.state.gameReview.viewCache[turn.TurnNumber]; !ok {
-		m.state.gameReview.viewCache[turn.TurnNumber] = &TurnDisplay{}
+	if _, ok := m.state.gameReview.viewCache[turn.TurnNumber()]; !ok {
+		m.state.gameReview.viewCache[turn.TurnNumber()] = &TurnDisplay{}
 	}
-	m.state.gameReview.viewCache[turn.TurnNumber].summary_row = s
+	m.state.gameReview.viewCache[turn.TurnNumber()].summary_row = s
 
 	return s
 }
@@ -415,19 +415,19 @@ func (m model) getTurnBadges(turn *game.Turn) string {
 	badges := make([]string, 0)
 	base_badge_style := lipgloss.NewStyle().Foreground(theme.Background).Bold(true)
 
-	if turn.ExtraLifeGained {
+	if turn.ExtraLifeGained() {
 		badges = append(badges, base_badge_style.Background(theme.Highlight).Render(" extra life "))
 	}
 
-	if turn.Solved && len(turn.Answer) == len(m.game.Player.Stats.LongestSolve) {
+	if turn.Solved() && len(turn.Answer()) == len(m.game.Player.Stats.LongestSolve) {
 		badges = append(badges, base_badge_style.Background(theme.Yellow).Render(" longest answer "))
 	}
 
-	if turn.Solved && turn.UniqueLetterCount == m.game.Player.Stats.MostUniqueCount {
+	if turn.Solved() && turn.UniqueLetterCount() == m.game.Player.Stats.MostUniqueCount {
 		badges = append(badges, base_badge_style.Background(theme.Purple).Render(" most unique "))
 	}
 
-	if m.game.Player.Stats.LongestStreak > 0 && turn.Streak == m.game.Player.Stats.LongestStreak {
+	if m.game.Player.Stats.LongestStreak > 0 && turn.Streak() == m.game.Player.Stats.LongestStreak {
 		badges = append(badges, base_badge_style.Background(theme.Orange).Render(" longest streak "))
 	}
 

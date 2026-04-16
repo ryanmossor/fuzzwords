@@ -58,7 +58,7 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 		return theme.Red
 	}
 
-	prompt_upper := strings.ToUpper(m.game.CurrentTurn().Prompt)
+	prompt_upper := strings.ToUpper(m.state.game.turn.prompt)
 	answer_upper := strings.ToUpper(m.text_input.Value())
 
 	is_match := false

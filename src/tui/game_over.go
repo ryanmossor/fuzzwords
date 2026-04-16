@@ -198,10 +198,10 @@ func (m *model) renderGameOverStatTable() string {
 	if !m.game.GameWon {
 		msg = styles.TextRed.Render(fmt.Sprintf(
 			"Possible solve for final prompt %s: ",
-			strings.ToUpper(m.game.CurrentTurn().Prompt)))
+			strings.ToUpper(m.state.game.turn.prompt)))
 		msg += m.highlightPromptAnswer(
-			m.game.CurrentTurn().Prompt,
-			m.game.CurrentTurn().SourceWord,
+			m.state.game.turn.prompt,
+			m.state.game.possibleFinalAnswer,
 			m.game.Settings.PromptMode)
 	}
 
