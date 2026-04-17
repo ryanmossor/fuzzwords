@@ -32,6 +32,38 @@
           "displayText": "off"
         }
       ]
+    },
+    {
+      "propName": "HealthDisplay",
+      "displayName": "Health bar style",
+      "type": "string",
+      "default": "● ;◯ ",
+      "validValues": [
+        {
+          "value": "██;▒▒",
+          "displayText": "████████▒▒"
+        },
+        {
+          "value": "█ ;▒ ",
+          "displayText": "█ █ █ █ ▒"
+        },
+        {
+          "value": "◼ ;◻ ",
+          "displayText": "◼◼◼◼◻"
+        },
+        {
+          "value": "● ;◯ ",
+          "displayText": "● ● ● ● ◯"
+        },
+        {
+          "value": "##;  ",
+          "displayText": "[########  ]"
+        },
+        {
+          "value": "❤️;🤍",
+          "displayText": "❤️❤️❤️❤️🤍"
+        }
+      ]
     }
   ],
   "game": [
@@ -178,38 +210,6 @@
       "max": 10,
       "bindTo": "HealthInitial",
       "bindRule": ">="
-    },
-    {
-      "propName": "HealthDisplay",
-      "displayName": "Health bar style",
-      "type": "string",
-      "default": "● ;◯ ",
-      "validValues": [
-        {
-          "value": "██;▒▒",
-          "displayText": "████████▒▒"
-        },
-        {
-          "value": "█ ;▒ ",
-          "displayText": "█ █ █ █ ▒"
-        },
-        {
-          "value": "◼ ;◻ ",
-          "displayText": "◼◼◼◼◻"
-        },
-        {
-          "value": "● ;◯ ",
-          "displayText": "● ● ● ● ◯"
-        },
-        {
-          "value": "##;  ",
-          "displayText": "[########  ]"
-        },
-        {
-          "value": "❤️;🤍",
-          "displayText": "❤️❤️❤️❤️🤍"
-        }
-      ]
     }
   ]
 }
