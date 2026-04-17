@@ -180,7 +180,6 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 	case game.AnswerAcceptedEvent:
 		msg := fmt.Sprintf("✓ %s  ", strings.ToUpper(e.Answer))
 		m.state.game.gameMsg = msg
-		m.state.game.playerDamaged = false
 		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 
 	case game.AnswerRejectedEvent:
