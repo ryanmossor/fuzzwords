@@ -56,7 +56,7 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 		Player:			newPlayer(*settings),
 		turns:			make([]Turn, 0, 300), // 300 should cover most games before realloc needed
 	}
-	g.newTurn(true)
+	g.newTurn(TransitionFirstTurn)
 
 	var events []GameEvent
 	events = append(events, NewTurnEvent{ Prompt: g.currentTurn().prompt })
@@ -72,11 +72,16 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 func (g *Game) SubmitAnswer(answer string) []GameEvent {
 	var events []GameEvent
 
-	answer_res := g.validateAnswer(answer)
-	if !answer_res.accepted {
+	if g.TimeRemaining() <= 0 {
+		events = g.handleTimeout()
+		return events
+	}
+
+	result := g.validateAnswer(answer)
+	if !result.accepted {
 		events = append(events, AnswerRejectedEvent {
 			Answer: answer,
-			Reason: answer_res.reason,
+			Reason: result.reason,
 		})
 		return events
 	}
@@ -93,7 +98,7 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 		return events
 	}
 
-	g.newTurn(false)
+	g.newTurn(TransitionSolved)
 
 	events = append(events, NewTurnEvent{ Prompt: g.currentTurn().prompt })
 
@@ -145,7 +150,7 @@ func (g *Game) handleTimeout() []GameEvent {
 		strike_evt.Strikeout = true
 		strike_evt.Message = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.prompt))
 
-		g.newTurn(false)
+		g.newTurn(TransitionTimeout)
 		events = append(events, NewTurnEvent{ Prompt: g.currentTurn().prompt })
 	} else {
 		g.startStrikeTimer()
@@ -169,6 +174,7 @@ func (g *Game) QuitGame() []GameEvent {
 		return nil
 	}
 	g.endGame()
+
 	return []GameEvent {
 		GameOverEvent{
 			PossibleAnswer: g.currentTurn().sourceWord,

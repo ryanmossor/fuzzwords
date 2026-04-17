@@ -99,8 +99,15 @@ func (t Turn) Health() int {
 	return t.health
 }
 
+type TurnTransition int
+const (
+	TransitionFirstTurn TurnTransition = iota
+	TransitionSolved
+	TransitionTimeout
+)
+
 // TODO: ensure next prompt is different from previous if previous prompt was failed
-func (g *Game) newTurn(first_turn bool) {
+func (g *Game) newTurn(reason TurnTransition) {
 	word_idx := rand.Intn(len(g.wordLists.available))
 	word := g.wordLists.available[word_idx]
 
@@ -136,24 +143,21 @@ func (g *Game) newTurn(first_turn bool) {
 		"prompt", prompt)
 
 	var turn_duration time.Duration
-	if first_turn {
-		// Game start: default to 30s
+
+	switch reason {
+	case TransitionFirstTurn:
 		turn_duration = 30 * time.Second
 
-	} else if g.TimeRemaining() <= 0 {
-		// Timer expiration: reset to random time between 15s (or turn min if larger) and 30s
-		turn_duration_min := max(g.Settings.TurnDurationMin, 15)
-		turn_duration_max := 30
-		rand_sec := utils.RandomBetween(turn_duration_min, turn_duration_max)
+	case TransitionSolved:
+		remaining := max(0, g.TimeRemaining())
+		turn_duration = max(remaining, time.Duration(g.Settings.TurnDurationMin) * time.Second)
+
+	case TransitionTimeout:
+		// Reset to random time between 15s (or turn min if larger) and 30s
+		min_sec := max(g.Settings.TurnDurationMin, 15)
+		max_sec := 30
+		rand_sec := utils.RandomBetween(min_sec, max_sec)
 		turn_duration = time.Duration(rand_sec) * time.Second
-
-	} else if g.TimeRemaining().Seconds() < float64(g.Settings.TurnDurationMin) {
-		// Correct answer: reset timer to TurnDurationMin if timer is < TurnDurationMin
-		turn_duration = time.Duration(g.Settings.TurnDurationMin) * time.Second
-
-	} else {
-		// Correct answer: do nothing if timer > TurnDurationMin
-		turn_duration = g.TimeRemaining()
 	}
 
 	now := time.Now()
@@ -180,8 +184,8 @@ func (g *Game) newTurn(first_turn bool) {
 }
 
 func (g *Game) startStrikeTimer() {
-	turn_duration_min := max(15, g.Settings.TurnDurationMin)
-	duration_sec := utils.RandomBetween(turn_duration_min, 30)
+	min_sec := max(15, g.Settings.TurnDurationMin)
+	duration_sec := utils.RandomBetween(min_sec, 30)
 
 	g.currentTurn().strikeStart = time.Now()
 	g.currentTurn().strikeDuration = time.Duration(duration_sec) * time.Second
