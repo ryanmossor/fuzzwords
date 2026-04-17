@@ -60,6 +60,7 @@ type GameUIState struct {
 	gameMsg				string
 	possibleFinalAnswer	string
 	turn				TurnUIState
+	stats				game.PlayerStats
 }
 
 type FooterState struct {

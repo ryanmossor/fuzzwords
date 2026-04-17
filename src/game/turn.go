@@ -175,7 +175,7 @@ func (g *Game) newTurn(first_turn bool) {
 
 		lettersRemaining: maps.Clone(g.Player.LettersRemaining),
 		newLettersUsed: make([]rune, 0, 16),
-		health: g.Player.HealthCurrent,
+		health: g.Player.healthCurrent,
 	})
 }
 
@@ -303,21 +303,21 @@ func (g *Game) handleCorrectAnswer(answer string) bool {
 
 	for _, c := range strings.ToUpper(answer) {
 		// TODO: consolidate LettersUsed/LettersRemaining, make []rune instead of []string?
-		if !slices.Contains(g.Player.LettersUsed, c) && strings.ContainsRune(g.Settings.Alphabet.Letters(), c) {
-			g.Player.LettersUsed = append(g.Player.LettersUsed, c)
+		if !slices.Contains(g.Player.lettersUsed, c) && strings.ContainsRune(g.Settings.Alphabet.Letters(), c) {
+			g.Player.lettersUsed = append(g.Player.lettersUsed, c)
 			turn.newLettersUsed = append(turn.newLettersUsed, c)
 		}
 
 		g.Player.LettersRemaining[c] = true
 	}
 
-	if len(g.Player.LettersUsed) >= len(g.Settings.Alphabet.Letters()) {
-		g.Player.LettersUsed = make([]rune, 0, len(g.Settings.Alphabet.Letters()))
+	if len(g.Player.lettersUsed) >= len(g.Settings.Alphabet.Letters()) {
+		g.Player.lettersUsed = make([]rune, 0, len(g.Settings.Alphabet.Letters()))
 		// TODO having letters remaining AND letters used seems redundant? consider consolidating into single map
 		g.Player.LettersRemaining = utils.StringToCharMap(g.Settings.Alphabet.Letters())
 
-		if g.Player.HealthCurrent < g.Settings.HealthMax {
-			g.Player.HealthCurrent++
+		if g.Player.healthCurrent < g.Settings.HealthMax {
+			g.Player.healthCurrent++
 			turn.health++
 		}
 

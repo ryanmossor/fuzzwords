@@ -218,12 +218,14 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 		cmds = append(cmds, m.debounceInputCmd(500))
 		m.state.game.gameOver = true
 		m.state.game.possibleFinalAnswer = e.PossibleAnswer
+		m.state.game.stats = e.Stats
 
 	case game.GameWonEvent:
 		m.state.game.playerDamaged = false
 		m.state.game.gameOver = true
 		m.state.game.gameMsg = ""
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
+		m.state.game.stats = e.Stats
 
 	default:
 		slog.Warn("Game event not handled", "type", reflect.TypeOf(e).String(), "event", e)

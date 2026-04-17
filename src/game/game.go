@@ -84,12 +84,12 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 
 	life_gained := g.handleCorrectAnswer(answer)
 	if life_gained {
-		events = append(events, ExtraLifeEvent{ Health: uint(g.Player.HealthCurrent) })
+		events = append(events, ExtraLifeEvent{ Health: uint(g.Player.healthCurrent) })
 	}
 
 	if g.determineWon() {
 		g.endGame()
-		events = append(events, GameWonEvent{})
+		events = append(events, GameWonEvent{ Stats: g.Player.stats })
 		return events
 	}
 
@@ -123,16 +123,19 @@ func (g *Game) handleTimeout() []GameEvent {
 	g.Player.streak = 0
 	turn.streak = 0
 
-	g.Player.HealthCurrent--
+	g.Player.healthCurrent--
 	turn.health--
-	events = append(events, PlayerDamagedEvent{ Health: uint(g.Player.HealthCurrent) })
+	events = append(events, PlayerDamagedEvent{ Health: uint(g.Player.healthCurrent) })
 
 	turn.strikes++
 	strike_evt := StrikeEvent{}
 
-	if g.Player.HealthCurrent <= 0 {
+	if g.Player.healthCurrent <= 0 {
 		g.endGame()
-		events = append(events, strike_evt, GameOverEvent{ PossibleAnswer: turn.sourceWord })
+		events = append(events, strike_evt, GameOverEvent{
+			PossibleAnswer: turn.sourceWord,
+			Stats: g.Player.stats,
+		})
 		return events
 	}
 
@@ -156,7 +159,7 @@ func (g *Game) handleTimeout() []GameEvent {
 func (g Game) determineWon() bool {
 	all_words_used := len(g.wordLists.available) == 0
 	max_lives_win := g.Settings.WinCondition == enums.WinConditionMaxLives &&
-					 g.Player.HealthCurrent == g.Settings.HealthMax
+					 g.Player.healthCurrent == g.Settings.HealthMax
 
 	return all_words_used || max_lives_win
 }
@@ -167,7 +170,10 @@ func (g *Game) QuitGame() []GameEvent {
 	}
 	g.endGame()
 	return []GameEvent {
-		GameOverEvent{ PossibleAnswer: g.currentTurn().sourceWord },
+		GameOverEvent{
+			PossibleAnswer: g.currentTurn().sourceWord,
+			Stats: g.Player.stats,
+		},
 		GameQuitEvent{},
 	}
 }
@@ -185,7 +191,7 @@ func (g *Game) endGame() {
 	turn.totalTurnDuration = time.Since(turn.turnStart)
 	turn.finalTurn = true
 
-	g.Player.Stats = g.calculateGameStats()
+	g.Player.stats = g.calculateGameStats()
 }
 
 func (g Game) GameActive() bool {

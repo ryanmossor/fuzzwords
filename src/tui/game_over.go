@@ -119,50 +119,50 @@ func (m *model) renderGameOverStatTable() string {
 		return m.state.gameOver.viewCache["stats"]
 	}
 
-	stats := m.game.Player.Stats
+	stats := m.state.game.stats
 
 	var longest_streak string
-	if stats.LongestStreak == 0 {
+	if stats.LongestStreak() == 0 {
 		longest_streak = "-"
 	} else {
-		longest_streak = fmt.Sprintf("%d words", stats.LongestStreak)
+		longest_streak = fmt.Sprintf("%d words", stats.LongestStreak())
 	}
 
 	var longest_solve, longest_count string
-	if stats.LongestSolve == "" {
+	if stats.LongestSolve() == "" {
 		longest_solve = "-"
 	} else {
-		longest_solve = fmt.Sprintf("%s", stats.LongestSolve)
-		longest_count = fmt.Sprintf("(%d)", len(stats.LongestSolve))
+		longest_solve = fmt.Sprintf("%s", stats.LongestSolve())
+		longest_count = fmt.Sprintf("(%d)", len(stats.LongestSolve()))
 	}
 
 	var most_unique_solve, most_unique_count string
-	if stats.MostUniqueWord == "" {
+	if stats.MostUniqueWord() == "" {
 		most_unique_solve = "-"
 	} else {
-		most_unique_solve = fmt.Sprintf("%s", stats.MostUniqueWord)
-		most_unique_count = fmt.Sprintf("(%d)", stats.MostUniqueCount)
+		most_unique_solve = fmt.Sprintf("%s", stats.MostUniqueWord())
+		most_unique_count = fmt.Sprintf("(%d)", stats.MostUniqueCount())
 	}
 
-	fastest_extra_life := fmt.Sprintf("%d turns", stats.FewestExtraLifeSolves)
-	if stats.FewestExtraLifeSolves == 0 {
+	fastest_extra_life := fmt.Sprintf("%d turns", stats.FewestExtraLifeSolves())
+	if stats.FewestExtraLifeSolves() == 0 {
 		fastest_extra_life = "-"
 	}
 
 	solves_per_min := "0"
-    if stats.PromptsSolved > 0 {
-		solves_per_min = fmt.Sprintf("%.1f", stats.SolvesPerMinute)
+    if stats.PromptsSolved() > 0 {
+		solves_per_min = fmt.Sprintf("%.1f", stats.SolvesPerMinute())
 	}
 
 	rows := [][]string {
-		{"Time played", utils.FormatTime(stats.TimePlayed)},
-		{"Prompts solved", fmt.Sprintf("%d / %d", stats.PromptsSolved, m.game.TurnCount())},
+		{"Time played", utils.FormatTime(stats.TimePlayed())},
+		{"Prompts solved", fmt.Sprintf("%d / %d", stats.PromptsSolved(), m.game.TurnCount())},
 		{"Solves per minute", solves_per_min},
 		{"Longest streak", longest_streak},
-		{"Average solve length", fmt.Sprintf("%.1f letters", stats.AverageSolveLength)},
+		{"Average solve length", fmt.Sprintf("%.1f letters", stats.AverageSolveLength())},
 		{"Longest word used", longest_solve, longest_count},
 		{"Most unique letters", most_unique_solve, most_unique_count},
-		{"Extra lives gained", strconv.Itoa(stats.ExtraLivesGained)},
+		{"Extra lives gained", strconv.Itoa(stats.ExtraLivesGained())},
 		{"Fastest extra life", fastest_extra_life},
 	}
 
@@ -180,7 +180,7 @@ func (m *model) renderGameOverStatTable() string {
 				style = styles.TextBody
 			}
 
-			if col == 0 && stats.PromptsSolved > 0 {
+			if col == 0 && stats.PromptsSolved() > 0 {
 				// Pad 1st col to offset extra width of 3rd col (counts for longest/most unique words)
 				// 3rd col only populated if at least 1 prompt was solved
 				style = style.PaddingLeft(len(longest_count) + 1)

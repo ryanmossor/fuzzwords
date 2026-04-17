@@ -176,13 +176,6 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 		return td.detail_view
 	}
 
-	var solved_style lipgloss.Style
-	if turn.Solved() {
-		solved_style = lipgloss.NewStyle().Foreground(theme.Background).Background(theme.Green).Bold(true)
-	} else {
-		solved_style = lipgloss.NewStyle().Foreground(theme.Background).Background(theme.Red).Bold(true)
-	}
-
 	rows := [][]string{}
 
 	if turn.Solved() {
@@ -263,6 +256,13 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 			return style
 		}).
 		Render()
+
+	var solved_style lipgloss.Style
+	if turn.Solved() {
+		solved_style = lipgloss.NewStyle().Foreground(theme.Background).Background(theme.Green).Bold(true)
+	} else {
+		solved_style = lipgloss.NewStyle().Foreground(theme.Background).Background(theme.Red).Bold(true)
+	}
 
 	title_line := solved_style.Render(fmt.Sprintf(" #%d ", turn.TurnNumber()))
 	title_line += " "
@@ -419,15 +419,15 @@ func (m model) getTurnBadges(turn *game.Turn) string {
 		badges = append(badges, base_badge_style.Background(theme.Highlight).Render(" extra life "))
 	}
 
-	if turn.Solved() && len(turn.Answer()) == len(m.game.Player.Stats.LongestSolve) {
+	if turn.Solved() && len(turn.Answer()) == len(m.state.game.stats.LongestSolve()) {
 		badges = append(badges, base_badge_style.Background(theme.Yellow).Render(" longest answer "))
 	}
 
-	if turn.Solved() && turn.UniqueLetterCount() == m.game.Player.Stats.MostUniqueCount {
+	if turn.Solved() && turn.UniqueLetterCount() == m.state.game.stats.MostUniqueCount() {
 		badges = append(badges, base_badge_style.Background(theme.Purple).Render(" most unique "))
 	}
 
-	if m.game.Player.Stats.LongestStreak > 0 && turn.Streak() == m.game.Player.Stats.LongestStreak {
+	if m.state.game.stats.LongestStreak() > 0 && turn.Streak() == m.state.game.stats.LongestStreak() {
 		badges = append(badges, base_badge_style.Background(theme.Orange).Render(" longest streak "))
 	}
 

@@ -16,16 +16,19 @@ type AnswerRejectedEvent struct {
 }
 
 type ExtraLifeEvent struct {
-	Health		uint
+	Health	uint
 }
 
 type GameOverEvent struct {
 	PossibleAnswer	string
+	Stats			PlayerStats
 }
 
 type GameQuitEvent struct{}
 
-type GameWonEvent struct{}
+type GameWonEvent struct {
+	Stats	PlayerStats
+}
 
 type StrikeEvent struct {
 	Strikeout	bool
@@ -34,6 +37,6 @@ type StrikeEvent struct {
 }
 
 type PlayerDamagedEvent struct {
-	Amount		uint
-	Health		uint
+	Amount	uint
+	Health	uint
 }
