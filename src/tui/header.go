@@ -12,7 +12,7 @@ import (
 
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// TODO: has_header flag
-	if m.game.GameActive ||
+	if m.game.GameActive() ||
 	m.page == game_over_page ||
 	m.page == game_review_page ||
 	m.page == settings_page ||

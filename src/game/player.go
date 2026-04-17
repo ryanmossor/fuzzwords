@@ -39,7 +39,7 @@ func newPlayer(settings GameSettings) Player {
 	return player
 }
 
-func (g *Game) CalculateGameStats() PlayerStats {
+func (g *Game) calculateGameStats() PlayerStats {
 	start := time.Now()
 
 	stats := PlayerStats{}

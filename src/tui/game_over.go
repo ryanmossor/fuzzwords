@@ -29,7 +29,7 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 		{key: "q", value: "quit"},
 	}
 
-	if m.game.GameWon {
+	if m.game.GameWon() {
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
 	}
 
@@ -77,7 +77,7 @@ func (m *model) GameOverView() string {
 		m.renderGameOverStatTable(),
 	)
 
-	if !m.game.GameWon || !m.app_settings.Prefs.AnimationsEnabled {
+	if !m.game.GameWon() || !m.app_settings.Prefs.AnimationsEnabled {
 		m.state.gameOver.viewCache["fullView"] = view
 	}
 
@@ -91,7 +91,7 @@ func (m *model) renderGameOverTitleMsg() string {
 
 	var title string
 
-	if m.game.GameWon {
+	if m.game.GameWon() {
 		var changed bool
 		title, changed = m.anim_mgr.ApplyAnimations(
 			string(animations.GameOverWin),
@@ -194,23 +194,21 @@ func (m *model) renderGameOverStatTable() string {
 		}).
 		Render()
 
-	var msg string
-	if !m.game.GameWon {
-		msg = styles.TextRed.Render(fmt.Sprintf(
+	lines := []string{ stats_table }
+
+	if !m.game.GameWon() {
+		msg := styles.TextRed.Render(fmt.Sprintf(
 			"Possible solve for final prompt %s: ",
 			strings.ToUpper(m.state.game.turn.prompt)))
 		msg += m.highlightPromptAnswer(
 			m.state.game.turn.prompt,
 			m.state.game.possibleFinalAnswer,
 			m.game.Settings.PromptMode)
+
+		lines = append(lines, "", msg)
 	}
 
-	view := lipgloss.JoinVertical(
-		lipgloss.Center,
-		stats_table,
-		"",
-        msg,
-	)
+	view := lipgloss.JoinVertical(lipgloss.Center, lines...)
 	m.state.gameOver.viewCache["stats"] = view
 
 	return view

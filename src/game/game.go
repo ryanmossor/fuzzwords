@@ -12,8 +12,8 @@ import (
 )
 
 type Game struct {
-	GameActive			bool
-	GameWon				bool
+	gameActive			bool
+	gameWon				bool
 	startUnixTs			int64
 	gameStart			time.Time
 	gameEnd				time.Time
@@ -42,8 +42,8 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 	}
 
 	g := Game {
-		GameActive: 	true,
-		GameWon:		false,
+		gameActive: 	true,
+		gameWon:		false,
 		gameStart: 		time.Now(),
 		startUnixTs:	time.Now().UnixMilli(),
 		failedTurns:	[]int{},
@@ -101,7 +101,7 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 }
 
 func (g *Game) AdvanceTime(now time.Time) []GameEvent {
-	if !g.GameActive {
+	if !g.gameActive {
 		return nil
 	}
 
@@ -162,7 +162,7 @@ func (g Game) determineWon() bool {
 }
 
 func (g *Game) QuitGame() []GameEvent {
-	if !g.GameActive {
+	if !g.gameActive {
 		return nil
 	}
 	g.endGame()
@@ -173,19 +173,27 @@ func (g *Game) QuitGame() []GameEvent {
 }
 
 func (g *Game) endGame() {
-	if !g.GameActive {
+	if !g.gameActive {
 		return
 	}
 
 	g.gameEnd = time.Now()
-	g.GameActive = false
-	g.GameWon = g.determineWon()
+	g.gameActive = false
+	g.gameWon = g.determineWon()
 
 	turn := g.currentTurn()
 	turn.totalTurnDuration = time.Since(turn.turnStart)
 	turn.finalTurn = true
 
-	g.Player.Stats = g.CalculateGameStats()
+	g.Player.Stats = g.calculateGameStats()
+}
+
+func (g Game) GameActive() bool {
+	return g.gameActive
+}
+
+func (g Game) GameWon() bool {
+	return g.gameWon
 }
 
 func (g Game) TurnCount() int {
