@@ -37,7 +37,7 @@ func (m model) renderTurnInfo(turn *game.Turn) string {
 func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
 	var out strings.Builder
 
-	for i, c := range m.game.Settings.Alphabet.Letters() {
+	for i, c := range m.game.Settings().Alphabet.Letters() {
 		if slices.Contains(turn.NewLettersUsed(), c) {
 			out.WriteString(styles.TextHighlight.Bold(true).Underline(true).Render(string(c)))
 		} else if turn.LettersUsed()[c] {
@@ -46,7 +46,7 @@ func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
 			out.WriteString(styles.TextYellow.Bold(true).Render(string(c)))
 		}
 
-		if i < len(m.game.Settings.Alphabet.Letters()) - 1 {
+		if i < len(m.game.Settings().Alphabet.Letters()) - 1 {
 			out.WriteRune(' ')
 		}
 	}

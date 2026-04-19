@@ -14,7 +14,7 @@ func (m model) GameStrikeCounterView() string {
 	strike_counter := styles.TextBody.Render("Strikes: ")
 	strike_counter += styles.TextRed.Render(fmt.Sprintf("%d/%d",
 		m.state.game.turn.strikes,
-		m.game.Settings.PromptStrikes))
+		m.game.Settings().PromptStrikes))
 
 	strike_counter, _ = m.anim_mgr.ApplyAnimations(
 		string(animations.StrikeCounter),

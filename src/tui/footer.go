@@ -12,9 +12,9 @@ func (m model) FooterView() string {
 	var footer_text_right string
 	if m.game.GameActive() || m.page == game_review_page || m.page == game_over_page {
 		footer_text_right = fmt.Sprintf("%s ─ %s ─ %s",
-			m.game.Settings.Dictionary.String(),
-			m.game.Settings.PromptMode.String(),
-			m.game.Settings.WinCondition.String())
+			m.game.Settings().Dictionary.String(),
+			m.game.Settings().PromptMode.String(),
+			m.game.Settings().WinCondition.String())
 	}
 
 	pad := 2

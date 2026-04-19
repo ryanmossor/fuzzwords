@@ -27,7 +27,7 @@ func (m model) GameView() string {
 		game_msg = m.highlightPromptAnswer(
 			m.state.game.turn.prompt,
 			m.text_input.Value(),
-			m.game.Settings.PromptMode)
+			m.game.Settings().PromptMode)
 	}
 
 	return lipgloss.JoinVertical(
@@ -67,7 +67,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.game, events = game.NewGame(&m.app_settings.Game)
 
 	m.state.game = GameUIState {
-		lettersUsed: utils.StringToCharMap(m.game.Settings.Alphabet.Letters()),
+		lettersUsed: utils.StringToCharMap(m.game.Settings().Alphabet.Letters()),
 	}
 	m.state.gameOver = GameOverState {
 		viewCache: make(map[string]string),
@@ -81,7 +81,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 		cmds = append(cmds, m.handleGameEvent(e)...)
 	}
 
-	m.state.game.health = uint(m.game.Settings.HealthInitial)
+	m.state.game.health = uint(m.game.Settings().HealthInitial)
 
 	m.text_input = m.initBlockTextInput()
 	cmds = append(cmds, textinput.Blink)
@@ -173,10 +173,10 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	return m, update_input_cmd
 }
 
-func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
+func (m *model) handleGameEvent(event game.GameEvent) []tea.Cmd {
 	var cmds []tea.Cmd
 
-	switch e := e.(type) {
+	switch e := event.(type) {
 	case game.NewTurnEvent:
 		m.state.game.turn = TurnUIState {
 			prompt: e.Prompt,
@@ -219,7 +219,7 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 	case game.ExtraLifeEvent:
 		m.state.game.health = e.Health
 		m.anim_mgr.InitAnimations(animations.ExtraLife)
-		m.state.game.lettersUsed = utils.StringToCharMap(m.game.Settings.Alphabet.Letters())
+		m.state.game.lettersUsed = utils.StringToCharMap(m.game.Settings().Alphabet.Letters())
 
 	case game.GameQuitEvent:
 		m.state.game.gameQuit = true

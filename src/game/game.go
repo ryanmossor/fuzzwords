@@ -20,7 +20,7 @@ type Game struct {
 	// Indexes of failed turns
 	failedTurns			[]int
 
-	Settings			GameSettings
+	settings			GameSettings
 	wordLists			wordLists
 	player				Player
 	// TODO: consider making this a map[int]*Turn? key is turn number/idx
@@ -47,7 +47,7 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 		gameStart: 		time.Now(),
 		startUnixTs:	time.Now().UnixMilli(),
 		failedTurns:	[]int{},
-		Settings: 		*settings,
+		settings: 		*settings,
 		wordLists: 		wordLists {
 			fullDict: 		full_map,
 			available: 		available,
@@ -63,8 +63,8 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 
 	slog.Info("Initialized game",
 		"startUnixTs", game.startUnixTs,
-		"alphabet", game.Settings.Alphabet.Letters(),
-		"settings", game.Settings)
+		"alphabet", game.settings.Alphabet.Letters(),
+		"settings", game.settings)
 
 	return game, events
 }
@@ -147,7 +147,7 @@ func (g *Game) handleTimeout() []GameEvent {
 		return events
 	}
 
-	if turn.strikes == g.Settings.PromptStrikes {
+	if turn.strikes == g.settings.PromptStrikes {
 		turn.totalTurnDuration = time.Since(turn.turnStart)
 
 		strike_evt.StrikeCount = 0
@@ -167,8 +167,8 @@ func (g *Game) handleTimeout() []GameEvent {
 
 func (g Game) determineWon() bool {
 	all_words_used := len(g.wordLists.available) == 0
-	max_lives_win := g.Settings.WinCondition == enums.WinConditionMaxLives &&
-					 g.player.healthCurrent == g.Settings.HealthMax
+	max_lives_win := g.settings.WinCondition == enums.WinConditionMaxLives &&
+					 g.player.healthCurrent == g.settings.HealthMax
 
 	return all_words_used || max_lives_win
 }
@@ -202,6 +202,10 @@ func (g *Game) endGame() {
 	turn.finalTurn = true
 
 	g.player.stats = g.calculateGameStats()
+}
+
+func (g Game) Settings() GameSettings {
+	return g.settings
 }
 
 func (g Game) GameActive() bool {

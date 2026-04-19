@@ -203,7 +203,7 @@ func (m *model) renderGameOverStatTable() string {
 		msg += m.highlightPromptAnswer(
 			m.state.game.turn.prompt,
 			m.state.game.possibleFinalAnswer,
-			m.game.Settings.PromptMode)
+			m.game.Settings().PromptMode)
 
 		lines = append(lines, "", msg)
 	}

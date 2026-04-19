@@ -114,21 +114,21 @@ func (g *Game) newTurn(reason TurnTransition) Turn {
 	assert.Assert(word != "", "Random word must not be empty", "word", word, "wordIdx", word_idx)
 
 	var prompt string
-	prompt_len := utils.RandomBetween(g.Settings.PromptLenMin, g.Settings.PromptLenMax)
+	prompt_len := utils.RandomBetween(g.settings.PromptLenMin, g.settings.PromptLenMax)
 
-	assert.Assert(prompt_len >= g.Settings.PromptLenMin, "Prompt len must be >= PromptLenMin",
+	assert.Assert(prompt_len >= g.settings.PromptLenMin, "Prompt len must be >= PromptLenMin",
 		"randPromptLen", prompt_len,
-		"promptLenMin", g.Settings.PromptLenMin)
-	assert.Assert(prompt_len <= g.Settings.PromptLenMax, "Prompt len must be <= PromptLenMax",
+		"promptLenMin", g.settings.PromptLenMin)
+	assert.Assert(prompt_len <= g.settings.PromptLenMax, "Prompt len must be <= PromptLenMax",
 		"randPromptLen", prompt_len,
-		"promptLenMax", g.Settings.PromptLenMax)
+		"promptLenMax", g.settings.PromptLenMax)
 
-	switch g.Settings.PromptMode {
+	switch g.settings.PromptMode {
 	case enums.PromptModeFuzzy:
-		prompt = createFuzzyPrompt(word, prompt_len, g.Settings.Dictionary)
+		prompt = createFuzzyPrompt(word, prompt_len, g.settings.Dictionary)
 	case enums.PromptModeClassic:
 		// TODO: classic prompts can contain hyphens/symbols in pokemon names bc it's just a substring
-		if len(word) <= g.Settings.PromptLenMax {
+		if len(word) <= g.settings.PromptLenMax {
 			prompt = word
 		} else {
 			rand_max := len(word) - prompt_len
@@ -150,11 +150,11 @@ func (g *Game) newTurn(reason TurnTransition) Turn {
 
 	case TransitionSolved:
 		remaining := max(0, g.TimeRemaining())
-		turn_duration = max(remaining, time.Duration(g.Settings.TurnDurationMin) * time.Second)
+		turn_duration = max(remaining, time.Duration(g.settings.TurnDurationMin) * time.Second)
 
 	case TransitionTimeout:
 		// Reset to random time between 15s (or turn min if larger) and 30s
-		min_sec := max(g.Settings.TurnDurationMin, 15)
+		min_sec := max(g.settings.TurnDurationMin, 15)
 		max_sec := 30
 		rand_sec := utils.RandomBetween(min_sec, max_sec)
 		turn_duration = time.Duration(rand_sec) * time.Second
@@ -187,7 +187,7 @@ func (g *Game) newTurn(reason TurnTransition) Turn {
 }
 
 func (g *Game) startStrikeTimer() {
-	min_sec := max(15, g.Settings.TurnDurationMin)
+	min_sec := max(15, g.settings.TurnDurationMin)
 	duration_sec := utils.RandomBetween(min_sec, 30)
 
 	g.currentTurn().strikeStart = time.Now()
@@ -222,10 +222,10 @@ func (g *Game) validateAnswer(answer string) answerResult {
 	}
 
 	is_match := false
-	if g.Settings.PromptMode == enums.PromptModeFuzzy {
+	if g.settings.PromptMode == enums.PromptModeFuzzy {
 		is_match = utils.IsFuzzyMatch(answer, g.currentTurn().prompt)
 	}
-	if g.Settings.PromptMode == enums.PromptModeClassic {
+	if g.settings.PromptMode == enums.PromptModeClassic {
 		is_match = strings.Contains(answer, g.currentTurn().prompt)
 	}
 
@@ -246,7 +246,7 @@ func (g *Game) validateAnswer(answer string) answerResult {
 		"answer", answer,
 		"accepted", result.accepted,
 		"reason", result.reason,
-		"promptMode", g.Settings.PromptMode.String())
+		"promptMode", g.settings.PromptMode.String())
 
 	if result.accepted {
 		word_idx, found := slices.BinarySearch(g.wordLists.available, answer)
@@ -316,7 +316,7 @@ func (g *Game) handleCorrectAnswer(answer string) Turn {
 	}
 
 	all_used := true
-	for _, c := range g.Settings.Alphabet.Letters() {
+	for _, c := range g.settings.Alphabet.Letters() {
 		if !g.player.lettersUsed[c] {
 			all_used = false
 			break
@@ -324,9 +324,9 @@ func (g *Game) handleCorrectAnswer(answer string) Turn {
 	}
 
 	if all_used {
-		g.player.lettersUsed = utils.StringToCharMap(g.Settings.Alphabet.Letters())
+		g.player.lettersUsed = utils.StringToCharMap(g.settings.Alphabet.Letters())
 
-		if g.player.healthCurrent < g.Settings.HealthMax {
+		if g.player.healthCurrent < g.settings.HealthMax {
 			g.player.healthCurrent++
 			turn.health++
 		}

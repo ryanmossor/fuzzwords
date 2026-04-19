@@ -35,7 +35,7 @@ func (m model) GameReviewSwitch() (model, tea.Cmd) {
 	summary_row_width := fmt.Sprintf("%s %d. %s %s %s",
 		"v", // validated symbol
 		m.game.TurnCount(),
-		strings.Repeat("_", m.game.Settings.PromptLenMax),
+		strings.Repeat("_", m.game.Settings().PromptLenMax),
 		"-s", // strike count
 		"+l", // extra life
 	)
@@ -181,12 +181,12 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 	if turn.Solved() {
 		rows = append(rows, []string{
 			"Answer",
-			m.highlightPromptAnswer(turn.Prompt(), turn.Answer(), m.game.Settings.PromptMode),
+			m.highlightPromptAnswer(turn.Prompt(), turn.Answer(), m.game.Settings().PromptMode),
 		})
 	} else {
 		rows = append(rows, []string{
 			"Possible answer",
-			m.highlightPromptAnswer(turn.Prompt(), turn.SourceWord(), m.game.Settings.PromptMode),
+			m.highlightPromptAnswer(turn.Prompt(), turn.SourceWord(), m.game.Settings().PromptMode),
 		})
 	}
 
@@ -210,7 +210,7 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 		red := styles.TextRed.Render
 		rows = append(rows, []string{
 			"Strikes",
-			red(fmt.Sprintf("%d/%d", turn.Strikes(), m.game.Settings.PromptStrikes)),
+			red(fmt.Sprintf("%d/%d", turn.Strikes(), m.game.Settings().PromptStrikes)),
 		})
 	}
 
@@ -341,7 +341,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 	turn_num_padding := strings.Repeat(" ", len(final_turn_num_str) - len(turn_num_str))
 
 	prompt := strings.ToLower(turn.Prompt())
-	prompt_padding := strings.Repeat(" ", m.game.Settings.PromptLenMax - len(prompt))
+	prompt_padding := strings.Repeat(" ", m.game.Settings().PromptLenMax - len(prompt))
 
 	var strikes string
 	if turn.Strikes() > 0 {

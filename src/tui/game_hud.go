@@ -44,7 +44,7 @@ func (m model) renderHealthDisplay(health_current int) string {
 		sb.WriteString(bracket_style.Render("["))
 	}
 
-	health_max := m.game.Settings.HealthMax
+	health_max := m.game.Settings().HealthMax
 	sb.WriteString(full_style.Render(strings.Repeat(health_icon_full, health_current)))
 	sb.WriteString(styles.TextBody.Render(strings.Repeat(health_icon_empty, health_max - health_current)))
 
@@ -114,13 +114,13 @@ func (m model) renderRemainingLetters() string {
 
 	letters, changed := m.anim_mgr.ApplyAnimations(
 		string(animations.ExtraLife),
-		strings.Join(strings.Split(m.game.Settings.Alphabet.Letters(), ""), " "))
+		strings.Join(strings.Split(m.game.Settings().Alphabet.Letters(), ""), " "))
 	if changed {
 		return letters
 	}
 
 	var out strings.Builder
-	for i, c := range m.game.Settings.Alphabet.Letters() {
+	for i, c := range m.game.Settings().Alphabet.Letters() {
 		if m.state.game.lettersUsed[c] {
 			out.WriteString(styles.TextDim.Render(string(c)))
 		} else if m.state.game.playerDamaged {
@@ -129,7 +129,7 @@ func (m model) renderRemainingLetters() string {
 			out.WriteString(styles.TextYellow.Bold(true).Render(string(c)))
 		}
 
-		if i < len(m.game.Settings.Alphabet.Letters()) - 1 {
+		if i < len(m.game.Settings().Alphabet.Letters()) - 1 {
 			out.WriteRune(' ')
 		}
 	}
