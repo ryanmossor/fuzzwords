@@ -85,12 +85,16 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 		})
 		return events
 	}
-	events = append(events, AnswerAcceptedEvent{ Answer: answer })
 
 	life_gained := g.handleCorrectAnswer(answer)
 	if life_gained {
 		events = append(events, ExtraLifeEvent{ Health: uint(g.Player.healthCurrent) })
 	}
+
+	events = append(events, AnswerAcceptedEvent {
+		Answer: answer,
+		NewLettersUsed: g.currentTurn().newLettersUsed,
+	})
 
 	if g.determineWon() {
 		g.endGame()

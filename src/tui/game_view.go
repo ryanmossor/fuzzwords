@@ -5,6 +5,7 @@ import (
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
 	"fzwds/src/tui/styles"
+	"fzwds/src/utils"
 	"log/slog"
 	"reflect"
 	"strings"
@@ -62,12 +63,18 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 		{key: "ctrl+q", value: "quit"},
 	}
 
-	m.state.game = GameUIState{}
-	m.state.gameOver = GameOverState{ viewCache: make(map[string]string) }
-	m.state.gameReview = GameReviewState{ viewCache: make(map[int]*TurnDisplay) }
-
 	var events []game.GameEvent
 	m.game, events = game.NewGame(&m.app_settings.Game)
+
+	m.state.game = GameUIState {
+		lettersRemaining: utils.StringToCharMap(m.game.Settings.Alphabet.Letters()),
+	}
+	m.state.gameOver = GameOverState {
+		viewCache: make(map[string]string),
+	}
+	m.state.gameReview = GameReviewState {
+		viewCache: make(map[int]*TurnDisplay),
+	}
 
 	var cmds []tea.Cmd
 	for _, e := range events {
@@ -181,6 +188,9 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 		msg := fmt.Sprintf("✓ %s  ", strings.ToUpper(e.Answer))
 		m.state.game.gameMsg = msg
 		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
+		for _, c := range e.NewLettersUsed {
+			m.state.game.lettersRemaining[c] = true
+		}
 
 	case game.AnswerRejectedEvent:
 		m.state.game.turn.prevAnswer = e.Answer
@@ -209,6 +219,7 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 	case game.ExtraLifeEvent:
 		m.state.game.health = e.Health
 		m.anim_mgr.InitAnimations(animations.ExtraLife)
+		m.state.game.lettersRemaining = utils.StringToCharMap(m.game.Settings.Alphabet.Letters())
 
 	case game.GameQuitEvent:
 		m.state.game.gameQuit = true

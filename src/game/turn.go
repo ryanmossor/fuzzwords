@@ -177,7 +177,7 @@ func (g *Game) newTurn(reason TurnTransition) {
 		solved: false,
 		extraLifeGained: false,
 
-		lettersRemaining: maps.Clone(g.Player.LettersRemaining),
+		lettersRemaining: maps.Clone(g.Player.lettersRemaining),
 		newLettersUsed: make([]rune, 0, 16),
 		health: g.Player.healthCurrent,
 	})
@@ -312,13 +312,13 @@ func (g *Game) handleCorrectAnswer(answer string) bool {
 			turn.newLettersUsed = append(turn.newLettersUsed, c)
 		}
 
-		g.Player.LettersRemaining[c] = true
+		g.Player.lettersRemaining[c] = true
 	}
 
 	if len(g.Player.lettersUsed) >= len(g.Settings.Alphabet.Letters()) {
 		g.Player.lettersUsed = make([]rune, 0, len(g.Settings.Alphabet.Letters()))
 		// TODO having letters remaining AND letters used seems redundant? consider consolidating into single map
-		g.Player.LettersRemaining = utils.StringToCharMap(g.Settings.Alphabet.Letters())
+		g.Player.lettersRemaining = utils.StringToCharMap(g.Settings.Alphabet.Letters())
 
 		if g.Player.healthCurrent < g.Settings.HealthMax {
 			g.Player.healthCurrent++

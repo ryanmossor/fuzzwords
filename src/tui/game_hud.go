@@ -121,7 +121,7 @@ func (m model) renderRemainingLetters() string {
 
 	var out strings.Builder
 	for i, c := range m.game.Settings.Alphabet.Letters() {
-		if m.game.Player.LettersRemaining[c] {
+		if m.state.game.lettersRemaining[c] {
 			out.WriteString(styles.TextDim.Render(string(c)))
 		} else if m.state.game.playerDamaged {
 			out.WriteString(styles.TextRed.Bold(true).Render(string(c)))

@@ -7,7 +7,8 @@ type NewTurnEvent struct {
 }
 
 type AnswerAcceptedEvent struct {
-	Answer	string
+	Answer			string
+	NewLettersUsed 	[]rune
 }
 
 type AnswerRejectedEvent struct {

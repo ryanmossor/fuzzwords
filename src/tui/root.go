@@ -59,6 +59,7 @@ type GameUIState struct {
 	health				uint
 	gameMsg				string
 	possibleFinalAnswer	string
+	lettersRemaining 	map[rune]bool
 	turn				TurnUIState
 	stats				game.PlayerStats
 }

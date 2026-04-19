@@ -64,7 +64,7 @@ func (s PlayerStats) LongestSolve() string {
 type Player struct {
 	healthCurrent    int
 	lettersUsed      []rune
-	LettersRemaining map[rune]bool
+	lettersRemaining map[rune]bool
 	streak           int
 	stats            PlayerStats
 }
@@ -72,7 +72,7 @@ type Player struct {
 func newPlayer(settings GameSettings) Player {
 	player := Player{
 		healthCurrent:    settings.HealthInitial,
-		LettersRemaining: utils.StringToCharMap(settings.Alphabet.Letters()),
+		lettersRemaining: utils.StringToCharMap(settings.Alphabet.Letters()),
 		lettersUsed:      make([]rune, 0, len(settings.Alphabet.Letters())),
 		streak:           0,
 		stats:            PlayerStats{},
