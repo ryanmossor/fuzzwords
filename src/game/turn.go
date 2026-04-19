@@ -107,7 +107,7 @@ const (
 )
 
 // TODO: ensure next prompt is different from previous if previous prompt was failed
-func (g *Game) newTurn(reason TurnTransition) {
+func (g *Game) newTurn(reason TurnTransition) Turn {
 	word_idx := rand.Intn(len(g.wordLists.available))
 	word := g.wordLists.available[word_idx]
 
@@ -161,7 +161,7 @@ func (g *Game) newTurn(reason TurnTransition) {
 	}
 
 	now := time.Now()
-	g.turns = append(g.turns, Turn {
+	turn := Turn {
 		turnNumber: g.CurrentTurnNumber() + 1,
 		turnStart: now,
 
@@ -180,7 +180,10 @@ func (g *Game) newTurn(reason TurnTransition) {
 		lettersRemaining: maps.Clone(g.Player.lettersRemaining),
 		newLettersUsed: make([]rune, 0, 16),
 		health: g.Player.healthCurrent,
-	})
+	}
+	g.turns = append(g.turns, turn)
+
+	return turn
 }
 
 func (g *Game) startStrikeTimer() {
@@ -295,7 +298,7 @@ func createFuzzyPrompt(word string, prompt_len int, dict enums.Dictionary) strin
 	return prompt
 }
 
-func (g *Game) handleCorrectAnswer(answer string) bool {
+func (g *Game) handleCorrectAnswer(answer string) Turn {
 	turn := g.currentTurn()
 	turn.totalTurnDuration = time.Since(turn.turnStart)
 	turn.solved = true
@@ -328,5 +331,5 @@ func (g *Game) handleCorrectAnswer(answer string) bool {
 		turn.extraLifeGained = true
 	}
 
-	return turn.extraLifeGained
+	return *turn
 }

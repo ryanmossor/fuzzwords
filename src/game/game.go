@@ -41,7 +41,7 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 		full_map = utils.ArrToMap(available)
 	}
 
-	g := Game {
+	game := Game {
 		gameActive: 	true,
 		gameWon:		false,
 		gameStart: 		time.Now(),
@@ -56,17 +56,17 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 		Player:			newPlayer(*settings),
 		turns:			make([]Turn, 0, 300), // 300 should cover most games before realloc needed
 	}
-	g.newTurn(TransitionFirstTurn)
 
 	var events []GameEvent
-	events = append(events, NewTurnEvent{ Prompt: g.currentTurn().prompt })
+	turn := game.newTurn(TransitionFirstTurn)
+	events = append(events, NewTurnEvent{ Prompt: turn.prompt })
 
 	slog.Info("Initialized game",
-		"startUnixTs", g.startUnixTs,
-		"alphabet", g.Settings.Alphabet.Letters(),
-		"settings", g.Settings)
+		"startUnixTs", game.startUnixTs,
+		"alphabet", game.Settings.Alphabet.Letters(),
+		"settings", game.Settings)
 
-	return g, events
+	return game, events
 }
 
 func (g *Game) SubmitAnswer(answer string) []GameEvent {
@@ -86,14 +86,14 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 		return events
 	}
 
-	life_gained := g.handleCorrectAnswer(answer)
-	if life_gained {
+	turn := g.handleCorrectAnswer(answer)
+	if turn.extraLifeGained {
 		events = append(events, ExtraLifeEvent{ Health: uint(g.Player.healthCurrent) })
 	}
 
 	events = append(events, AnswerAcceptedEvent {
 		Answer: answer,
-		NewLettersUsed: g.currentTurn().newLettersUsed,
+		NewLettersUsed: turn.newLettersUsed,
 	})
 
 	if g.determineWon() {
@@ -102,9 +102,8 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 		return events
 	}
 
-	g.newTurn(TransitionSolved)
-
-	events = append(events, NewTurnEvent{ Prompt: g.currentTurn().prompt })
+	t := g.newTurn(TransitionSolved)
+	events = append(events, NewTurnEvent{ Prompt: t.prompt })
 
 	return events
 }
@@ -151,15 +150,16 @@ func (g *Game) handleTimeout() []GameEvent {
 	if turn.strikes == g.Settings.PromptStrikes {
 		turn.totalTurnDuration = time.Since(turn.turnStart)
 
+		strike_evt.StrikeCount = 0
 		strike_evt.Strikeout = true
 		strike_evt.Message = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.prompt))
 
-		g.newTurn(TransitionTimeout)
-		events = append(events, NewTurnEvent{ Prompt: g.currentTurn().prompt })
+		t := g.newTurn(TransitionTimeout)
+		events = append(events, NewTurnEvent{ Prompt: t.prompt })
 	} else {
 		g.startStrikeTimer()
+		strike_evt.StrikeCount = turn.strikes
 	}
-	strike_evt.StrikeCount = g.currentTurn().strikes
 	events = append(events, strike_evt)
 
 	return events
