@@ -22,7 +22,7 @@ type Game struct {
 
 	Settings			GameSettings
 	wordLists			wordLists
-	Player				Player
+	player				Player
 	// TODO: consider making this a map[int]*Turn? key is turn number/idx
 	// Would make accessing failed turns by idx easier
 	turns				[]Turn
@@ -53,7 +53,7 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 			available: 		available,
 			used: 			make(map[string]bool),
 		},
-		Player:			newPlayer(*settings),
+		player:			newPlayer(*settings),
 		turns:			make([]Turn, 0, 300), // 300 should cover most games before realloc needed
 	}
 
@@ -89,7 +89,7 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 	accepted_evt := AnswerAcceptedEvent{ Answer: answer }
 	turn := g.handleCorrectAnswer(answer)
 	if turn.extraLifeGained {
-		events = append(events, ExtraLifeEvent{ Health: uint(g.Player.healthCurrent) })
+		events = append(events, ExtraLifeEvent{ Health: uint(g.player.healthCurrent) })
 	} else {
 		// Only when no extra life; UI resets used letters on extra life event
 		accepted_evt.NewLettersUsed = turn.newLettersUsed
@@ -98,7 +98,7 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 
 	if g.determineWon() {
 		g.endGame()
-		events = append(events, GameWonEvent{ Stats: g.Player.stats })
+		events = append(events, GameWonEvent{ Stats: g.player.stats })
 		return events
 	}
 
@@ -128,21 +128,21 @@ func (g *Game) handleTimeout() []GameEvent {
 	turn := g.currentTurn()
 	var events []GameEvent
 
-	g.Player.streak = 0
+	g.player.streak = 0
 	turn.streak = 0
 
-	g.Player.healthCurrent--
+	g.player.healthCurrent--
 	turn.health--
-	events = append(events, PlayerDamagedEvent{ Health: uint(g.Player.healthCurrent) })
+	events = append(events, PlayerDamagedEvent{ Health: uint(g.player.healthCurrent) })
 
 	turn.strikes++
 	strike_evt := StrikeEvent{}
 
-	if g.Player.healthCurrent <= 0 {
+	if g.player.healthCurrent <= 0 {
 		g.endGame()
 		events = append(events, strike_evt, GameOverEvent{
 			PossibleAnswer: turn.sourceWord,
-			Stats: g.Player.stats,
+			Stats: g.player.stats,
 		})
 		return events
 	}
@@ -168,7 +168,7 @@ func (g *Game) handleTimeout() []GameEvent {
 func (g Game) determineWon() bool {
 	all_words_used := len(g.wordLists.available) == 0
 	max_lives_win := g.Settings.WinCondition == enums.WinConditionMaxLives &&
-					 g.Player.healthCurrent == g.Settings.HealthMax
+					 g.player.healthCurrent == g.Settings.HealthMax
 
 	return all_words_used || max_lives_win
 }
@@ -182,7 +182,7 @@ func (g *Game) QuitGame() []GameEvent {
 	return []GameEvent {
 		GameOverEvent{
 			PossibleAnswer: g.currentTurn().sourceWord,
-			Stats: g.Player.stats,
+			Stats: g.player.stats,
 		},
 		GameQuitEvent{},
 	}
@@ -201,7 +201,7 @@ func (g *Game) endGame() {
 	turn.totalTurnDuration = time.Since(turn.turnStart)
 	turn.finalTurn = true
 
-	g.Player.stats = g.calculateGameStats()
+	g.player.stats = g.calculateGameStats()
 }
 
 func (g Game) GameActive() bool {

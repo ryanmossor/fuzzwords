@@ -177,9 +177,9 @@ func (g *Game) newTurn(reason TurnTransition) Turn {
 		solved: false,
 		extraLifeGained: false,
 
-		lettersUsed: maps.Clone(g.Player.lettersUsed),
+		lettersUsed: maps.Clone(g.player.lettersUsed),
 		newLettersUsed: make([]rune, 0, 16),
-		health: g.Player.healthCurrent,
+		health: g.player.healthCurrent,
 	}
 	g.turns = append(g.turns, turn)
 
@@ -305,29 +305,29 @@ func (g *Game) handleCorrectAnswer(answer string) Turn {
 	turn.answer = answer
 	turn.uniqueLetterCount = utils.CountUniqueLetters(answer)
 
-	g.Player.streak++
-	turn.streak = g.Player.streak
+	g.player.streak++
+	turn.streak = g.player.streak
 
 	for _, c := range strings.ToUpper(answer) {
-		if used, is_in_alphabet := g.Player.lettersUsed[c]; !used && is_in_alphabet {
+		if used, is_in_alphabet := g.player.lettersUsed[c]; !used && is_in_alphabet {
 			turn.newLettersUsed = append(turn.newLettersUsed, c)
-			g.Player.lettersUsed[c] = true
+			g.player.lettersUsed[c] = true
 		}
 	}
 
 	all_used := true
 	for _, c := range g.Settings.Alphabet.Letters() {
-		if !g.Player.lettersUsed[c] {
+		if !g.player.lettersUsed[c] {
 			all_used = false
 			break
 		}
 	}
 
 	if all_used {
-		g.Player.lettersUsed = utils.StringToCharMap(g.Settings.Alphabet.Letters())
+		g.player.lettersUsed = utils.StringToCharMap(g.Settings.Alphabet.Letters())
 
-		if g.Player.healthCurrent < g.Settings.HealthMax {
-			g.Player.healthCurrent++
+		if g.player.healthCurrent < g.Settings.HealthMax {
+			g.player.healthCurrent++
 			turn.health++
 		}
 
