@@ -40,7 +40,7 @@ func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
 	for i, c := range m.game.Settings.Alphabet.Letters() {
 		if slices.Contains(turn.NewLettersUsed(), c) {
 			out.WriteString(styles.TextHighlight.Bold(true).Underline(true).Render(string(c)))
-		} else if turn.LettersRemaining()[c] {
+		} else if turn.LettersUsed()[c] {
 			out.WriteString(styles.TextDim.Render(string(c)))
 		} else {
 			out.WriteString(styles.TextYellow.Bold(true).Render(string(c)))

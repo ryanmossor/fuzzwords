@@ -67,7 +67,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	m.game, events = game.NewGame(&m.app_settings.Game)
 
 	m.state.game = GameUIState {
-		lettersRemaining: utils.StringToCharMap(m.game.Settings.Alphabet.Letters()),
+		lettersUsed: utils.StringToCharMap(m.game.Settings.Alphabet.Letters()),
 	}
 	m.state.gameOver = GameOverState {
 		viewCache: make(map[string]string),
@@ -189,7 +189,7 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 		m.state.game.gameMsg = msg
 		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 		for _, c := range e.NewLettersUsed {
-			m.state.game.lettersRemaining[c] = true
+			m.state.game.lettersUsed[c] = true
 		}
 
 	case game.AnswerRejectedEvent:
@@ -219,7 +219,7 @@ func (m *model) handleGameEvent(e game.GameEvent) []tea.Cmd {
 	case game.ExtraLifeEvent:
 		m.state.game.health = e.Health
 		m.anim_mgr.InitAnimations(animations.ExtraLife)
-		m.state.game.lettersRemaining = utils.StringToCharMap(m.game.Settings.Alphabet.Letters())
+		m.state.game.lettersUsed = utils.StringToCharMap(m.game.Settings.Alphabet.Letters())
 
 	case game.GameQuitEvent:
 		m.state.game.gameQuit = true

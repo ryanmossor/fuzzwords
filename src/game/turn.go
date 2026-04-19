@@ -31,7 +31,7 @@ type Turn struct {
 	solved				bool
 	extraLifeGained		bool
 
-	lettersRemaining	map[rune]bool
+	lettersUsed			map[rune]bool
 	newLettersUsed		[]rune
 	uniqueLetterCount	int
 	streak				int
@@ -79,8 +79,8 @@ func (t Turn) ExtraLifeGained() bool {
 	return t.extraLifeGained
 }
 
-func (t Turn) LettersRemaining() map[rune]bool {
-	return t.lettersRemaining
+func (t Turn) LettersUsed() map[rune]bool {
+	return t.lettersUsed
 }
 
 func (t Turn) NewLettersUsed() []rune {
@@ -177,7 +177,7 @@ func (g *Game) newTurn(reason TurnTransition) Turn {
 		solved: false,
 		extraLifeGained: false,
 
-		lettersRemaining: maps.Clone(g.Player.lettersRemaining),
+		lettersUsed: maps.Clone(g.Player.lettersUsed),
 		newLettersUsed: make([]rune, 0, 16),
 		health: g.Player.healthCurrent,
 	}
@@ -309,19 +309,22 @@ func (g *Game) handleCorrectAnswer(answer string) Turn {
 	turn.streak = g.Player.streak
 
 	for _, c := range strings.ToUpper(answer) {
-		// TODO: consolidate LettersUsed/LettersRemaining, make []rune instead of []string?
-		if !slices.Contains(g.Player.lettersUsed, c) && strings.ContainsRune(g.Settings.Alphabet.Letters(), c) {
-			g.Player.lettersUsed = append(g.Player.lettersUsed, c)
+		if used, is_in_alphabet := g.Player.lettersUsed[c]; !used && is_in_alphabet {
 			turn.newLettersUsed = append(turn.newLettersUsed, c)
+			g.Player.lettersUsed[c] = true
 		}
-
-		g.Player.lettersRemaining[c] = true
 	}
 
-	if len(g.Player.lettersUsed) >= len(g.Settings.Alphabet.Letters()) {
-		g.Player.lettersUsed = make([]rune, 0, len(g.Settings.Alphabet.Letters()))
-		// TODO having letters remaining AND letters used seems redundant? consider consolidating into single map
-		g.Player.lettersRemaining = utils.StringToCharMap(g.Settings.Alphabet.Letters())
+	all_used := true
+	for _, c := range g.Settings.Alphabet.Letters() {
+		if !g.Player.lettersUsed[c] {
+			all_used = false
+			break
+		}
+	}
+
+	if all_used {
+		g.Player.lettersUsed = utils.StringToCharMap(g.Settings.Alphabet.Letters())
 
 		if g.Player.healthCurrent < g.Settings.HealthMax {
 			g.Player.healthCurrent++
