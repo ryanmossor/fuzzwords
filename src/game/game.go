@@ -17,9 +17,6 @@ type Game struct {
 	startUnixTs			int64
 	gameStart			time.Time
 	gameEnd				time.Time
-	// Indexes of failed turns
-	failedTurns			[]int
-
 	settings			GameSettings
 	wordLists			wordLists
 	player				Player
@@ -46,7 +43,6 @@ func NewGame(settings *GameSettings) (Game, []GameEvent) {
 		gameWon:		false,
 		gameStart: 		time.Now(),
 		startUnixTs:	time.Now().UnixMilli(),
-		failedTurns:	[]int{},
 		settings: 		*settings,
 		wordLists: 		wordLists {
 			fullDict: 		full_map,

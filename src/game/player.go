@@ -89,7 +89,7 @@ func (g *Game) calculateGameStats() PlayerStats {
 	turns_since_last_extra_life := 0
 	longest_streak := 0
 
-	for i, turn := range g.turns {
+	for _, turn := range g.turns {
 		turns_since_last_extra_life++
 
 		if turn.solved {
@@ -120,7 +120,6 @@ func (g *Game) calculateGameStats() PlayerStats {
 			}
 		} else {
 			stats.promptsFailed++
-			g.failedTurns = append(g.failedTurns, i)
 		}
 	}
 
