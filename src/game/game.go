@@ -84,7 +84,7 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 	accepted_evt := AnswerAcceptedEvent{ Answer: answer }
 	turn := g.handleCorrectAnswer(answer)
 	if turn.extraLifeGained {
-		events = append(events, ExtraLifeEvent{ Health: uint(g.player.healthCurrent) })
+		events = append(events, ExtraLifeEvent{ Health: g.player.healthCurrent })
 	} else {
 		// Only when no extra life; UI resets used letters on extra life event
 		accepted_evt.NewLettersUsed = turn.newLettersUsed
@@ -128,7 +128,7 @@ func (g *Game) handleTimeout() []GameEvent {
 
 	g.player.healthCurrent--
 	turn.health--
-	events = append(events, PlayerDamagedEvent{ Health: uint(g.player.healthCurrent) })
+	events = append(events, PlayerDamagedEvent{ Health: g.player.healthCurrent })
 
 	turn.strikes++
 	strike_evt := StrikeEvent{}

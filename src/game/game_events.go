@@ -17,7 +17,7 @@ type AnswerRejectedEvent struct {
 }
 
 type ExtraLifeEvent struct {
-	Health	uint
+	Health	int
 }
 
 type GameOverEvent struct {
@@ -38,6 +38,6 @@ type StrikeEvent struct {
 }
 
 type PlayerDamagedEvent struct {
-	Amount	uint
-	Health	uint
+	Amount	int
+	Health	int
 }

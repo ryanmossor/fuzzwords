@@ -56,7 +56,7 @@ type GameUIState struct {
 	inputRestricted		bool
 	gameOver			bool
 	gameQuit			bool
-	health				uint
+	health				int
 	gameMsg				string
 	possibleFinalAnswer	string
 	lettersUsed 	map[rune]bool

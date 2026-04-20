@@ -81,7 +81,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 		cmds = append(cmds, m.handleGameEvent(e)...)
 	}
 
-	m.state.game.health = uint(m.game.Settings().HealthInitial)
+	m.state.game.health = m.game.Settings().HealthInitial
 
 	m.text_input = m.initBlockTextInput()
 	cmds = append(cmds, textinput.Blink)
