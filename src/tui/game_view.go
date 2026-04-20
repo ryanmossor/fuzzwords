@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	"fzwds/src/game"
 	"fzwds/src/tui/animations"
 	"fzwds/src/tui/styles"
@@ -185,7 +184,7 @@ func (m *model) handleGameEvent(event game.GameEvent) []tea.Cmd {
 		}
 
 	case game.AnswerAcceptedEvent:
-		msg := fmt.Sprintf("✓ %s  ", strings.ToUpper(e.Answer))
+		msg := "✓ " + strings.ToUpper(e.Answer) + "  "
 		m.state.game.gameMsg = msg
 		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 		for _, c := range e.NewLettersUsed {

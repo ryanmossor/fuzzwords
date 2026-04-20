@@ -132,7 +132,7 @@ func (m *model) renderGameOverStatTable() string {
 	if stats.LongestSolve() == "" {
 		longest_solve = "-"
 	} else {
-		longest_solve = fmt.Sprintf("%s", stats.LongestSolve())
+		longest_solve = stats.LongestSolve()
 		longest_count = fmt.Sprintf("(%d)", len(stats.LongestSolve()))
 	}
 
@@ -140,7 +140,7 @@ func (m *model) renderGameOverStatTable() string {
 	if stats.MostUniqueWord() == "" {
 		most_unique_solve = "-"
 	} else {
-		most_unique_solve = fmt.Sprintf("%s", stats.MostUniqueWord())
+		most_unique_solve = stats.MostUniqueWord()
 		most_unique_count = fmt.Sprintf("(%d)", stats.MostUniqueCount())
 	}
 
