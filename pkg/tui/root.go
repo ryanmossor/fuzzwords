@@ -198,19 +198,7 @@ func NewModel(
 	}
 }
 
-type TickMsg struct {
-	Time	time.Time
-}
-
-// Global tick timer
-func (m model) tickCmd() tea.Cmd {
-	return tea.Tick(time.Second / time.Duration(m.FPS), func(t time.Time) tea.Msg {
-		return TickMsg{t}
-	})
-}
-
 func (m model) Init() tea.Cmd {
-	// TODO: batch async cmds - I/O, db loading, settings json etc
 	return tea.Batch(
 		m.MainMenuInit(),
 		m.PressPlayInit(),

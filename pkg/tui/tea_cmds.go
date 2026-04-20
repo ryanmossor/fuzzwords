@@ -9,6 +9,16 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type TickMsg struct {
+	Time	time.Time
+}
+// Global tick timer
+func (m model) tickCmd() tea.Cmd {
+	return tea.Tick(time.Second / time.Duration(m.FPS), func(t time.Time) tea.Msg {
+		return TickMsg{t}
+	})
+}
+
 type EnableInputMsg time.Time
 func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
     m.state.game.inputRestricted = true
