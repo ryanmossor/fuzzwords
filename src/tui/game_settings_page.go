@@ -203,6 +203,7 @@ func (m model) SettingsView() string {
 		}
 
 		row_1_space := m.width_content - lipgloss.Width(display_name) - lipgloss.Width(default_text) - 3
+		row_1_space = max(0, row_1_space)
 
 		var content string
 		description := setting.Description

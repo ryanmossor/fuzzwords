@@ -132,6 +132,7 @@ func (m model) PokemonGenSelectorView() string {
 
 		// TODO: better way of calculating width (eg max 50% of width container?)
 		row_space := m.width_content - lipgloss.Width(display_name) - lipgloss.Width(row_text) - 3 - 26
+		row_space = max(0, row_space)
 
 		gen_len := len(dictionary.PokemonDictionary[gen])
 		desc := fmt.Sprintf(" %s - %s",
