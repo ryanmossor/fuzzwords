@@ -8,6 +8,7 @@ import (
 	"fzwds/src/utils"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -34,6 +35,7 @@ func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.Pr
 				sb.WriteString(accent(curr_char))
 			}
 		}
+
 	case enums.PromptModeClassic:
 		if !strings.Contains(answer_upper, prompt_upper) {
 			sb.WriteString(accent(answer_upper))
@@ -52,22 +54,22 @@ func (m model) highlightPromptAnswer(prompt, answer string, prompt_mode enums.Pr
 // Get accent color for input box based on HighlightInput setting, damage state, etc.
 // Style applied to border if rounded-style input box, or left accent bar if block-style input box.
 func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipgloss.TerminalColor {
-	if m.state.game_ui.player_damaged {
+	if m.state.game.playerDamaged {
 		return theme.Red
 	}
 
-	prompt_upper := strings.ToUpper(m.game.CurrentTurn().Prompt)
+	prompt_upper := strings.ToUpper(m.state.game.turn.prompt)
 	answer_upper := strings.ToUpper(m.text_input.Value())
 
 	is_match := false
-	switch m.game.Settings.PromptMode {
+	switch m.game.Settings().PromptMode {
 	case enums.PromptModeFuzzy:
 		is_match = utils.IsFuzzyMatch(answer_upper, prompt_upper)
 	case enums.PromptModeClassic:
 		is_match = strings.Contains(answer_upper, prompt_upper)
 	}
 
-	if m.game.Settings.HighlightInput {
+	if m.game.Settings().HighlightInput {
 		valid_word := m.game.WordInDictionary(answer_upper)
 		if is_match && valid_word {
 			return theme.Green
@@ -80,14 +82,12 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 }
 
 func (m *model) renderValidationMsg() string {
-	if strings.HasPrefix(m.state.game_ui.validation_msg, "✓") {
-		return styles.TextGreen.Render(utils.RightPad(m.state.game_ui.validation_msg, 2))
+	if strings.HasPrefix(m.state.game.gameMsg, "✓") {
+		return styles.TextGreen.Render(m.state.game.gameMsg)
 	}
 
 	var msg string
-	msg, _ = m.anim_mgr.ApplyAnimations(
-		string(animations.ValidationMessage),
-		m.state.game_ui.validation_msg)
+	msg, _ = m.anim_mgr.ApplyAnimations(string(animations.ValidationMessage), m.state.game.gameMsg)
 
 	// Prevent input box from shaking by ensuring msg and input width are both even/odd
 	raw_str := utils.StripANSICodes(msg)
@@ -108,6 +108,10 @@ func (m model) initRoundedTextInput() textinput.Model {
 	text_input.Prompt = " "
 	text_input.CharLimit = 40
 	text_input.Width = 40
+
+	if !m.app_settings.Prefs.AnimationsEnabled {
+		text_input.Cursor.SetMode(cursor.CursorStatic)
+	}
 
 	text_input.Focus()
 
@@ -130,6 +134,10 @@ func (m model) initBlockTextInput() textinput.Model {
 	text_input.Prompt = "  "
 	text_input.CharLimit = 40
 	text_input.Width = text_input.CharLimit - len(text_input.Prompt) - 1
+
+	if !m.app_settings.Prefs.AnimationsEnabled {
+		text_input.Cursor.SetMode(cursor.CursorStatic)
+	}
 
 	input_bg_style := lipgloss.NewStyle().Background(theme.InputBg)
 

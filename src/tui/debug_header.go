@@ -48,6 +48,7 @@ func (m model) DebugView() string {
 
 	tabs := []string{
 		"viewSize " + m.debug_map["viewSize"] + " B",
+		fmt.Sprintf("input %v", !m.state.game.inputRestricted),
 		"keyPress " + m.debug_map["keyPress"],
 
 		// fmt.Sprintf("heightContainer %d", m.height_container),
@@ -55,6 +56,7 @@ func (m model) DebugView() string {
 
 		fmt.Sprintf("Turn %d", m.game.CurrentTurnNumber()),
 
+		// string(m.page),
 		// m.size.String(),
 	}
 

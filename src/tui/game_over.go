@@ -14,10 +14,11 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (m model) GameOverSwitch() (model, tea.Cmd) {
-	// Briefly prevent key presses on game over screen
-	cmds := []tea.Cmd{ m.debounceInputCmd(500) }
+type GameOverState struct {
+	viewCache		map[string]string
+}
 
+func (m model) GameOverSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(game_over_page)
 
 	m.footer_keymaps = []FooterKeymap {
@@ -28,42 +29,18 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 		{key: "q", value: "quit"},
 	}
 
-	if m.game.GameWon {
+	if m.game.GameWon() {
 		m.anim_mgr.InitAnimations(animations.GameOverWin)
 	}
 
-	m.state.game_ui.player_damaged = false
-
-	if m.game.GameWon {
-		m.state.game_ui.validation_msg = ""
-		m.state.game_ui.game_over_msg = "===== YOU WIN! ====="
-		m.anim_mgr.InitAnimations(animations.GameOverWin)
-	} else {
-		red := styles.TextRed
-		m.state.game_ui.validation_msg = red.Render(fmt.Sprintf(
-			"Possible solve for final prompt %s: ",
-			strings.ToUpper(m.game.CurrentTurn().Prompt)))
-		m.state.game_ui.validation_msg += m.highlightPromptAnswer(
-			m.game.CurrentTurn().Prompt,
-			m.game.CurrentTurn().SourceWord,
-			m.game.Settings.PromptMode)
-
-		m.state.game_ui.game_over_msg = red.Bold(true).Render("☠️ GAME OVER ☠️")
-	}
-
-	if !m.game.EarlyQuit && !m.game.GameWon && !m.state.game_ui.game_over_seen {
-		cmds = append(cmds, m.terminalBellCmd(false))
-	}
-
-	m.state.game_ui.game_over_seen = true
-
-	return m, tea.Batch(cmds...)
+	return m, nil
 }
 
 func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.state.game_ui.input_restricted {
+		// TODO can this check be in main model? or maybe just keep here since i want to refactor pages/components
+		if m.state.game.inputRestricted {
 			return m, nil
 		}
 
@@ -75,6 +52,7 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.SettingsSwitch(game_settings)
 		case "r":
+			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
 			return m.GameReviewSwitch()
 		case "enter":
 			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
@@ -87,52 +65,104 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) GameOverView() string {
-	stats := m.game.Player.Stats
+func (m *model) GameOverView() string {
+	if m.state.gameOver.viewCache["fullView"] != "" {
+		return m.state.gameOver.viewCache["fullView"]
+	}
+
+	view := lipgloss.JoinVertical(
+		lipgloss.Center,
+		m.renderGameOverTitleMsg(),
+		"",
+		m.renderGameOverStatTable(),
+	)
+
+	if !m.game.GameWon() || !m.app_settings.Prefs.AnimationsEnabled {
+		m.state.gameOver.viewCache["fullView"] = view
+	}
+
+	return view
+}
+
+func (m *model) renderGameOverTitleMsg() string {
+	if cached := m.state.gameOver.viewCache["title"]; cached != "" {
+		return cached
+	}
+
+	var title string
+
+	if m.game.GameWon() {
+		var changed bool
+		title, changed = m.anim_mgr.ApplyAnimations(
+			string(animations.GameOverWin),
+			"===== YOU WIN! =====")
+
+		if !changed {
+			title = styles.TextYellow.Bold(true).Render(title)
+		}
+
+		// Don't cache animated title
+		if m.app_settings.Prefs.AnimationsEnabled {
+			return title
+		}
+	} else {
+		title = styles.TextRed.Bold(true).Render("☠️ GAME OVER ☠️")
+	}
+
+	m.state.gameOver.viewCache["title"] = title
+
+	return title
+}
+
+func (m *model) renderGameOverStatTable() string {
+	if m.state.gameOver.viewCache["stats"] != "" {
+		return m.state.gameOver.viewCache["stats"]
+	}
+
+	stats := m.state.game.stats
 
 	var longest_streak string
-	if stats.LongestStreak == 0 {
+	if stats.LongestStreak() == 0 {
 		longest_streak = "-"
 	} else {
-		longest_streak = fmt.Sprintf("%d words", stats.LongestStreak)
+		longest_streak = fmt.Sprintf("%d words", stats.LongestStreak())
 	}
 
 	var longest_solve, longest_count string
-	if stats.LongestSolve == "" {
+	if stats.LongestSolve() == "" {
 		longest_solve = "-"
 	} else {
-		longest_solve = fmt.Sprintf("%s", stats.LongestSolve)
-		longest_count = fmt.Sprintf("(%d)", len(stats.LongestSolve))
+		longest_solve = stats.LongestSolve()
+		longest_count = fmt.Sprintf("(%d)", len(stats.LongestSolve()))
 	}
 
 	var most_unique_solve, most_unique_count string
-	if stats.MostUniqueWord == "" {
+	if stats.MostUniqueWord() == "" {
 		most_unique_solve = "-"
 	} else {
-		most_unique_solve = fmt.Sprintf("%s", stats.MostUniqueWord)
-		most_unique_count = fmt.Sprintf("(%d)", stats.MostUniqueCount)
+		most_unique_solve = stats.MostUniqueWord()
+		most_unique_count = fmt.Sprintf("(%d)", stats.MostUniqueCount())
 	}
 
-	fastest_extra_life := fmt.Sprintf("%d turns", stats.FewestExtraLifeSolves)
-	if stats.FewestExtraLifeSolves == 0 {
+	fastest_extra_life := fmt.Sprintf("%d turns", stats.FewestExtraLifeSolves())
+	if stats.FewestExtraLifeSolves() == 0 {
 		fastest_extra_life = "-"
 	}
 
 	solves_per_min := "0"
-    if stats.PromptsSolved > 0 {
-		solves_per_min = fmt.Sprintf("%.1f", stats.SolvesPerMinute)
+    if stats.PromptsSolved() > 0 {
+		solves_per_min = fmt.Sprintf("%.1f", stats.SolvesPerMinute())
 	}
 
 	rows := [][]string {
-		{"Time played", utils.FormatTime(stats.TimePlayed)},
-		{"Prompts solved", strconv.Itoa(stats.PromptsSolved)},
-		{"Prompts failed", strconv.Itoa(stats.PromptsFailed)},
+		{"Time played", utils.FormatTime(stats.TimePlayed())},
+		{"Prompts solved", fmt.Sprintf("%d / %d", stats.PromptsSolved(), m.game.TurnCount())},
 		{"Solves per minute", solves_per_min},
 		{"Longest streak", longest_streak},
-		{"Average solve length", fmt.Sprintf("%.1f letters", stats.AverageSolveLength)},
+		{"Average solve length", fmt.Sprintf("%.1f letters", stats.AverageSolveLength())},
 		{"Longest word used", longest_solve, longest_count},
 		{"Most unique letters", most_unique_solve, most_unique_count},
-		{"Extra lives gained", strconv.Itoa(stats.ExtraLivesGained)},
+		{"Extra lives gained", strconv.Itoa(stats.ExtraLivesGained())},
 		{"Fastest extra life", fastest_extra_life},
 	}
 
@@ -150,7 +180,7 @@ func (m model) GameOverView() string {
 				style = styles.TextBody
 			}
 
-			if col == 0 && stats.PromptsSolved > 0 {
+			if col == 0 && stats.PromptsSolved() > 0 {
 				// Pad 1st col to offset extra width of 3rd col (counts for longest/most unique words)
 				// 3rd col only populated if at least 1 prompt was solved
 				style = style.PaddingLeft(len(longest_count) + 1)
@@ -164,19 +194,22 @@ func (m model) GameOverView() string {
 		}).
 		Render()
 
-	game_over_msg, changed := m.anim_mgr.ApplyAnimations(
-		string(animations.GameOverWin),
-		m.state.game_ui.game_over_msg)
-	if !changed {
-		game_over_msg = styles.TextYellow.Bold(true).Render(game_over_msg)
+	lines := []string{ stats_table }
+
+	if !m.game.GameWon() {
+		msg := styles.TextRed.Render(fmt.Sprintf(
+			"Possible solve for final prompt %s: ",
+			strings.ToUpper(m.state.game.turn.prompt)))
+		msg += m.highlightPromptAnswer(
+			m.state.game.turn.prompt,
+			m.state.game.possibleFinalAnswer,
+			m.game.Settings().PromptMode)
+
+		lines = append(lines, "", msg)
 	}
 
-	return lipgloss.JoinVertical(
-		lipgloss.Center,
-		game_over_msg,
-		"",
-		stats_table,
-		"",
-        m.state.game_ui.validation_msg,
-	)
+	view := lipgloss.JoinVertical(lipgloss.Center, lines...)
+	m.state.gameOver.viewCache["stats"] = view
+
+	return view
 }

@@ -7,43 +7,81 @@ import (
 )
 
 type PlayerStats struct {
-	TimePlayed            time.Duration
-	PromptsSolved         int
-	PromptsFailed         int
-	SolvesPerMinute       float64
-	AverageSolveLength    float64
-	LongestStreak         int
-	ExtraLivesGained      int
-	FewestExtraLifeSolves int
-	MostUniqueCount       int
-	MostUniqueWord        string
-	LongestSolve          string
+	timePlayed            time.Duration
+	promptsSolved         int
+	promptsFailed         int
+	solvesPerMinute       float64
+	averageSolveLength    float64
+	longestStreak         int
+	extraLivesGained      int
+	fewestExtraLifeSolves int
+	mostUniqueCount       int
+	mostUniqueWord        string
+	longestSolve          string
+}
+
+func (s PlayerStats) TimePlayed() time.Duration {
+	return s.timePlayed
+}
+
+func (s PlayerStats) PromptsSolved() int {
+	return s.promptsSolved
+}
+
+func (s PlayerStats) SolvesPerMinute() float64 {
+	return s.solvesPerMinute
+}
+
+func (s PlayerStats) AverageSolveLength() float64 {
+	return s.averageSolveLength
+}
+
+func (s PlayerStats) LongestStreak() int {
+	return s.longestStreak
+}
+
+func (s PlayerStats) ExtraLivesGained() int {
+	return s.extraLivesGained
+}
+
+func (s PlayerStats) FewestExtraLifeSolves() int {
+	return s.fewestExtraLifeSolves
+}
+
+func (s PlayerStats) MostUniqueCount() int {
+	return s.mostUniqueCount
+}
+
+func (s PlayerStats) MostUniqueWord() string {
+	return s.mostUniqueWord
+}
+
+func (s PlayerStats) LongestSolve() string {
+	return s.longestSolve
 }
 
 type Player struct {
-	HealthCurrent    int
-	LettersUsed      []rune
-	LettersRemaining map[rune]bool
+	healthCurrent    int
 	streak           int
-	Stats            PlayerStats
+	lettersUsed		 map[rune]bool
+	stats            PlayerStats
 }
 
 func newPlayer(settings GameSettings) Player {
-	player := Player{
-		HealthCurrent:    settings.HealthInitial,
-		LettersRemaining: utils.StringToCharMap(settings.Alphabet.Letters()),
-		LettersUsed:      make([]rune, 0, len(settings.Alphabet.Letters())),
-		streak:           0,
-		Stats:            PlayerStats{},
+	player := Player {
+		healthCurrent:  settings.HealthInitial,
+		streak:         0,
+		lettersUsed:	utils.StringToCharMap(settings.Alphabet.Letters()),
+		stats:          PlayerStats{},
 	}
 	return player
 }
 
-func (g *Game) CalculateGameStats() PlayerStats {
+func (g *Game) calculateGameStats() PlayerStats {
 	start := time.Now()
 
 	stats := PlayerStats{}
-	stats.TimePlayed = g.gameEnd.Sub(g.gameStart)
+	stats.timePlayed = g.gameEnd.Sub(g.gameStart)
 
 	solve_lengths := make([]int, 0, len(g.turns))
 	solve_len_idx := 0
@@ -51,51 +89,50 @@ func (g *Game) CalculateGameStats() PlayerStats {
 	turns_since_last_extra_life := 0
 	longest_streak := 0
 
-	for i, turn := range g.turns {
+	for _, turn := range g.turns {
 		turns_since_last_extra_life++
 
-		if turn.Solved {
-			stats.PromptsSolved++
+		if turn.solved {
+			stats.promptsSolved++
 
-			if turn.Streak > longest_streak {
-				longest_streak = turn.Streak
+			if turn.streak > longest_streak {
+				longest_streak = turn.streak
 			}
 
-			solve_lengths = append(solve_lengths, len(turn.Answer))
+			solve_lengths = append(solve_lengths, len(turn.answer))
 			solve_len_idx++
 
-			if len(turn.Answer) > len(stats.LongestSolve) {
-				stats.LongestSolve = turn.Answer
+			if len(turn.answer) > len(stats.longestSolve) {
+				stats.longestSolve = turn.answer
 			}
 
-			if turn.UniqueLetterCount > stats.MostUniqueCount {
-				stats.MostUniqueWord = turn.Answer
-				stats.MostUniqueCount = turn.UniqueLetterCount
+			if turn.uniqueLetterCount > stats.mostUniqueCount {
+				stats.mostUniqueWord = turn.answer
+				stats.mostUniqueCount = turn.uniqueLetterCount
 			}
 
-			if turn.ExtraLifeGained {
-				stats.ExtraLivesGained++
-				if stats.FewestExtraLifeSolves == 0 || turns_since_last_extra_life < stats.FewestExtraLifeSolves {
-					stats.FewestExtraLifeSolves = turns_since_last_extra_life
+			if turn.extraLifeGained {
+				stats.extraLivesGained++
+				if stats.fewestExtraLifeSolves == 0 || turns_since_last_extra_life < stats.fewestExtraLifeSolves {
+					stats.fewestExtraLifeSolves = turns_since_last_extra_life
 				}
 				turns_since_last_extra_life = 0
 			}
 		} else {
-			stats.PromptsFailed++
-			g.failedTurns = append(g.failedTurns, i)
+			stats.promptsFailed++
 		}
 	}
 
-	stats.AverageSolveLength = utils.Average(solve_lengths)
-	stats.SolvesPerMinute = float64(stats.PromptsSolved) / (float64(stats.TimePlayed.Seconds()) / 60.0)
-	stats.LongestStreak = longest_streak
+	stats.averageSolveLength = utils.Average(solve_lengths)
+	stats.solvesPerMinute = float64(stats.promptsSolved) / (float64(stats.timePlayed.Seconds()) / 60.0)
+	stats.longestStreak = longest_streak
 
 	elapsed := time.Since(start)
 
 	slog.Debug("Calculated stats for game",
 		"startUnixTx", g.startUnixTs,
 		"turns", len(g.turns),
-		"gameDuration", utils.FormatTime(stats.TimePlayed),
+		"gameDuration", utils.FormatTime(stats.timePlayed),
 		"calcTimeMs", elapsed.Milliseconds(),
 	)
 

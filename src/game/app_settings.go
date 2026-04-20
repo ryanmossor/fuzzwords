@@ -11,6 +11,7 @@ import (
 type GeneralPreferences struct {
 	AnimationsEnabled		bool		`json:"animationsEnabled"`
 	BellEnabled				bool		`json:"bellEnabled"`
+	HealthDisplay			string		`json:"healthDisplay"`
 	// TODO: color theme, health bar color?
 }
 
@@ -26,11 +27,7 @@ type GameSettings struct {
 	PromptLenMax			int					`json:"promptLenMax"`
 	TurnDurationMin			int					`json:"turnDurationMin"`
 	PromptStrikes			int					`json:"promptStrikes"`
-	HealthDisplay			string				`json:"healthDisplay"`
 	PokemonGens				[]int				`json:"pokemonGens"`
-	// TODO: add cfg for hints after each strike?
-	// hints_enabled			bool
-	// hint_chars_per_turn		int
 }
 
 type Settings struct {
@@ -40,8 +37,9 @@ type Settings struct {
 
 func GetDefaultGeneralPreferences() GeneralPreferences {
 	return GeneralPreferences {
-		AnimationsEnabled: true,
-		BellEnabled: false,
+		AnimationsEnabled: 	true,
+		BellEnabled: 		false,
+		HealthDisplay:		"● ;◯ ",
 	}
 }
 
@@ -58,7 +56,6 @@ func GetDefaultGameSettings() GameSettings {
 		PromptLenMax: 		3,
 		TurnDurationMin: 	10,
 		PromptStrikes:		2,
-		HealthDisplay:		"● ;◯ ",
 	}
 }
 
@@ -93,12 +90,12 @@ func (s *Settings) GetSetting(propName string) any {
 		return s.Game.TurnDurationMin
 	case "PromptStrikes":
 		return s.Game.PromptStrikes
-	case "HealthDisplay":
-		return s.Game.HealthDisplay
 	case "AnimationsEnabled":
 		return s.Prefs.AnimationsEnabled
 	case "BellEnabled":
 		return s.Prefs.BellEnabled
+	case "HealthDisplay":
+		return s.Prefs.HealthDisplay
 	}
 
 	return nil
@@ -170,10 +167,6 @@ func (s *Settings) SetSetting(propName string, value any, schema SettingsSchema)
 		if vInt, ok := utils.ParseInt(value); ok {
 			s.Game.PromptStrikes = vInt
 		}
-	case "HealthDisplay":
-		if vStr, ok := value.(string); ok {
-			s.Game.HealthDisplay = vStr
-		}
 	case "AnimationsEnabled":
 		if vbool, ok := value.(bool); ok {
 			s.Prefs.AnimationsEnabled = vbool
@@ -181,6 +174,10 @@ func (s *Settings) SetSetting(propName string, value any, schema SettingsSchema)
 	case "BellEnabled":
 		if vbool, ok := value.(bool); ok {
 			s.Prefs.BellEnabled = vbool
+		}
+	case "HealthDisplay":
+		if vStr, ok := value.(string); ok {
+			s.Prefs.HealthDisplay = vStr
 		}
 	}
 
@@ -282,9 +279,9 @@ func (s *Settings) ValidateSettings(schema SettingsSchema) *Settings {
 		SetPromptStrikes(s.Game.PromptStrikes, schema).
 		SetTurnDurationMin(s.Game.TurnDurationMin, schema).
 		SetWinCondition(s.Game.WinCondition.String(), schema).
-		SetHealthDisplay(s.Game.HealthDisplay, schema).
 		SetAnimationsEnabled(s.Prefs.AnimationsEnabled, schema).
-		SetBellEnabled(s.Prefs.BellEnabled, schema)
+		SetBellEnabled(s.Prefs.BellEnabled, schema).
+		SetHealthDisplay(s.Prefs.HealthDisplay, schema)
 }
 
 func ValidateSettingValue(schema_item SettingsSchemaItem, value any) bool {

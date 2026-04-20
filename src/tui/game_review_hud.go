@@ -13,7 +13,7 @@ import (
 
 func (m model) GameReviewHudView() string {
 	// TODO: refactor review state to have ref to current turn rather than idx
-	turn := m.game.GetTurn(m.state.game_review.selected_turn)
+	turn := m.game.GetTurn(m.state.gameReview.selected_turn)
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		m.renderTurnInfo(turn),
@@ -23,7 +23,7 @@ func (m model) GameReviewHudView() string {
 }
 
 func (m model) renderTurnInfo(turn *game.Turn) string {
-	health_display := m.renderHealthDisplay(turn.Health)
+	health_display := m.renderHealthDisplay(turn.Health())
 	health_change_info := m.renderHealthChangeInfo(turn)
 	line := styles.TextBorder.Render(strings.Repeat("─", m.width_container))
 
@@ -37,16 +37,16 @@ func (m model) renderTurnInfo(turn *game.Turn) string {
 func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
 	var out strings.Builder
 
-	for i, c := range m.game.Settings.Alphabet.Letters() {
-		if slices.Contains(turn.NewLettersUsed, c) {
+	for i, c := range m.game.Settings().Alphabet.Letters() {
+		if slices.Contains(turn.NewLettersUsed(), c) {
 			out.WriteString(styles.TextHighlight.Bold(true).Underline(true).Render(string(c)))
-		} else if turn.LettersRemaining[c] {
+		} else if turn.LettersUsed()[c] {
 			out.WriteString(styles.TextDim.Render(string(c)))
 		} else {
 			out.WriteString(styles.TextYellow.Bold(true).Render(string(c)))
 		}
 
-		if i < len(m.game.Settings.Alphabet.Letters()) - 1 {
+		if i < len(m.game.Settings().Alphabet.Letters()) - 1 {
 			out.WriteRune(' ')
 		}
 	}
@@ -57,11 +57,11 @@ func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
 func (m model) renderHealthChangeInfo(turn *game.Turn) string {
 	var health_change_info string
 
-	if turn.Strikes > 0 {
-		health_change_info += styles.TextRed.Render(fmt.Sprintf(" -%d", turn.Strikes))
+	if turn.Strikes() > 0 {
+		health_change_info += styles.TextRed.Render(fmt.Sprintf(" -%d", turn.Strikes()))
 	}
 
-	if turn.ExtraLifeGained {
+	if turn.ExtraLifeGained() {
 		health_change_info += styles.TextHighlight.Render(" +1")
 	}
 

@@ -8,26 +8,17 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type TurnTimerExpiredMsg struct{}
-func (m model) turnTimerExpiredCmd() tea.Cmd {
-	return func() tea.Msg {
-		return TurnTimerExpiredMsg{}
-	}
-}
-
 type EnableInputMsg time.Time
 func (m *model) debounceInputCmd(duration_ms int) tea.Cmd {
-    m.state.game_ui.input_restricted = true
-
+    m.state.game.inputRestricted = true
     return tea.Tick(time.Millisecond * time.Duration(duration_ms), func(t time.Time) tea.Msg {
 		return EnableInputMsg(t)
 	})
 }
 
 type TogglePlayerDamagedMsg struct{}
-func (m *model) setPlayerDamagedStateCmd() tea.Cmd {
-	m.state.game_ui.player_damaged = true
-    return tea.Tick(time.Millisecond * time.Duration(400), func(t time.Time) tea.Msg {
+func (m *model) togglePlayerDamagedCmd() tea.Cmd {
+    return tea.Tick(time.Millisecond * time.Duration(500), func(t time.Time) tea.Msg {
 		return TogglePlayerDamagedMsg{}
 	})
 }

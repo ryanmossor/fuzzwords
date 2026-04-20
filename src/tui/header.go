@@ -12,7 +12,7 @@ import (
 
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// TODO: has_header flag
-	if m.game.GameActive ||
+	if m.game.GameActive() ||
 	m.page == game_over_page ||
 	m.page == game_review_page ||
 	m.page == settings_page ||
@@ -54,7 +54,7 @@ func (m model) HeaderView() string {
 		return lipgloss.JoinVertical(
 			lipgloss.Center,
 			styles.TextBorder.Render(strings.Repeat("─", m.width_container)),
-			styles.TextYellow.Bold(true).Render(m.state.settings.title),
+			styles.TextBlue.Bold(true).Render(m.state.settings.title),
 			styles.TextBorder.Render(strings.Repeat("─", m.width_container)))
 	}
 

@@ -10,18 +10,18 @@ import (
 
 func (m model) FooterView() string {
 	var footer_text_right string
-	if m.game.GameActive || m.page == game_review_page || m.page == game_over_page {
-		footer_text_right = fmt.Sprintf("%s - %s - %s",
-			m.game.Settings.Dictionary.String(),
-			m.game.Settings.PromptMode.String(),
-			m.game.Settings.WinCondition.String())
+	if m.game.GameActive() || m.page == game_review_page || m.page == game_over_page {
+		footer_text_right = fmt.Sprintf("%s ─ %s ─ %s",
+			m.game.Settings().Dictionary.String(),
+			m.game.Settings().PromptMode.String(),
+			m.game.Settings().WinCondition.String())
 	}
 
 	pad := 2
 	max_footer_width := max(0, m.width_container - lipgloss.Width(footer_text_right) - pad)
 	footer_line := strings.Repeat("─", max_footer_width) + footer_text_right + strings.Repeat("─", pad)
 
-	if m.state.game_ui.player_damaged {
+	if m.state.game.playerDamaged {
 		footer_line = styles.TextRed.Render(footer_line)
 	} else {
 		footer_line = styles.TextDim.Render(footer_line)

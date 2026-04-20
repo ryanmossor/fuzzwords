@@ -14,7 +14,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type PokemonGenSelectorState struct {
+type PokemonMenuState struct {
 	selected 	int
 	gen_list	[]int
 	gen_state	map[int]bool
@@ -22,7 +22,7 @@ type PokemonGenSelectorState struct {
 
 func (m model) PokemonGenSelectorSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(pokemon_gen_selector)
-	m.state.pokemon_gen_selector.selected = 1
+	m.state.pokemonMenu.selected = 1
 
 	m.footer_keymaps = []FooterKeymap {
 		{key: "↑/↓", value: "scroll"},
@@ -41,35 +41,35 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		switch msg.String() {
 		case "j", "down", "tab":
-			if m.state.pokemon_gen_selector.selected + 1 > len(dictionary.PokemonDictionary) {
-				m.state.pokemon_gen_selector.selected = 1
+			if m.state.pokemonMenu.selected + 1 > len(dictionary.PokemonDictionary) {
+				m.state.pokemonMenu.selected = 1
 			} else {
-				m.state.pokemon_gen_selector.selected += 1
+				m.state.pokemonMenu.selected += 1
 			}
 
-			if m.state.pokemon_gen_selector.selected == 1 {
+			if m.state.pokemonMenu.selected == 1 {
 				m.goto_top = true
 			}
 
 		case "k", "up", "shift+tab":
-			if m.state.pokemon_gen_selector.selected - 1 <= 0 {
-				m.state.pokemon_gen_selector.selected = len(dictionary.PokemonDictionary)
+			if m.state.pokemonMenu.selected - 1 <= 0 {
+				m.state.pokemonMenu.selected = len(dictionary.PokemonDictionary)
 			} else {
-				m.state.pokemon_gen_selector.selected -= 1
+				m.state.pokemonMenu.selected -= 1
 			}
 
-			if m.state.pokemon_gen_selector.selected == len(dictionary.PokemonDictionary) - 1 {
+			if m.state.pokemonMenu.selected == len(dictionary.PokemonDictionary) - 1 {
 				m.goto_bottom = true
 			}
 
 		case "+", "=", "right", "l", "-", "left", "h":
-			idx := m.state.pokemon_gen_selector.selected
-			m.state.pokemon_gen_selector.gen_state[idx] = !m.state.pokemon_gen_selector.gen_state[idx]
+			idx := m.state.pokemonMenu.selected
+			m.state.pokemonMenu.gen_state[idx] = !m.state.pokemonMenu.gen_state[idx]
 			m.state.footer.footer_msg = ""
 
 		case "enter":
 			selected_gens := make([]int, 0, len(dictionary.PokemonDictionary))
-			for gen, enabled := range m.state.pokemon_gen_selector.gen_state {
+			for gen, enabled := range m.state.pokemonMenu.gen_state {
 				if enabled {
 					selected_gens = append(selected_gens, gen)
 				}
@@ -82,7 +82,7 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return m, nil
 			}
 
-			m.state.pokemon_gen_selector.gen_list = selected_gens
+			m.state.pokemonMenu.gen_list = selected_gens
 			m.app_settings.Game.PokemonGens = selected_gens
 
 			marshaled_settings, err := json.MarshalIndent(m.app_settings, "", "    ")
@@ -114,7 +114,7 @@ func (m model) PokemonGenSelectorView() string {
 	for i := range len(dictionary.PokemonDictionary) {
 		gen := i + 1
 
-		cur_val := m.state.pokemon_gen_selector.gen_state[gen]
+		cur_val := m.state.pokemonMenu.gen_state[gen]
 		var enabled_text string
 		if cur_val == true {
 			enabled_text = "on"
@@ -124,7 +124,7 @@ func (m model) PokemonGenSelectorView() string {
 
 		display_name := fmt.Sprintf(" Gen %d", gen)
 		row_text := dim("  " + enabled_text + "  ")
-		is_selected := m.state.pokemon_gen_selector.selected == gen
+		is_selected := m.state.pokemonMenu.selected == gen
 
 		if is_selected {
 			row_text = accent("◀ " + enabled_text + " ▶")
