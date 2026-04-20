@@ -6,7 +6,6 @@ import (
 	"fzwds/src/enums"
 	"fzwds/src/utils"
 	"log/slog"
-	"strings"
 	"time"
 )
 
@@ -131,7 +130,7 @@ func (g *Game) handleTimeout() []GameEvent {
 	events = append(events, PlayerDamagedEvent{ Health: g.player.healthCurrent })
 
 	turn.strikes++
-	strike_evt := StrikeEvent{}
+	strike_evt := StrikeEvent{ Prompt: turn.prompt }
 
 	if g.player.healthCurrent <= 0 {
 		g.endGame()
@@ -147,7 +146,6 @@ func (g *Game) handleTimeout() []GameEvent {
 
 		strike_evt.StrikeCount = 0
 		strike_evt.Strikeout = true
-		strike_evt.Message = "Prompt " + strings.ToUpper(turn.prompt) + " failed"
 
 		t := g.newTurn(TransitionTimeout)
 		events = append(events, NewTurnEvent{ Prompt: t.prompt })

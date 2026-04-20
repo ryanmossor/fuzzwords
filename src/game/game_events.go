@@ -13,7 +13,7 @@ type AnswerAcceptedEvent struct {
 
 type AnswerRejectedEvent struct {
 	Answer	string
-	Reason	string
+	Reason	RejectionReason
 }
 
 type ExtraLifeEvent struct {
@@ -34,7 +34,7 @@ type GameWonEvent struct {
 type StrikeEvent struct {
 	Strikeout	bool
 	StrikeCount	int
-	Message		string
+	Prompt		string
 }
 
 type PlayerDamagedEvent struct {

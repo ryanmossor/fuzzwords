@@ -199,10 +199,17 @@ func (g Game) TimeRemaining() time.Duration {
 		Sub(time.Now())
 }
 
+type RejectionReason int
+const (
+	RejectionEmpty RejectionReason = iota
+	RejectionInvalidWord
+	RejectionPromptMismatch
+	RejectionAlreadyUsed
+)
+
 type answerResult struct {
 	accepted	bool
-	// TODO make this an enum which UI then generates display message from?
-	reason		string
+	reason		RejectionReason
 }
 
 func (g *Game) validateAnswer(answer string) answerResult {
@@ -212,12 +219,12 @@ func (g *Game) validateAnswer(answer string) answerResult {
 	if len(answer) == 0 {
 		incr_guess_count = false
 		result.accepted = false
-		result.reason = "No answer given"
+		result.reason = RejectionEmpty
 	}
 
 	if result.accepted && !g.wordLists.fullDict[answer] {
 		result.accepted = false
-		result.reason = "Invalid word: " + strings.ToUpper(answer)
+		result.reason = RejectionInvalidWord
 	}
 
 	is_match := false
@@ -230,12 +237,12 @@ func (g *Game) validateAnswer(answer string) answerResult {
 
 	if result.accepted && !is_match {
 		result.accepted = false
-		result.reason = strings.ToUpper(answer) + " does not satisfy prompt"
+		result.reason = RejectionPromptMismatch
 	}
 
 	if result.accepted && g.wordLists.used[answer] {
 		result.accepted = false
-		result.reason = "🔒 " + strings.ToUpper(answer) + " already used"
+		result.reason = RejectionAlreadyUsed
 	}
 
 	slog.Debug("Answer validated",
