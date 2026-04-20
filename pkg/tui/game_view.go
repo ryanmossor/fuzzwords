@@ -184,7 +184,7 @@ func (m *model) handleGameEvent(event game.GameEvent) []tea.Cmd {
 		}
 
 	case game.AnswerAcceptedEvent:
-		msg := "✓ " + strings.ToUpper(e.Answer) + "  "
+		msg := styles.TextGreen.Render("✓ " + strings.ToUpper(e.Answer) + "  ")
 		m.state.game.gameMsg = msg
 		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
 		for _, c := range e.NewLettersUsed {
@@ -194,22 +194,26 @@ func (m *model) handleGameEvent(event game.GameEvent) []tea.Cmd {
 	case game.AnswerRejectedEvent:
 		m.state.game.turn.prevAnswer = e.Answer
 
+		var msg string
+
 		switch e.Reason {
 		case game.RejectionEmpty:
-			m.state.game.gameMsg = "No answer given"
+			msg = "No answer given"
 		case game.RejectionInvalidWord:
-			m.state.game.gameMsg = "Invalid word: " + strings.ToUpper(e.Answer)
+			msg = "Invalid word: " + strings.ToUpper(e.Answer)
 		case game.RejectionPromptMismatch:
-			m.state.game.gameMsg = strings.ToUpper(e.Answer) + " does not satisfy prompt"
+			msg = strings.ToUpper(e.Answer) + " does not satisfy prompt"
 		case game.RejectionAlreadyUsed:
-			m.state.game.gameMsg = "🔒 " + strings.ToUpper(e.Answer) + " already used"
+			msg = "🔒 " + strings.ToUpper(e.Answer) + " already used"
 		}
+
+		m.state.game.gameMsg = styles.TextRed.Render(msg)
 
 	case game.StrikeEvent:
 		m.state.game.turn.strikes = e.StrikeCount
 
 		if e.Strikeout {
-			m.state.game.gameMsg = "Prompt " + strings.ToUpper(e.Prompt) + " failed"
+			m.state.game.gameMsg = styles.TextRed.Render("Prompt " + strings.ToUpper(e.Prompt) + " failed")
 			m.anim_mgr.InitAnimations(animations.ValidationMessage)
 			m.text_input.Reset()
 			cmds = append(cmds, m.debounceInputCmd(500))

@@ -82,12 +82,10 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 }
 
 func (m *model) renderValidationMsg() string {
-	if strings.HasPrefix(m.state.game.gameMsg, "✓") {
-		return styles.TextGreen.Render(m.state.game.gameMsg)
+	msg, changed := m.anim_mgr.ApplyAnimations(string(animations.ValidationMessage), m.state.game.gameMsg)
+	if !changed {
+		return msg
 	}
-
-	var msg string
-	msg, _ = m.anim_mgr.ApplyAnimations(string(animations.ValidationMessage), m.state.game.gameMsg)
 
 	// Prevent input box from shaking by ensuring msg and input width are both even/odd
 	raw_str := utils.StripANSICodes(msg)
@@ -99,7 +97,7 @@ func (m *model) renderValidationMsg() string {
 		}
 	}
 
-	return styles.TextRed.Render(msg)
+	return msg
 }
 
 // Initialize text input for use with rounded borders
