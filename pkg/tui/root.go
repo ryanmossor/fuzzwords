@@ -129,63 +129,29 @@ type model struct {
 
 	game				game.Game
 	state				State
-	app_settings		*game.Settings
-	app_settings_copy	game.Settings
-	app_settings_schema	game.SettingsSchema
-	app_settings_path	string
+
+	settingsPath		string
+	schema				game.SettingsSchema
+	settings			*game.Settings
+	settingsCopy		game.Settings
 
 	FPS					int
 	anim_mgr			anim.AnimationManager
 }
 
-//go:embed game_settings_schema.json
-var game_settings_schema_json []byte
-
-func NewModel(debug bool) tea.Model {
-	cfg_dir, err := os.UserConfigDir()
-	if err != nil {
-		slog.Error("Config dir not found, using tmp dir to save settings instead", "error", err)
-		cfg_dir = os.TempDir()
-	}
-	fzwds_cfg_path := filepath.Join(cfg_dir, "fuzzwords")
-	os.MkdirAll(fzwds_cfg_path, os.ModePerm)
-
-	var game_settings game.Settings
-	settings_file_path := filepath.Join(fzwds_cfg_path, "settings.json")
-	contents, err := os.ReadFile(settings_file_path)
-    if err != nil {
-		game_settings = game.GetDefaultSettings()
-	}
-
-	var game_settings_schema_parsed game.SettingsSchema
-	if err := json.Unmarshal(game_settings_schema_json, &game_settings_schema_parsed); err != nil {
-		slog.Error("Error parsing game_settings_schema.json", "error", err)
-		os.Exit(1)
-	}
-
-    if err := json.Unmarshal(contents, &game_settings); err != nil {
-		slog.Error("Error parsing settings.json - restoring default settings", "error", err)
-		game_settings = game.GetDefaultSettings()
-	} else {
-		game_settings.ValidateSettings(game_settings_schema_parsed)
-	}
-
-	marshaled_settings, err := json.MarshalIndent(game_settings, "", "    ")
-	if err != nil {
-		slog.Error("Error marshaling validated settings JSON", "error", err)
-	}
-
-	if err := os.WriteFile(settings_file_path, marshaled_settings, 0644); err != nil {
-		slog.Error("Error writing settings.json", "error", err)
-	}
-
+func NewModel(
+	debug bool,
+	settings game.Settings,
+	schema game.SettingsSchema,
+	settingsPath string,
+) tea.Model {
 	title_logo_anim := anim.NewTitleScreenLogoAnim(styles.GetRainbowColors())
 	extra_life_anim := anim.NewRainbowScrollAnim(anim.ExtraLife, 30, false, styles.GetRainbowColors())
 	validation_msg_dmg_anim := anim.NewDamageShakeAnim(anim.ValidationMessage, 10)
 	strike_dmg_anim := anim.NewDamageShakeAnim(anim.StrikeCounter, 8)
 	win_anim := anim.NewRainbowScrollAnim(anim.GameOverWin, 0, true, styles.GetRainbowColors())
 
-	mgr := anim.NewAnimationManager(game_settings.Prefs.AnimationsEnabled)
+	mgr := anim.NewAnimationManager(settings.Prefs.AnimationsEnabled)
 	mgr.Register(
 		title_logo_anim,
 		extra_life_anim,
@@ -203,10 +169,10 @@ func NewModel(debug bool) tea.Model {
 			{key: "q", value: "quit"},
 		},
 
-		app_settings: &game_settings,
-		app_settings_copy: game_settings,
-		app_settings_schema: game_settings_schema_parsed,
-		app_settings_path: settings_file_path,
+		settingsPath: settingsPath,
+		schema: schema,
+		settings: &settings,
+		settingsCopy: settings,
 
 		page: splash_page,
 
@@ -222,7 +188,7 @@ func NewModel(debug bool) tea.Model {
 
 			pokemonMenu: PokemonMenuState {
 				gen_list: []int{},
-				gen_state: initSelectedPokemonGens(&game_settings),
+				gen_state: initSelectedPokemonGens(&settings),
 				selected: 1,
 			},
 		},
@@ -259,7 +225,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// TODO: animations/timer only enabled on title screen/game
 	// should probably not render other screens at 30fps
 	case TickMsg:
-		if m.app_settings.Prefs.AnimationsEnabled {
+		if m.settings.Prefs.AnimationsEnabled {
 			m.anim_mgr.Update(msg.Time)
 		}
 		cmds = append(cmds, m.tickCmd())
@@ -507,4 +473,54 @@ func (m model) getScrollbar() string {
 			bar,
 		),
 	)
+}
+
+//go:embed game_settings_schema.json
+var settingsSchemaJson []byte
+
+func LoadSchema() game.SettingsSchema {
+	var schema game.SettingsSchema
+	if err := json.Unmarshal(settingsSchemaJson, &schema); err != nil {
+		slog.Error("Error parsing game_settings_schema.json", "error", err)
+		os.Exit(1)
+	}
+	return schema
+}
+
+func LoadSettings(schema game.SettingsSchema) (game.Settings, string) {
+	settingsDir, err := os.UserConfigDir()
+	if err != nil {
+		slog.Error("Config dir not found, using tmp dir to save settings instead", "error", err)
+		settingsDir = os.TempDir()
+	}
+	settingsDir = filepath.Join(settingsDir, "fuzzwords")
+	os.MkdirAll(settingsDir, os.ModePerm)
+
+	var settings game.Settings
+	path := filepath.Join(settingsDir, "settings.json")
+	contents, err := os.ReadFile(path)
+    if err != nil {
+		settings = game.GetDefaultSettings()
+	}
+
+    if err := json.Unmarshal(contents, &settings); err != nil {
+		slog.Error("Error parsing settings.json - restoring default settings", "error", err)
+		settings = game.GetDefaultSettings()
+	}
+
+	settings.ValidateSettings(schema)
+	writeSettings(settings, path)
+
+	return settings, path
+}
+
+func writeSettings(settings game.Settings, path string) {
+	data, err := json.MarshalIndent(settings, "", "    ")
+	if err != nil {
+		slog.Error("Error marshaling settings", "error", err)
+	}
+
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		slog.Error("Error writing settings.json", "error", err)
+	}
 }

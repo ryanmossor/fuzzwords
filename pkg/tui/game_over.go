@@ -77,7 +77,7 @@ func (m *model) GameOverView() string {
 		m.renderGameOverStatTable(),
 	)
 
-	if !m.game.GameWon() || !m.app_settings.Prefs.AnimationsEnabled {
+	if !m.game.GameWon() || !m.settings.Prefs.AnimationsEnabled {
 		m.state.gameOver.viewCache["fullView"] = view
 	}
 
@@ -102,7 +102,7 @@ func (m *model) renderGameOverTitleMsg() string {
 		}
 
 		// Don't cache animated title
-		if m.app_settings.Prefs.AnimationsEnabled {
+		if m.settings.Prefs.AnimationsEnabled {
 			return title
 		}
 	} else {

@@ -20,7 +20,7 @@ var (
 
 type PressPlayTickMsg struct {}
 func (m model) pressPlayFlashCmd() tea.Cmd {
-	if !m.app_settings.Prefs.AnimationsEnabled {
+	if !m.settings.Prefs.AnimationsEnabled {
 		return nil
 	}
 	return tea.Every(850 * time.Millisecond, func(t time.Time) tea.Msg {
@@ -33,7 +33,7 @@ func (m model) PressPlayInit() tea.Cmd {
 }
 
 func (m model) PressPlayView() string {
-	if !m.state.pressPlay.visible && m.app_settings.Prefs.AnimationsEnabled {
+	if !m.state.pressPlay.visible && m.settings.Prefs.AnimationsEnabled {
 		return hidden
 	}
 	return visible

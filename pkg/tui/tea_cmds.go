@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"fzwds/pkg/game"
 	"os"
 	"time"
 
@@ -24,7 +25,7 @@ func (m *model) togglePlayerDamagedCmd() tea.Cmd {
 }
 
 func (m model) terminalBellCmd(force bool) tea.Cmd {
-	if force || m.app_settings.Prefs.BellEnabled {
+	if force || m.settings.Prefs.BellEnabled {
 		return func() tea.Msg {
 			// Send BEL character
 			fmt.Fprint(os.Stdout, "\a")
@@ -32,4 +33,11 @@ func (m model) terminalBellCmd(force bool) tea.Cmd {
 		}
 	}
 	return nil
+}
+
+func(m model) saveSettingsCmd(settings game.Settings, path string) tea.Cmd {
+	return func() tea.Msg {
+		writeSettings(settings, path)
+		return nil
+	}
 }

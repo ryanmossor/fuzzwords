@@ -13,32 +13,32 @@ import (
 )
 
 func main() {
-	cache_dir, err := os.UserCacheDir()
+	cacheDir, err := os.UserCacheDir()
 	if err != nil {
         // panic("Cache dir not found" + err.Error())
-		cache_dir = os.TempDir()
+		cacheDir = os.TempDir()
 	}
-	path := filepath.Join(cache_dir, "fuzzwords")
+	path := filepath.Join(cacheDir, "fuzzwords")
 	os.MkdirAll(path, os.ModePerm)
 
-	log_file, err := os.OpenFile(filepath.Join(path, "log.json"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile(filepath.Join(path, "log.json"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
     if err != nil {
         panic("Failed to open log file: " + err.Error())
     }
-	defer log_file.Close()
+	defer logFile.Close()
 
 	debug := flag.Bool("debug", false, "Enable debug mode")
 	flag.Parse()
 
-	var log_level slog.Leveler
+	var logLevel slog.Leveler
 	if *debug {
-		log_level = slog.LevelDebug
+		logLevel = slog.LevelDebug
 	} else {
-		log_level = slog.LevelInfo
+		logLevel = slog.LevelInfo
 	}
 
-	opts := &slog.HandlerOptions{
-		Level: log_level,
+	opts := &slog.HandlerOptions {
+		Level: logLevel,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			if a.Key != slog.TimeKey {
 				return a
@@ -49,13 +49,16 @@ func main() {
 		},
 	}
 
-    fileHandler := slog.NewJSONHandler(log_file, opts)
+    fileHandler := slog.NewJSONHandler(logFile, opts)
     slog.SetDefault(slog.New(fileHandler))
 
-	model := tui.NewModel(*debug)
+	schema := tui.LoadSchema()
+	settings, path := tui.LoadSettings(schema)
+
+	model := tui.NewModel(*debug, settings, schema, path)
 	app := tea.NewProgram(model,
         tea.WithAltScreen(),
-        tea.WithMouseCellMotion(), // enable mouse support for scroll wheel usage
+        tea.WithMouseCellMotion(),
     )
 	_, err = app.Run()
 	if err != nil {

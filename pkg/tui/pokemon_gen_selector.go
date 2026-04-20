@@ -1,13 +1,10 @@
 package tui
 
 import (
-	"encoding/json"
 	"fmt"
 	"fzwds/pkg/dictionary"
 	"fzwds/pkg/game"
 	"fzwds/pkg/tui/styles"
-	"log/slog"
-	"os"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -35,6 +32,8 @@ func (m model) PokemonGenSelectorSwitch() (model, tea.Cmd) {
 }
 
 func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		m.state.footer.footer_msg = ""
@@ -65,7 +64,6 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "+", "=", "right", "l", "-", "left", "h":
 			idx := m.state.pokemonMenu.selected
 			m.state.pokemonMenu.gen_state[idx] = !m.state.pokemonMenu.gen_state[idx]
-			m.state.footer.footer_msg = ""
 
 		case "enter":
 			selected_gens := make([]int, 0, len(dictionary.PokemonDictionary))
@@ -83,26 +81,20 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			m.state.pokemonMenu.gen_list = selected_gens
-			m.app_settings.Game.PokemonGens = selected_gens
+			m.settings.Game.PokemonGens = selected_gens
 
-			marshaled_settings, err := json.MarshalIndent(m.app_settings, "", "    ")
-			if err != nil {
-				slog.Error("Error marshaling validated settings JSON", "error", err)
-			}
+			cmds = append(cmds, m.saveSettingsCmd(*m.settings, m.settingsPath))
 
-			if err := os.WriteFile(m.app_settings_path, marshaled_settings, 0644); err != nil {
-				slog.Error("Error writing settings.json", "error", err)
-			}
-
-			m.state.footer.footer_msg = ""
-			return m.GameSwitch()
+			var cmd tea.Cmd
+			m, cmd = m.GameSwitch()
+			cmds = append(cmds, cmd)
 
 		case "esc":
 			return m.SettingsSwitch(game_settings)
 		}
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m model) PokemonGenSelectorView() string {

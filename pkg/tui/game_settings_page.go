@@ -1,13 +1,10 @@
 package tui
 
 import (
-	"encoding/json"
 	"fzwds/pkg/enums"
 	"fzwds/pkg/game"
 	"fzwds/pkg/tui/styles"
 	"fzwds/pkg/utils"
-	"log/slog"
-	"os"
 	"strconv"
 	"strings"
 
@@ -36,7 +33,7 @@ func (m model) SettingsSwitch(category SettingsMenuCategory) (model, tea.Cmd) {
 
 	switch category {
 	case preferences:
-		m.state.settings.schemaList = m.app_settings_schema.Prefs
+		m.state.settings.schemaList = m.schema.Prefs
 		m.state.settings.title = "General Preferences"
 
 		m.footer_keymaps = []FooterKeymap {
@@ -47,7 +44,7 @@ func (m model) SettingsSwitch(category SettingsMenuCategory) (model, tea.Cmd) {
 			{key: "m", value: "menu"},
 		}
 	case game_settings:
-		m.state.settings.schemaList = m.app_settings_schema.Game
+		m.state.settings.schemaList = m.schema.Game
 		m.state.settings.title = "Game Settings"
 
 		m.footer_keymaps = []FooterKeymap {
@@ -88,7 +85,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		case "+", "=", "right", "l":
 			setting := m.state.settings.schemaList[m.state.settings.selected]
-			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.app_settings_copy.Prefs.BellEnabled
+			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.settingsCopy.Prefs.BellEnabled
 
 			m.changeCurrentSetting(Next, m.state.settings.schemaList)
 
@@ -98,7 +95,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		case "-", "left", "h":
 			setting := m.state.settings.schemaList[m.state.settings.selected]
-			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.app_settings_copy.Prefs.BellEnabled
+			is_bell_being_enabled := setting.PropName == "BellEnabled" && !m.settingsCopy.Prefs.BellEnabled
 
 			m.changeCurrentSetting(Prev, m.state.settings.schemaList)
 
@@ -109,39 +106,33 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "ctrl+d":
 			switch m.state.settings.category {
 			case preferences:
-				m.app_settings_copy.Prefs = game.GetDefaultGeneralPreferences()
+				m.settingsCopy.Prefs = game.GetDefaultGeneralPreferences()
 			case game_settings:
-				m.app_settings_copy.Game = game.GetDefaultGameSettings()
+				m.settingsCopy.Game = game.GetDefaultGameSettings()
 			}
 
 		case "enter":
-			m.app_settings = &m.app_settings_copy
+			m.settings = &m.settingsCopy
 
-			// TODO: return m, cmd that updates game_settings
-			// TODO: abstract this save logic to common func shared with root initalization of settings
-			marshaled_settings, err := json.MarshalIndent(m.app_settings, "", "    ")
-			if err != nil {
-				slog.Error("Error marshaling validated settings JSON", "error", err)
-			}
+			cmds = append(cmds, m.saveSettingsCmd(*m.settings, m.settingsPath))
 
-			if err := os.WriteFile(m.app_settings_path, marshaled_settings, 0644); err != nil {
-				slog.Error("Error writing settings.json", "error", err)
-			}
-
+			var cmd tea.Cmd
 			switch m.state.settings.category {
 			case preferences:
-				m.anim_mgr.SetAnimationStatus(m.app_settings.Prefs.AnimationsEnabled)
-				return m.MainMenuSwitch()
+				m.anim_mgr.SetAnimationStatus(m.settings.Prefs.AnimationsEnabled)
+				m, cmd = m.MainMenuSwitch()
+
 			case game_settings:
-				if m.app_settings.Game.Dictionary == enums.Pokemon {
-					return m.PokemonGenSelectorSwitch()
+				if m.settings.Game.Dictionary == enums.Pokemon {
+					m, cmd = m.PokemonGenSelectorSwitch()
 				} else {
-					return m.GameSwitch()
+					m, cmd = m.GameSwitch()
 				}
 			}
+			cmds = append(cmds, cmd)
 
 		case "m", "esc":
-			m.app_settings_copy = *m.app_settings
+			m.settingsCopy = *m.settings
 			return m.MainMenuSwitch()
 		}
 	}
@@ -161,7 +152,7 @@ func (m model) SettingsView() string {
 		}
 
 		var default_val, sub_desc string
-		current_val := m.app_settings_copy.GetSetting(setting.PropName)
+		current_val := m.settingsCopy.GetSetting(setting.PropName)
 
 		switch setting.Type {
 		case "int":
@@ -272,7 +263,7 @@ func (m *model) changeCurrentSetting(dir Direction, schema []game.SettingsSchema
 	dir_int := int(dir)
 
 	setting := schema[m.state.settings.selected]
-	cur_val := m.app_settings_copy.GetSetting(setting.PropName)
+	cur_val := m.settingsCopy.GetSetting(setting.PropName)
 	var new_val any
 
 	if len(setting.ValidValues) > 0 {
@@ -310,5 +301,5 @@ func (m *model) changeCurrentSetting(dir Direction, schema []game.SettingsSchema
 		return
 	}
 
-	m.app_settings_copy.SetSetting(setting.PropName, new_val, m.app_settings_schema)
+	m.settingsCopy.SetSetting(setting.PropName, new_val, m.schema)
 }

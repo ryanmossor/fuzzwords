@@ -118,7 +118,7 @@ func (m model) MainMenuView() string {
 	case large:
 		a, _ := m.anim_mgr.Get(animations.TitleLogo)
 		anim, ok := a.(*animations.TitleScreenLogoAnim)
-		if !m.app_settings.Prefs.AnimationsEnabled || !ok {
+		if !m.settings.Prefs.AnimationsEnabled || !ok {
 			// Display yellow logo if animation state could not be retrieved
 			for _, ch := range constants.FULL_GAME_TITLE {
 				logo = drawGlyph(byte(ch), logo, yellow)

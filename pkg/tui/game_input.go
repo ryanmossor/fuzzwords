@@ -107,7 +107,7 @@ func (m model) initRoundedTextInput() textinput.Model {
 	text_input.CharLimit = 40
 	text_input.Width = 40
 
-	if !m.app_settings.Prefs.AnimationsEnabled {
+	if !m.settings.Prefs.AnimationsEnabled {
 		text_input.Cursor.SetMode(cursor.CursorStatic)
 	}
 
@@ -133,7 +133,7 @@ func (m model) initBlockTextInput() textinput.Model {
 	text_input.CharLimit = 40
 	text_input.Width = text_input.CharLimit - len(text_input.Prompt) - 1
 
-	if !m.app_settings.Prefs.AnimationsEnabled {
+	if !m.settings.Prefs.AnimationsEnabled {
 		text_input.Cursor.SetMode(cursor.CursorStatic)
 	}
 

@@ -63,7 +63,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	}
 
 	var events []game.GameEvent
-	m.game, events = game.NewGame(&m.app_settings.Game)
+	m.game, events = game.NewGame(&m.settings.Game)
 
 	m.state.game = GameUIState {
 		lettersUsed: utils.StringToCharMap(m.game.Settings().Alphabet.Letters()),
