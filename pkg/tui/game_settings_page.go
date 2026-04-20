@@ -120,7 +120,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			switch m.state.settings.category {
 			case preferences:
 				m.animManager.SetAnimationStatus(m.settings.Prefs.AnimationsEnabled)
-				m, cmd = m.MainMenuSwitch()
+				m, cmd = m.TitleScreenSwitch()
 
 			case gameSettings:
 				if m.settings.Game.Dictionary == enums.Pokemon {
@@ -133,7 +133,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		case "m", "esc":
 			m.settingsCopy = *m.settings
-			return m.MainMenuSwitch()
+			return m.TitleScreenSwitch()
 		}
 	}
 

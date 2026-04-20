@@ -10,8 +10,8 @@ import (
 
 func (p page) String() string {
 	switch p {
-	case splashPage:
-		return "Splash"
+	case titlePage:
+		return "Title"
 	case aboutPage:
 		return "About"
 	case settingsPage:

@@ -28,7 +28,7 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "a":
 			return m.AboutSwitch()
 		case "m":
-			return m.MainMenuSwitch()
+			return m.TitleScreenSwitch()
 		case "q":
 			return m, tea.Quit
 		}
@@ -63,7 +63,7 @@ func (m model) HeaderView() string {
 	stats := accent("s") + body(" stats")
 
 	switch m.page {
-	case splashPage:
+	case titlePage:
 		menu = bold("m main menu")
 	case aboutPage:
 		about = bold("a about")

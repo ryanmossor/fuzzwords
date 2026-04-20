@@ -28,7 +28,7 @@ const (
 	gameReviewPage 		page = "review"
 	pokemonGenMenuPage 	page = "pokemon gens"
 	settingsPage 		page = "settings"
-	splashPage 			page = "title screen"
+	titlePage 			page = "title screen"
     statsPage 			page = "stats"
 )
 
@@ -151,7 +151,7 @@ func NewModel(
 		settings: &settings,
 		settingsCopy: settings,
 
-		page: splashPage,
+		page: titlePage,
 
 		state: state {
 			pressPlay: pressPlayState {
@@ -177,8 +177,7 @@ func NewModel(
 
 func (m model) Init() tea.Cmd {
 	return tea.Batch(
-		m.MainMenuInit(),
-		m.PressPlayInit(),
+		m.TitleScreenInit(),
 		m.tickCmd(),
 	)
 }
@@ -243,8 +242,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch m.page {
-	case splashPage:
-		m, cmd = m.MainMenuUpdate(msg)
+	case titlePage:
+		m, cmd = m.TitleScreenUpdate(msg)
 	case aboutPage:
 		m, cmd = m.AboutUpdate(msg)
 	case settingsPage:
@@ -361,8 +360,8 @@ func (m model) getContent() string {
 	page := "unknown"
 
 	switch m.page {
-	case splashPage:
-		page = m.MainMenuView()
+	case titlePage:
+		page = m.TitleScreenView()
 	case aboutPage:
 		page = m.AboutView()
 	case settingsPage:

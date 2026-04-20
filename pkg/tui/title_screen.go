@@ -68,18 +68,32 @@ var letters = map[byte][]string {
 	},
 }
 
-func (m model) MainMenuInit() tea.Cmd {
-	m.animManager.InitAnimations(animations.TitleLogo)
-	return nil
+var (
+	hidden  = styles.TextBody.Render("Press       to play")
+	visible = styles.TextBody.Render("Press ") +
+			  styles.TextAccent.Bold(true).Render("ENTER") +
+			  styles.TextBody.Render(" to play")
+)
+
+type pressPlayState struct {
+	visible		bool
+	id 			int
 }
 
-func (m model) MainMenuSwitch() (model, tea.Cmd) {
+func (m model) TitleScreenInit() tea.Cmd {
+	m.animManager.InitAnimations(animations.TitleLogo)
+	return m.pressPlayFlashCmd()
+}
+
+func (m model) TitleScreenSwitch() (model, tea.Cmd) {
 	// Don't switch if already here; prevents title anim reload
-	if m.page == splashPage {
+	if m.page == titlePage {
 		return m, nil
 	}
 
-	m = m.SwitchPage(splashPage)
+	m.state.pressPlay.id += 1
+
+	m = m.SwitchPage(titlePage)
 	m.footerKeymaps = []footerKeymap{
 		{key: "ctrl+p", value: "preferences"},
 		{key: "q", value: "quit"},
@@ -89,7 +103,7 @@ func (m model) MainMenuSwitch() (model, tea.Cmd) {
 	return m, m.pressPlayFlashCmd()
 }
 
-func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
+func (m model) TitleScreenUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -100,6 +114,10 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 
 	case PressPlayTickMsg:
+		// Drop stale tick messages from previous visits
+		if msg.id != m.state.pressPlay.id {
+			return m, nil
+		}
 		m.state.pressPlay.visible = !m.state.pressPlay.visible
 		return m, m.pressPlayFlashCmd()
 	}
@@ -107,7 +125,7 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) MainMenuView() string {
+func (m model) TitleScreenView() string {
 	yellow := styles.TextYellow
 
 	// Initialize []string of size equal to height of each "glyph".
@@ -126,7 +144,7 @@ func (m model) MainMenuView() string {
 
 			logo = append([]string{"\n", "\n"}, logo...) // prepend top padding
 			logo = append(logo, "\n\n\n") // append bottom padding
-			logo = append(logo, m.PressPlayView())
+			logo = append(logo, m.pressPlayText())
 
 			return lipgloss.JoinVertical(lipgloss.Center, logo...)
 		}
@@ -179,12 +197,19 @@ func (m model) MainMenuView() string {
 
 	logo = append([]string{"\n\n\n"}, logo...) // prepend top padding
 	logo = append(logo, "\n\n\n\n") // append bottom padding
-	logo = append(logo, m.PressPlayView())
+	logo = append(logo, m.pressPlayText())
 
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		logo...
 	)
+}
+
+func (m model) pressPlayText() string {
+	if m.settings.Prefs.AnimationsEnabled && !m.state.pressPlay.visible {
+		return hidden
+	}
+	return visible
 }
 
 func drawGlyph(char byte, logo []string, style lipgloss.Style) []string {

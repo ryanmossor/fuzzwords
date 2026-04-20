@@ -47,7 +47,7 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 		switch msg.String() {
 		case "m":
 			m.animManager.DeactivateAnimations(animations.GameOverWin)
-			return m.MainMenuSwitch()
+			return m.TitleScreenSwitch()
 		case "s":
 			m.animManager.DeactivateAnimations(animations.GameOverWin)
 			return m.SettingsSwitch(gameSettings)

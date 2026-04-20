@@ -51,3 +51,16 @@ func(m model) saveSettingsCmd(settings game.Settings, path string) tea.Cmd {
 		return nil
 	}
 }
+
+type PressPlayTickMsg struct {
+	id		int
+}
+func (m model) pressPlayFlashCmd() tea.Cmd {
+	if !m.settings.Prefs.AnimationsEnabled {
+		return nil
+	}
+	return tea.Tick(850 * time.Millisecond, func(t time.Time) tea.Msg {
+		return PressPlayTickMsg{ id: m.state.pressPlay.id }
+	})
+}
+
