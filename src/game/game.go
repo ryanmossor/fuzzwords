@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"fzwds/src/assert"
 	"fzwds/src/dictionary"
 	"fzwds/src/enums"
@@ -136,7 +135,7 @@ func (g *Game) handleTimeout() []GameEvent {
 
 	if g.player.healthCurrent <= 0 {
 		g.endGame()
-		events = append(events, strike_evt, GameOverEvent{
+		events = append(events, strike_evt, GameOverEvent {
 			PossibleAnswer: turn.sourceWord,
 			Stats: g.player.stats,
 		})
@@ -148,7 +147,7 @@ func (g *Game) handleTimeout() []GameEvent {
 
 		strike_evt.StrikeCount = 0
 		strike_evt.Strikeout = true
-		strike_evt.Message = fmt.Sprintf("Prompt %s failed", strings.ToUpper(turn.prompt))
+		strike_evt.Message = "Prompt " + strings.ToUpper(turn.prompt) + " failed"
 
 		t := g.newTurn(TransitionTimeout)
 		events = append(events, NewTurnEvent{ Prompt: t.prompt })
@@ -176,7 +175,7 @@ func (g *Game) QuitGame() []GameEvent {
 	g.endGame()
 
 	return []GameEvent {
-		GameOverEvent{
+		GameOverEvent {
 			PossibleAnswer: g.currentTurn().sourceWord,
 			Stats: g.player.stats,
 		},

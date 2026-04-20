@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"fzwds/src/assert"
 	"fzwds/src/enums"
 	"fzwds/src/utils"
@@ -218,7 +217,7 @@ func (g *Game) validateAnswer(answer string) answerResult {
 
 	if result.accepted && !g.wordLists.fullDict[answer] {
 		result.accepted = false
-		result.reason = fmt.Sprintf("Invalid word: %s", strings.ToUpper(answer))
+		result.reason = "Invalid word: " + strings.ToUpper(answer)
 	}
 
 	is_match := false
@@ -231,12 +230,12 @@ func (g *Game) validateAnswer(answer string) answerResult {
 
 	if result.accepted && !is_match {
 		result.accepted = false
-		result.reason = fmt.Sprintf("%s does not satisfy prompt", strings.ToUpper(answer))
+		result.reason = strings.ToUpper(answer) + " does not satisfy prompt"
 	}
 
 	if result.accepted && g.wordLists.used[answer] {
 		result.accepted = false
-		result.reason = fmt.Sprintf("🔒 %s already used", strings.ToUpper(answer))
+		result.reason = "🔒 " + strings.ToUpper(answer) + " already used"
 	}
 
 	slog.Debug("Answer validated",
