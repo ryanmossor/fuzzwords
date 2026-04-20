@@ -16,7 +16,7 @@ func (m model) GameStrikeCounterView() string {
 		m.state.game.turn.strikes,
 		m.game.Settings().PromptStrikes))
 
-	strike_counter, _ = m.anim_mgr.ApplyAnimations(
+	strike_counter, _ = m.animManager.ApplyAnimations(
 		string(animations.StrikeCounter),
 		strike_counter)
 

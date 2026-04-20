@@ -95,7 +95,7 @@ func (m model) renderTopBar() string {
 		BorderStyle(border_style).
 		BorderColumn(false).
 		Row(row_items...).
-		Width(m.width_container).
+		Width(m.containerWidth).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			if col == 0 {
 				return lipgloss.NewStyle().Align(lipgloss.Left).PaddingLeft(8)
@@ -112,7 +112,7 @@ func (m model) renderRemainingLetters() string {
 		return ""
 	}
 
-	letters, changed := m.anim_mgr.ApplyAnimations(
+	letters, changed := m.animManager.ApplyAnimations(
 		string(animations.ExtraLife),
 		strings.Join(strings.Split(m.game.Settings().Alphabet.Letters(), ""), " "))
 	if changed {

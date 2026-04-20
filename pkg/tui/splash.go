@@ -69,22 +69,22 @@ var letters = map[byte][]string {
 }
 
 func (m model) MainMenuInit() tea.Cmd {
-	m.anim_mgr.InitAnimations(animations.TitleLogo)
+	m.animManager.InitAnimations(animations.TitleLogo)
 	return nil
 }
 
 func (m model) MainMenuSwitch() (model, tea.Cmd) {
 	// Don't switch if already here; prevents title anim reload
-	if m.page == splash_page {
+	if m.page == splashPage {
 		return m, nil
 	}
 
-	m = m.SwitchPage(splash_page)
-	m.footer_keymaps = []FooterKeymap{
+	m = m.SwitchPage(splashPage)
+	m.footerKeymaps = []footerKeymap{
 		{key: "ctrl+p", value: "preferences"},
 		{key: "q", value: "quit"},
 	}
-	m.anim_mgr.InitAnimations(animations.TitleLogo)
+	m.animManager.InitAnimations(animations.TitleLogo)
 
 	return m, m.pressPlayFlashCmd()
 }
@@ -94,7 +94,7 @@ func (m model) MainMenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			return m.SettingsSwitch(game_settings)
+			return m.SettingsSwitch(gameSettings)
 		case "ctrl+p":
 			return m.SettingsSwitch(preferences)
 		}
@@ -116,7 +116,7 @@ func (m model) MainMenuView() string {
 
 	switch m.size {
 	case large:
-		a, _ := m.anim_mgr.Get(animations.TitleLogo)
+		a, _ := m.animManager.Get(animations.TitleLogo)
 		anim, ok := a.(*animations.TitleScreenLogoAnim)
 		if !m.settings.Prefs.AnimationsEnabled || !ok {
 			// Display yellow logo if animation state could not be retrieved

@@ -59,7 +59,7 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 	}
 
 	prompt_upper := strings.ToUpper(m.state.game.turn.prompt)
-	answer_upper := strings.ToUpper(m.text_input.Value())
+	answer_upper := strings.ToUpper(m.gameInput.Value())
 
 	is_match := false
 	switch m.game.Settings().PromptMode {
@@ -82,14 +82,14 @@ func (m model) getInputAccentColor(default_color lipgloss.TerminalColor) lipglos
 }
 
 func (m *model) renderValidationMsg() string {
-	msg, changed := m.anim_mgr.ApplyAnimations(string(animations.ValidationMessage), m.state.game.gameMsg)
+	msg, changed := m.animManager.ApplyAnimations(string(animations.ValidationMessage), m.state.game.gameMsg)
 	if !changed {
 		return msg
 	}
 
 	// Prevent input box from shaking by ensuring msg and input width are both even/odd
 	raw_str := utils.StripANSICodes(msg)
-	if len(raw_str) % 2 != m.text_input.CharLimit % 2 {
+	if len(raw_str) % 2 != m.gameInput.CharLimit % 2 {
 		if raw_str[0] == ' ' {
 			msg = utils.LeftPad(msg, 1)
 		} else {
@@ -120,8 +120,8 @@ func (m model) initRoundedTextInput() textinput.Model {
 func (m model) GetRoundedInputView() string {
 	border_color := m.getInputAccentColor(theme.Border)
 	input := styles.
-		TextInputRoundedBorderStyle(border_color, m.text_input.CharLimit).
-		Render(m.text_input.View())
+		TextInputRoundedBorderStyle(border_color, m.gameInput.CharLimit).
+		Render(m.gameInput.View())
 
 	return lipgloss.JoinHorizontal(lipgloss.Center, input)
 }
@@ -153,7 +153,7 @@ func (m model) initBlockTextInput() textinput.Model {
 
 // Get text input with block border styling applied
 func (m model) GetBlockInputView() string {
-	border_color := m.getInputAccentColor(m.text_input.PromptStyle.GetBorderLeftForeground())
-	return styles.TextInputBlockBorderStyle(border_color, m.text_input.CharLimit).
-		Render(m.text_input.View())
+	border_color := m.getInputAccentColor(m.gameInput.PromptStyle.GetBorderLeftForeground())
+	return styles.TextInputBlockBorderStyle(border_color, m.gameInput.CharLimit).
+		Render(m.gameInput.View())
 }

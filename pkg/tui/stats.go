@@ -6,9 +6,9 @@ import (
 )
 
 func (m model) StatsSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(stats_page)
+	m = m.SwitchPage(statsPage)
 
-	m.footer_keymaps = []FooterKeymap{
+	m.footerKeymaps = []footerKeymap{
 		{key: "q", value: "quit"},
 	}
 

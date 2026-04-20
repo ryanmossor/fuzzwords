@@ -15,20 +15,20 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-type TurnDisplay struct {
-	summary_row			string
-	summary_row_hl		string
-	detail_view			string
+type turnDisplay struct {
+	summaryRow			string
+	summaryRowHl		string
+	detailView			string
 }
 
-type GameReviewState struct {
-	summary_row_fmt_str		string
-	summary_row_width		int
-	summary_row_pad			int
+type gameReviewState struct {
+	summaryRowFmtStr		string
+	summaryRowWidth			int
+	summaryRowPad			int
 	// TODO: store *Turn instead of idx?
-	selected_turn			int
-	visible_row_start		int
-	viewCache				map[int]*TurnDisplay
+	selectedTurn			int
+	visibleRowStart			int
+	viewCache				map[int]*turnDisplay
 }
 
 func (m model) GameReviewSwitch() (model, tea.Cmd) {
@@ -43,16 +43,16 @@ func (m model) GameReviewSwitch() (model, tea.Cmd) {
 	summary_row_width = utils.RightPad(summary_row_width, pad)
 	summary_row_width = utils.LeftPad(summary_row_width, pad)
 
-	m.state.gameReview.summary_row_width = len(summary_row_width)
-	m.state.gameReview.summary_row_pad = pad
+	m.state.gameReview.summaryRowWidth = len(summary_row_width)
+	m.state.gameReview.summaryRowPad = pad
 
-	m.footer_keymaps = []FooterKeymap {
+	m.footerKeymaps = []footerKeymap {
 		{key: "↑/↓", value: "scroll"},
 		{key: "n/p", value: "next/prev strike"},
         {key: "esc", value: "back"},
 	}
 
-	m = m.SwitchPage(game_review_page)
+	m = m.SwitchPage(gameReviewPage)
 
 	return m, nil
 }
@@ -69,38 +69,38 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.updateSummaryListState(m.game.TurnCount() - 1)
 
 		case "j", "down", "tab":
-			if m.state.gameReview.selected_turn < m.game.TurnCount() - 1 {
-				m.updateSummaryListState(m.state.gameReview.selected_turn + 1)
+			if m.state.gameReview.selectedTurn < m.game.TurnCount() - 1 {
+				m.updateSummaryListState(m.state.gameReview.selectedTurn + 1)
 			}
 
 		case "k", "up", "shift+tab":
-			if m.state.gameReview.selected_turn > 0 {
-				m.updateSummaryListState(m.state.gameReview.selected_turn - 1)
+			if m.state.gameReview.selectedTurn > 0 {
+				m.updateSummaryListState(m.state.gameReview.selectedTurn - 1)
 			}
 
 		case "n":
-			sel := m.game.NextFailedTurnIdx(m.state.gameReview.selected_turn)
+			sel := m.game.NextFailedTurnIdx(m.state.gameReview.selectedTurn)
 			m.updateSummaryListState(sel)
 
 		case "p":
-			sel := m.game.PrevFailedTurnIdx(m.state.gameReview.selected_turn)
+			sel := m.game.PrevFailedTurnIdx(m.state.gameReview.selectedTurn)
 			m.updateSummaryListState(sel)
 
 		case "ctrl+u", "pgup":
-			visible_rows := m.height_content - 2
+			visible_rows := m.contentHeight - 2
 			scroll := int(math.Floor(float64(visible_rows) / 2))
 			clamped := utils.Clamp(
-				m.state.gameReview.selected_turn - scroll,
+				m.state.gameReview.selectedTurn - scroll,
 				0,
-				m.state.gameReview.selected_turn - scroll)
+				m.state.gameReview.selectedTurn - scroll)
 			m.updateSummaryListState(clamped)
 
 		case "ctrl+d", "pgdown":
-			visible_rows := m.height_content - 2
+			visible_rows := m.contentHeight - 2
 			scroll := int(math.Floor(float64(visible_rows) / 2))
 			clamped := utils.Clamp(
-				m.state.gameReview.selected_turn + scroll,
-				m.state.gameReview.selected_turn + scroll,
+				m.state.gameReview.selectedTurn + scroll,
+				m.state.gameReview.selectedTurn + scroll,
 				m.game.TurnCount() - 1)
 			m.updateSummaryListState(clamped)
 
@@ -113,9 +113,9 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) GameReviewView() string {
-	height := m.height_content - 2 // -2 for top/bottom table border rows
-	current_turn := m.game.GetTurn(m.state.gameReview.selected_turn)
-	return lipgloss.NewStyle().Height(m.height_content).Render(
+	height := m.contentHeight - 2 // -2 for top/bottom table border rows
+	current_turn := m.game.GetTurn(m.state.gameReview.selectedTurn)
+	return lipgloss.NewStyle().Height(m.contentHeight).Render(
 		lipgloss.JoinHorizontal(
 			lipgloss.Top,
 			m.renderTurnSummaryList(height),
@@ -125,7 +125,7 @@ func (m model) GameReviewView() string {
 func (m model) renderTurnSummaryList(height int) string {
 	border := lipgloss.Border(lipgloss.RoundedBorder())
 	border_style := lipgloss.NewStyle().Foreground(theme.Border).Render
-	width := m.state.gameReview.summary_row_width
+	width := m.state.gameReview.summaryRowWidth
 
 	list_title := "Turns"
 	list_header := border_style(border.TopLeft + border.Top)
@@ -137,7 +137,7 @@ func (m model) renderTurnSummaryList(height int) string {
 	// 1 space always reserved for final turn
 	visible_rows := min(last_turn_idx, height - 1)
 
-	start := m.state.gameReview.visible_row_start
+	start := m.state.gameReview.visibleRowStart
 	// Show divider if last turn not within visible range
 	show_divider := start + visible_rows < last_turn_idx
 	if show_divider {
@@ -172,8 +172,8 @@ func (m model) renderTurnSummaryList(height int) string {
 
 func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 	td, ok := m.state.gameReview.viewCache[turn.TurnNumber()]
-	if ok && td.detail_view != "" {
-		return td.detail_view
+	if ok && td.detailView != "" {
+		return td.detailView
 	}
 
 	rows := [][]string{}
@@ -284,29 +284,29 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 
 	view := lipgloss.NewStyle().
 		Height(height).
-		Width(m.width_content - m.state.gameReview.summary_row_width).
+		Width(m.contentWidth - m.state.gameReview.summaryRowWidth).
 		PaddingLeft(3).
 		Border(border).
 		BorderForeground(theme.Border).
 		Render(detail_table)
 
 	if !ok {
-		m.state.gameReview.viewCache[turn.TurnNumber()] = &TurnDisplay{}
+		m.state.gameReview.viewCache[turn.TurnNumber()] = &turnDisplay{}
 	}
-	m.state.gameReview.viewCache[turn.TurnNumber()].detail_view = view
+	m.state.gameReview.viewCache[turn.TurnNumber()].detailView = view
 
 	return view
 }
 
 func (m model) renderReviewSummaryRow(turn *game.Turn) string {
-	is_turn_selected := m.state.gameReview.selected_turn == turn.TurnNumber() - 1
+	is_turn_selected := m.state.gameReview.selectedTurn == turn.TurnNumber() - 1
 	td, ok := m.state.gameReview.viewCache[turn.TurnNumber()]
 	if ok {
-		if !is_turn_selected && td.summary_row != "" {
-			return td.summary_row
+		if !is_turn_selected && td.summaryRow != "" {
+			return td.summaryRow
 		}
-		if is_turn_selected && td.summary_row_hl != "" {
-			return td.summary_row_hl
+		if is_turn_selected && td.summaryRowHl != "" {
+			return td.summaryRowHl
 		}
 	}
 
@@ -364,7 +364,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 		turn_prompt_style = styles.TextBody
 	}
 
-	edge_pad_str := strings.Repeat(" ", m.state.gameReview.summary_row_pad)
+	edge_pad_str := strings.Repeat(" ", m.state.gameReview.summaryRowPad)
 	var out strings.Builder
 
 	if is_turn_selected {
@@ -384,12 +384,12 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 
 		s := out.String()
 		if _, ok := m.state.gameReview.viewCache[turn.TurnNumber()]; !ok {
-			m.state.gameReview.viewCache[turn.TurnNumber()] = &TurnDisplay{}
+			m.state.gameReview.viewCache[turn.TurnNumber()] = &turnDisplay{}
 		}
-		m.state.gameReview.viewCache[turn.TurnNumber()].summary_row_hl = s
+		m.state.gameReview.viewCache[turn.TurnNumber()].summaryRowHl = s
 
 		return lipgloss.NewStyle().
-			Width(m.state.gameReview.summary_row_width).
+			Width(m.state.gameReview.summaryRowWidth).
 			Render(s)
 	}
 
@@ -404,9 +404,9 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 
 	s := out.String()
 	if _, ok := m.state.gameReview.viewCache[turn.TurnNumber()]; !ok {
-		m.state.gameReview.viewCache[turn.TurnNumber()] = &TurnDisplay{}
+		m.state.gameReview.viewCache[turn.TurnNumber()] = &turnDisplay{}
 	}
-	m.state.gameReview.viewCache[turn.TurnNumber()].summary_row = s
+	m.state.gameReview.viewCache[turn.TurnNumber()].summaryRow = s
 
 	return s
 }
@@ -435,29 +435,29 @@ func (m model) getTurnBadges(turn *game.Turn) string {
 }
 
 func (m *model) updateSummaryListState(sel int) {
-	if sel == m.state.gameReview.selected_turn {
+	if sel == m.state.gameReview.selectedTurn {
 		return
 	}
 
-	m.state.gameReview.selected_turn = sel
+	m.state.gameReview.selectedTurn = sel
 
 	scrolloff := 2
 	// TODO: this is also calculated in view; need to consolidate/store as struct prop
-	max_rows := min(m.game.TurnCount(), m.height_content - 2) // -2 rows for top/bottom borders
+	max_rows := min(m.game.TurnCount(), m.contentHeight - 2) // -2 rows for top/bottom borders
 	scrolloff_clamped := utils.Clamp(scrolloff, 0, int(math.Floor(float64(max_rows / 2))))
 
 	// Scroll up
-	if sel < m.state.gameReview.visible_row_start + scrolloff_clamped {
-		m.state.gameReview.visible_row_start = utils.Clamp(sel - scrolloff_clamped, 0, sel - scrolloff_clamped)
+	if sel < m.state.gameReview.visibleRowStart + scrolloff_clamped {
+		m.state.gameReview.visibleRowStart = utils.Clamp(sel - scrolloff_clamped, 0, sel - scrolloff_clamped)
 	}
 
 	// Scroll down; add 2 to scrolloff to account for pinned last row (separator + last row)
-	if sel >= m.state.gameReview.visible_row_start + max_rows - (scrolloff_clamped + 2) {
-		m.state.gameReview.visible_row_start = sel - max_rows + 1 + (scrolloff_clamped + 2)
+	if sel >= m.state.gameReview.visibleRowStart + max_rows - (scrolloff_clamped + 2) {
+		m.state.gameReview.visibleRowStart = sel - max_rows + 1 + (scrolloff_clamped + 2)
 	}
 
-	clamped := utils.Clamp(m.state.gameReview.visible_row_start, 0, m.game.TurnCount() - max_rows)
-	if m.state.gameReview.visible_row_start > clamped {
-		m.state.gameReview.visible_row_start = clamped
+	clamped := utils.Clamp(m.state.gameReview.visibleRowStart, 0, m.game.TurnCount() - max_rows)
+	if m.state.gameReview.visibleRowStart > clamped {
+		m.state.gameReview.visibleRowStart = clamped
 	}
 }

@@ -12,22 +12,22 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type SettingsState struct {
+type settingsState struct {
 	selected 		int
-	category		SettingsMenuCategory
+	category		settingsMenuCategory
 	schemaList		[]game.SettingsSchemaItem
-	lastSel			map[SettingsMenuCategory]int
+	lastSel			map[settingsMenuCategory]int
 	title			string
 }
 
-type SettingsMenuCategory string
+type settingsMenuCategory string
 const (
 	preferences	 = "preferences"
-	game_settings = "game_settings"
+	gameSettings = "game_settings"
 )
 
-func (m model) SettingsSwitch(category SettingsMenuCategory) (model, tea.Cmd) {
-	m = m.SwitchPage(settings_page)
+func (m model) SettingsSwitch(category settingsMenuCategory) (model, tea.Cmd) {
+	m = m.SwitchPage(settingsPage)
 	m.state.settings.category = category
 	m.state.settings.selected = m.state.settings.lastSel[category]
 
@@ -36,18 +36,18 @@ func (m model) SettingsSwitch(category SettingsMenuCategory) (model, tea.Cmd) {
 		m.state.settings.schemaList = m.schema.Prefs
 		m.state.settings.title = "General Preferences"
 
-		m.footer_keymaps = []FooterKeymap {
+		m.footerKeymaps = []footerKeymap {
 			{key: "↑/↓", value: "scroll"},
 			{key: "←/→", value: "change"},
 			{key: "enter", value: "save"},
 			{key: "ctrl+d", value: "defaults"},
 			{key: "m", value: "menu"},
 		}
-	case game_settings:
+	case gameSettings:
 		m.state.settings.schemaList = m.schema.Game
 		m.state.settings.title = "Game Settings"
 
-		m.footer_keymaps = []FooterKeymap {
+		m.footerKeymaps = []footerKeymap {
 			{key: "↑/↓", value: "scroll"},
 			{key: "←/→", value: "change"},
 			{key: "enter", value: "play"},
@@ -73,14 +73,14 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.state.settings.selected = (m.state.settings.selected + 1 + len(m.state.settings.schemaList)) % len(m.state.settings.schemaList)
 			m.state.settings.lastSel[m.state.settings.category] = m.state.settings.selected
 			if m.state.settings.selected == 0 {
-				m.goto_top = true
+				m.gotoTop = true
 			}
 
 		case "k", "up", "shift+tab":
 			m.state.settings.selected = (m.state.settings.selected - 1 + len(m.state.settings.schemaList)) % len(m.state.settings.schemaList)
 			m.state.settings.lastSel[m.state.settings.category] = m.state.settings.selected
 			if m.state.settings.selected == len(m.state.settings.schemaList) - 1 {
-				m.goto_bottom = true
+				m.gotoBottom = true
 			}
 
 		case "+", "=", "right", "l":
@@ -107,7 +107,7 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			switch m.state.settings.category {
 			case preferences:
 				m.settingsCopy.Prefs = game.GetDefaultGeneralPreferences()
-			case game_settings:
+			case gameSettings:
 				m.settingsCopy.Game = game.GetDefaultGameSettings()
 			}
 
@@ -119,10 +119,10 @@ func (m model) SettingsUpdate(msg tea.Msg) (model, tea.Cmd) {
 			var cmd tea.Cmd
 			switch m.state.settings.category {
 			case preferences:
-				m.anim_mgr.SetAnimationStatus(m.settings.Prefs.AnimationsEnabled)
+				m.animManager.SetAnimationStatus(m.settings.Prefs.AnimationsEnabled)
 				m, cmd = m.MainMenuSwitch()
 
-			case game_settings:
+			case gameSettings:
 				if m.settings.Game.Dictionary == enums.Pokemon {
 					m, cmd = m.PokemonGenSelectorSwitch()
 				} else {
@@ -193,7 +193,7 @@ func (m model) SettingsView() string {
 			display_name = dim(setting.DisplayName)
 		}
 
-		row_1_space := m.width_content - lipgloss.Width(display_name) - lipgloss.Width(default_text) - 3
+		row_1_space := m.contentWidth - lipgloss.Width(display_name) - lipgloss.Width(default_text) - 3
 		row_1_space = max(0, row_1_space)
 
 		var content string
@@ -201,7 +201,7 @@ func (m model) SettingsView() string {
 
 		// Show description for selected item only
 		if is_selected && setting.Description != "" {
-			row_2_space := m.width_content - lipgloss.Width(description) - lipgloss.Width(sub_desc) - 5
+			row_2_space := m.contentWidth - lipgloss.Width(description) - lipgloss.Width(sub_desc) - 5
 			var row_2 string
 
 			if setting.Description != "n/a" {
@@ -242,7 +242,7 @@ func (m model) SettingsView() string {
 
 		// Don't apply border to final setting box
 		apply_bottom_border := i != len(m.state.settings.schemaList) - 1
-		line := styles.CreateSettingsMenuItem(content, is_selected, apply_bottom_border, m.width_content - 2)
+		line := styles.CreateSettingsMenuItem(content, is_selected, apply_bottom_border, m.contentWidth - 2)
 		lines = append(lines, line)
 	}
 

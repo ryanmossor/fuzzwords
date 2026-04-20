@@ -8,9 +8,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type footerState struct {
+	footerMsg		string
+}
+
 func (m model) FooterView() string {
 	var footer_text_right string
-	if m.game.GameActive() || m.page == game_review_page || m.page == game_over_page {
+	if m.game.GameActive() || m.page == gameReviewPage || m.page == gameOverPage {
 		footer_text_right = fmt.Sprintf("%s ─ %s ─ %s",
 			m.game.Settings().Dictionary.String(),
 			m.game.Settings().PromptMode.String(),
@@ -18,7 +22,7 @@ func (m model) FooterView() string {
 	}
 
 	pad := 2
-	max_footer_width := max(0, m.width_container - lipgloss.Width(footer_text_right) - pad)
+	max_footer_width := max(0, m.containerWidth - lipgloss.Width(footer_text_right) - pad)
 	footer_line := strings.Repeat("─", max_footer_width) + footer_text_right + strings.Repeat("─", pad)
 
 	if m.state.game.playerDamaged {
@@ -28,7 +32,7 @@ func (m model) FooterView() string {
 	}
 
 	keymaps := []string{}
-	for _, k := range m.footer_keymaps {
+	for _, k := range m.footerKeymaps {
 		keymaps = append(keymaps,
 			fmt.Sprintf("%s %s",
 				styles.TextBlue.Bold(true).Render(k.key),
@@ -40,7 +44,7 @@ func (m model) FooterView() string {
 		lipgloss.Center,
 		// TODO move footer msg, inline text, keymaps(?) to config struct per page that is
 		// retrieved in root View() and passed to FooterView()
-		m.state.footer.footer_msg,
+		m.state.footer.footerMsg,
 		footer_line,
 		strings.Join(keymaps, styles.TextBody.Render(" • ")),
 		"",

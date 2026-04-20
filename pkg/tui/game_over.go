@@ -14,14 +14,14 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-type GameOverState struct {
+type gameOverState struct {
 	viewCache		map[string]string
 }
 
 func (m model) GameOverSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(game_over_page)
+	m = m.SwitchPage(gameOverPage)
 
-	m.footer_keymaps = []FooterKeymap {
+	m.footerKeymaps = []footerKeymap {
 		{key: "r", value: "review"},
 		{key: "enter", value: "new game"},
 		{key: "s", value: "settings"},
@@ -30,7 +30,7 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 	}
 
 	if m.game.GameWon() {
-		m.anim_mgr.InitAnimations(animations.GameOverWin)
+		m.animManager.InitAnimations(animations.GameOverWin)
 	}
 
 	return m, nil
@@ -46,16 +46,16 @@ func (m model) GameOverUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		switch msg.String() {
 		case "m":
-			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
+			m.animManager.DeactivateAnimations(animations.GameOverWin)
 			return m.MainMenuSwitch()
 		case "s":
-			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
-			return m.SettingsSwitch(game_settings)
+			m.animManager.DeactivateAnimations(animations.GameOverWin)
+			return m.SettingsSwitch(gameSettings)
 		case "r":
-			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
+			m.animManager.DeactivateAnimations(animations.GameOverWin)
 			return m.GameReviewSwitch()
 		case "enter":
-			m.anim_mgr.DeactivateAnimations(animations.GameOverWin)
+			m.animManager.DeactivateAnimations(animations.GameOverWin)
 			return m.GameSwitch()
 		case "q":
 			return m, tea.Quit
@@ -93,7 +93,7 @@ func (m *model) renderGameOverTitleMsg() string {
 
 	if m.game.GameWon() {
 		var changed bool
-		title, changed = m.anim_mgr.ApplyAnimations(
+		title, changed = m.animManager.ApplyAnimations(
 			string(animations.GameOverWin),
 			"===== YOU WIN! =====")
 

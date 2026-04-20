@@ -11,17 +11,17 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type PokemonMenuState struct {
+type pokemonMenuState struct {
 	selected 	int
-	gen_list	[]int
-	gen_state	map[int]bool
+	genList		[]int
+	genState	map[int]bool
 }
 
 func (m model) PokemonGenSelectorSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(pokemon_gen_selector)
+	m = m.SwitchPage(pokemonGenMenuPage)
 	m.state.pokemonMenu.selected = 1
 
-	m.footer_keymaps = []FooterKeymap {
+	m.footerKeymaps = []footerKeymap {
 		{key: "↑/↓", value: "scroll"},
 		{key: "←/→", value: "change"},
 		{key: "esc", value: "back"},
@@ -36,7 +36,7 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		m.state.footer.footer_msg = ""
+		m.state.footer.footerMsg = ""
 
 		switch msg.String() {
 		case "j", "down", "tab":
@@ -47,7 +47,7 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			if m.state.pokemonMenu.selected == 1 {
-				m.goto_top = true
+				m.gotoTop = true
 			}
 
 		case "k", "up", "shift+tab":
@@ -58,29 +58,29 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 			if m.state.pokemonMenu.selected == len(dictionary.PokemonDictionary) - 1 {
-				m.goto_bottom = true
+				m.gotoBottom = true
 			}
 
 		case "+", "=", "right", "l", "-", "left", "h":
 			idx := m.state.pokemonMenu.selected
-			m.state.pokemonMenu.gen_state[idx] = !m.state.pokemonMenu.gen_state[idx]
+			m.state.pokemonMenu.genState[idx] = !m.state.pokemonMenu.genState[idx]
 
 		case "enter":
 			selected_gens := make([]int, 0, len(dictionary.PokemonDictionary))
-			for gen, enabled := range m.state.pokemonMenu.gen_state {
+			for gen, enabled := range m.state.pokemonMenu.genState {
 				if enabled {
 					selected_gens = append(selected_gens, gen)
 				}
 			}
 
 			if len(selected_gens) == 0 {
-				m.state.footer.footer_msg = styles.
+				m.state.footer.footerMsg = styles.
 					TextRed.
 					Render("You must select at least one generation")
 				return m, nil
 			}
 
-			m.state.pokemonMenu.gen_list = selected_gens
+			m.state.pokemonMenu.genList = selected_gens
 			m.settings.Game.PokemonGens = selected_gens
 
 			cmds = append(cmds, m.saveSettingsCmd(*m.settings, m.settingsPath))
@@ -90,7 +90,7 @@ func (m model) PokemonGenSelectorUpdate(msg tea.Msg) (model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 
 		case "esc":
-			return m.SettingsSwitch(game_settings)
+			return m.SettingsSwitch(gameSettings)
 		}
 	}
 
@@ -106,7 +106,7 @@ func (m model) PokemonGenSelectorView() string {
 	for i := range len(dictionary.PokemonDictionary) {
 		gen := i + 1
 
-		cur_val := m.state.pokemonMenu.gen_state[gen]
+		cur_val := m.state.pokemonMenu.genState[gen]
 		var enabled_text string
 		if cur_val == true {
 			enabled_text = "on"
@@ -123,7 +123,7 @@ func (m model) PokemonGenSelectorView() string {
 		}
 
 		// TODO: better way of calculating width (eg max 50% of width container?)
-		row_space := m.width_content - lipgloss.Width(display_name) - lipgloss.Width(row_text) - 3 - 26
+		row_space := m.contentWidth - lipgloss.Width(display_name) - lipgloss.Width(row_text) - 3 - 26
 		row_space = max(0, row_space)
 
 		gen_len := len(dictionary.PokemonDictionary[gen])
@@ -152,7 +152,7 @@ func (m model) PokemonGenSelectorView() string {
 
 		apply_bottom_border := gen != len(dictionary.PokemonDictionary)
 		// TODO: better width calculation
-		line := styles.CreatePokemonMenuItem(content, is_selected, apply_bottom_border, m.width_content - 26)
+		line := styles.CreatePokemonMenuItem(content, is_selected, apply_bottom_border, m.contentWidth - 26)
 		lines = append(lines, line)
 	}
 

@@ -9,8 +9,8 @@ import (
 )
 
 func (m model) AboutSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(about_page)
-	m.footer_keymaps = []FooterKeymap{
+	m = m.SwitchPage(aboutPage)
+	m.footerKeymaps = []footerKeymap{
 		{key: "q", value: "quit"},
 	}
 	return m, nil

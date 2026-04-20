@@ -10,15 +10,15 @@ import (
 
 func (p page) String() string {
 	switch p {
-	case splash_page:
+	case splashPage:
 		return "Splash"
-	case about_page:
+	case aboutPage:
 		return "About"
-	case settings_page:
+	case settingsPage:
 		return "Settings"
-	case game_page:
+	case gamePage:
 		return "Game"
-	case game_over_page:
+	case gameOverPage:
 		return "Game Over"
 	default:
 		return "Unknown page"
@@ -65,7 +65,7 @@ func (m model) DebugView() string {
 		BorderBottom(false).
 		Row(tabs...).
 		Row(m.memStatsView()...).
-		Width(m.width_container).
+		Width(m.containerWidth).
 		Render()
 }
 

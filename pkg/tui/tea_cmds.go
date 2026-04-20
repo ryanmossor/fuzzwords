@@ -14,7 +14,7 @@ type TickMsg struct {
 }
 // Global tick timer
 func (m model) tickCmd() tea.Cmd {
-	return tea.Tick(time.Second / time.Duration(m.FPS), func(t time.Time) tea.Msg {
+	return tea.Tick(time.Second / time.Duration(m.fps), func(t time.Time) tea.Msg {
 		return TickMsg{t}
 	})
 }

@@ -13,10 +13,10 @@ import (
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// TODO: has_header flag
 	if m.game.GameActive() ||
-	m.page == game_over_page ||
-	m.page == game_review_page ||
-	m.page == settings_page ||
-	m.page == pokemon_gen_selector {
+	m.page == gameOverPage ||
+	m.page == gameReviewPage ||
+	m.page == settingsPage ||
+	m.page == pokemonGenMenuPage {
 		return m, nil
 	}
 
@@ -38,10 +38,10 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) HeaderView() string {
-	if m.page == game_page || m.page == game_over_page {
+	if m.page == gamePage || m.page == gameOverPage {
 		return m.GameHudView()
 	}
-	if m.page == game_review_page {
+	if m.page == gameReviewPage {
 		return m.GameReviewHudView()
 	}
 
@@ -50,12 +50,12 @@ func (m model) HeaderView() string {
 	body := styles.TextBody.Render
 
 	// TODO: entire header could probably be top line, custom text from model state, bottom line
-	if m.page == settings_page || m.page == pokemon_gen_selector {
+	if m.page == settingsPage || m.page == pokemonGenMenuPage {
 		return lipgloss.JoinVertical(
 			lipgloss.Center,
-			styles.TextBorder.Render(strings.Repeat("─", m.width_container)),
+			styles.TextBorder.Render(strings.Repeat("─", m.containerWidth)),
 			styles.TextBlue.Bold(true).Render(m.state.settings.title),
-			styles.TextBorder.Render(strings.Repeat("─", m.width_container)))
+			styles.TextBorder.Render(strings.Repeat("─", m.containerWidth)))
 	}
 
 	menu := accent("m") + body(" main menu")
@@ -63,11 +63,11 @@ func (m model) HeaderView() string {
 	stats := accent("s") + body(" stats")
 
 	switch m.page {
-	case splash_page:
+	case splashPage:
 		menu = bold("m main menu")
-	case about_page:
+	case aboutPage:
 		about = bold("a about")
-	case stats_page:
+	case statsPage:
 		stats = bold("s stats")
 	}
 
@@ -84,7 +84,7 @@ func (m model) HeaderView() string {
 		BorderColumn(false).
 		BorderStyle(lipgloss.NewStyle().Foreground(theme.Border)).
 		Row(tabs...).
-		Width(m.width_container).
+		Width(m.containerWidth).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			return lipgloss.NewStyle().Padding(0, 1).AlignHorizontal(lipgloss.Center)
 		}).

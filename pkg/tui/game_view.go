@@ -14,6 +14,25 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type turnUIState struct {
+	prompt		string
+	strikes		int
+	prevAnswer	string
+}
+
+type gameUIState struct {
+	playerDamaged		bool
+	inputRestricted		bool
+	gameOver			bool
+	gameQuit			bool
+	health				int
+	gameMsg				string
+	possibleFinalAnswer	string
+	lettersUsed 		map[rune]bool
+	turn				turnUIState
+	stats				game.PlayerStats
+}
+
 func (m model) GameView() string {
 	prompt := styles.TextAccent.
 		Bold(true).
@@ -25,7 +44,7 @@ func (m model) GameView() string {
 	} else {
 		game_msg = m.highlightPromptAnswer(
 			m.state.game.turn.prompt,
-			m.text_input.Value(),
+			m.gameInput.Value(),
 			m.game.Settings().PromptMode)
 	}
 
@@ -55,9 +74,9 @@ func (m model) GameView() string {
 }
 
 func (m model) GameSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(game_page)
+	m = m.SwitchPage(gamePage)
 
-	m.footer_keymaps = []FooterKeymap {
+	m.footerKeymaps = []footerKeymap {
 		{key: "esc", value: "clear input"},
 		{key: "ctrl+q", value: "quit"},
 	}
@@ -65,14 +84,14 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 	var events []game.GameEvent
 	m.game, events = game.NewGame(&m.settings.Game)
 
-	m.state.game = GameUIState {
+	m.state.game = gameUIState {
 		lettersUsed: utils.StringToCharMap(m.game.Settings().Alphabet.Letters()),
 	}
-	m.state.gameOver = GameOverState {
+	m.state.gameOver = gameOverState {
 		viewCache: make(map[string]string),
 	}
-	m.state.gameReview = GameReviewState {
-		viewCache: make(map[int]*TurnDisplay),
+	m.state.gameReview = gameReviewState {
+		viewCache: make(map[int]*turnDisplay),
 	}
 
 	var cmds []tea.Cmd
@@ -82,7 +101,7 @@ func (m model) GameSwitch() (model, tea.Cmd) {
 
 	m.state.game.health = m.game.Settings().HealthInitial
 
-	m.text_input = m.initBlockTextInput()
+	m.gameInput = m.initBlockTextInput()
 	cmds = append(cmds, textinput.Blink)
 
 	return m, tea.Batch(cmds...)
@@ -119,19 +138,19 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 		if key != "enter" {
 			m.state.game.gameMsg = ""
 		}
-		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
+		m.animManager.DeactivateAnimations(animations.ValidationMessage)
 
 		// TODO: skips -- sacrifice life for skip, earn extra skips from extra lifes if already full
 		// TODO: mute key combo for alert sound in game?
 		switch key {
 		case "up":
 			if m.state.game.turn.prevAnswer != "" {
-				m.text_input.SetValue(m.state.game.turn.prevAnswer)
+				m.gameInput.SetValue(m.state.game.turn.prevAnswer)
 			}
 			return m, nil
 
 		case "esc":
-			m.text_input.Reset()
+			m.gameInput.Reset()
 			return m, nil
 
 		case "ctrl+q":
@@ -146,8 +165,8 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m, tea.Batch(cmds...)
 
 		case "enter":
-			answer := strings.ToLower(strings.TrimSpace(m.text_input.Value()))
-            m.text_input.Reset()
+			answer := strings.ToLower(strings.TrimSpace(m.gameInput.Value()))
+            m.gameInput.Reset()
 
 			events := m.game.SubmitAnswer(answer)
 			for _, e := range events {
@@ -167,7 +186,7 @@ func (m model) GameUpdate(msg tea.Msg) (model, tea.Cmd) {
 	}
 
 	var update_input_cmd tea.Cmd
-	m.text_input, update_input_cmd = m.text_input.Update(msg)
+	m.gameInput, update_input_cmd = m.gameInput.Update(msg)
 
 	return m, update_input_cmd
 }
@@ -177,7 +196,7 @@ func (m *model) handleGameEvent(event game.GameEvent) []tea.Cmd {
 
 	switch e := event.(type) {
 	case game.NewTurnEvent:
-		m.state.game.turn = TurnUIState {
+		m.state.game.turn = turnUIState {
 			prompt: e.Prompt,
 			strikes: 0,
 			prevAnswer: "",
@@ -186,7 +205,7 @@ func (m *model) handleGameEvent(event game.GameEvent) []tea.Cmd {
 	case game.AnswerAcceptedEvent:
 		msg := styles.TextGreen.Render("✓ " + strings.ToUpper(e.Answer) + "  ")
 		m.state.game.gameMsg = msg
-		m.anim_mgr.DeactivateAnimations(animations.ValidationMessage)
+		m.animManager.DeactivateAnimations(animations.ValidationMessage)
 		for _, c := range e.NewLettersUsed {
 			m.state.game.lettersUsed[c] = true
 		}
@@ -214,11 +233,11 @@ func (m *model) handleGameEvent(event game.GameEvent) []tea.Cmd {
 
 		if e.Strikeout {
 			m.state.game.gameMsg = styles.TextRed.Render("Prompt " + strings.ToUpper(e.Prompt) + " failed")
-			m.anim_mgr.InitAnimations(animations.ValidationMessage)
-			m.text_input.Reset()
+			m.animManager.InitAnimations(animations.ValidationMessage)
+			m.gameInput.Reset()
 			cmds = append(cmds, m.debounceInputCmd(500))
 		} else {
-			m.anim_mgr.InitAnimations(animations.StrikeCounter)
+			m.animManager.InitAnimations(animations.StrikeCounter)
 		}
 
 	case game.PlayerDamagedEvent:
@@ -231,7 +250,7 @@ func (m *model) handleGameEvent(event game.GameEvent) []tea.Cmd {
 
 	case game.ExtraLifeEvent:
 		m.state.game.health = e.Health
-		m.anim_mgr.InitAnimations(animations.ExtraLife)
+		m.animManager.InitAnimations(animations.ExtraLife)
 		m.state.game.lettersUsed = utils.StringToCharMap(m.game.Settings().Alphabet.Letters())
 
 	case game.GameQuitEvent:
@@ -247,7 +266,7 @@ func (m *model) handleGameEvent(event game.GameEvent) []tea.Cmd {
 		m.state.game.playerDamaged = false
 		m.state.game.gameOver = true
 		m.state.game.gameMsg = ""
-		m.anim_mgr.InitAnimations(animations.GameOverWin)
+		m.animManager.InitAnimations(animations.GameOverWin)
 		m.state.game.stats = e.Stats
 
 	default:

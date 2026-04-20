@@ -13,7 +13,7 @@ import (
 
 func (m model) GameReviewHudView() string {
 	// TODO: refactor review state to have ref to current turn rather than idx
-	turn := m.game.GetTurn(m.state.gameReview.selected_turn)
+	turn := m.game.GetTurn(m.state.gameReview.selectedTurn)
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		m.renderTurnInfo(turn),
@@ -25,7 +25,7 @@ func (m model) GameReviewHudView() string {
 func (m model) renderTurnInfo(turn *game.Turn) string {
 	health_display := m.renderHealthDisplay(turn.Health())
 	health_change_info := m.renderHealthChangeInfo(turn)
-	line := styles.TextBorder.Render(strings.Repeat("─", m.width_container))
+	line := styles.TextBorder.Render(strings.Repeat("─", m.containerWidth))
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
