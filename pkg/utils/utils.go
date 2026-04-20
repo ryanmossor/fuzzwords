@@ -31,16 +31,6 @@ func Remove[T any](list []T, i int) []T {
     return slices.Delete(list, i, i + 1)
 }
 
-func GetLongestStr(list []string) string {
-	var longest string
-	for _, str := range list {
-		if len(str) > len(longest) {
-			longest = str
-		}
-	}
-	return longest
-}
-
 func ArrToMap(lines []string) map[string]bool {
 	var word_map = make(map[string]bool)
 	for _, word := range lines {
