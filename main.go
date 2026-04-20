@@ -10,7 +10,6 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func main() {
@@ -53,17 +52,15 @@ func main() {
     fileHandler := slog.NewJSONHandler(log_file, opts)
     slog.SetDefault(slog.New(fileHandler))
 
-	menu := tui.NewModel(lipgloss.DefaultRenderer(), *debug)
-	prog := tea.NewProgram(
-        menu,
+	model := tui.NewModel(*debug)
+	app := tea.NewProgram(model,
         tea.WithAltScreen(),
         tea.WithMouseCellMotion(), // enable mouse support for scroll wheel usage
     )
-	_, err = prog.Run()
+	_, err = app.Run()
 	if err != nil {
 		fmt.Println("Error running program:", err)
 		slog.Error("Error running program", "errMsg", err)
 		os.Exit(1)
 	}
 }
- 

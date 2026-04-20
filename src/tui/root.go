@@ -59,7 +59,7 @@ type GameUIState struct {
 	health				int
 	gameMsg				string
 	possibleFinalAnswer	string
-	lettersUsed 	map[rune]bool
+	lettersUsed 		map[rune]bool
 	turn				TurnUIState
 	stats				game.PlayerStats
 }
@@ -141,7 +141,7 @@ type model struct {
 //go:embed game_settings_schema.json
 var game_settings_schema_json []byte
 
-func NewModel(renderer *lipgloss.Renderer, debug bool) tea.Model {
+func NewModel(debug bool) tea.Model {
 	cfg_dir, err := os.UserConfigDir()
 	if err != nil {
 		slog.Error("Config dir not found, using tmp dir to save settings instead", "error", err)
