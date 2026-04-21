@@ -29,7 +29,7 @@ func (m model) GameOverSwitch() (model, tea.Cmd) {
 		{key: "q", value: "quit"},
 	}
 
-	if m.game.GameWon() {
+	if m.state.game.gameWon {
 		m.animManager.InitAnimations(animations.GameOverWin)
 	}
 
@@ -77,7 +77,7 @@ func (m *model) GameOverView() string {
 		m.renderGameOverStatTable(),
 	)
 
-	if !m.game.GameWon() || !m.settings.Prefs.AnimationsEnabled {
+	if !m.state.game.gameWon || !m.settings.Prefs.AnimationsEnabled {
 		m.state.gameOver.viewCache["fullView"] = view
 	}
 
@@ -91,7 +91,7 @@ func (m *model) renderGameOverTitleMsg() string {
 
 	var title string
 
-	if m.game.GameWon() {
+	if m.state.game.gameWon {
 		var changed bool
 		title, changed = m.animManager.ApplyAnimations(
 			string(animations.GameOverWin),
@@ -156,7 +156,7 @@ func (m *model) renderGameOverStatTable() string {
 
 	rows := [][]string {
 		{"Time played", utils.FormatTime(stats.TimePlayed())},
-		{"Prompts solved", fmt.Sprintf("%d / %d", stats.PromptsSolved(), m.game.TurnCount())},
+		{"Prompts solved", fmt.Sprintf("%d / %d", stats.PromptsSolved(), len(m.state.gameReview.turns))},
 		{"Solves per minute", solves_per_min},
 		{"Longest streak", longest_streak},
 		{"Average solve length", fmt.Sprintf("%.1f letters", stats.AverageSolveLength())},
@@ -196,7 +196,7 @@ func (m *model) renderGameOverStatTable() string {
 
 	lines := []string{ stats_table }
 
-	if !m.game.GameWon() {
+	if !m.state.game.gameWon {
 		msg := styles.TextRed.Render(fmt.Sprintf(
 			"Possible solve for final prompt %s: ",
 			strings.ToUpper(m.state.game.turn.prompt)))

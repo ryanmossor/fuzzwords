@@ -23,12 +23,14 @@ type ExtraLifeEvent struct {
 type GameOverEvent struct {
 	PossibleAnswer	string
 	Stats			PlayerStats
+	Turns			[]Turn
 }
 
 type GameQuitEvent struct{}
 
 type GameWonEvent struct {
 	Stats	PlayerStats
+	Turns	[]Turn
 }
 
 type StrikeEvent struct {

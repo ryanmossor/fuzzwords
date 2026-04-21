@@ -6,7 +6,6 @@ import (
 	"fzwds/pkg/tui/styles"
 	"fzwds/pkg/tui/theme"
 	"fzwds/pkg/utils"
-	"math"
 	"strings"
 	"time"
 
@@ -25,7 +24,7 @@ type gameReviewState struct {
 	summaryRowFmtStr		string
 	summaryRowWidth			int
 	summaryRowPad			int
-	// TODO: store *Turn instead of idx?
+	turns					[]game.Turn
 	selectedTurn			int
 	visibleRowStart			int
 	viewCache				map[int]*turnDisplay
@@ -34,7 +33,7 @@ type gameReviewState struct {
 func (m model) GameReviewSwitch() (model, tea.Cmd) {
 	summary_row_width := fmt.Sprintf("%s %d. %s %s %s",
 		"v", // validated symbol
-		m.game.TurnCount(),
+		len(m.state.gameReview.turns),
 		strings.Repeat("_", m.game.Settings().PromptLenMax),
 		"-s", // strike count
 		"+l", // extra life
@@ -66,10 +65,10 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.updateSummaryListState(0)
 
 		case "G", "end":
-			m.updateSummaryListState(m.game.TurnCount() - 1)
+			m.updateSummaryListState(len(m.state.gameReview.turns) - 1)
 
 		case "j", "down", "tab":
-			if m.state.gameReview.selectedTurn < m.game.TurnCount() - 1 {
+			if m.state.gameReview.selectedTurn < len(m.state.gameReview.turns) - 1 {
 				m.updateSummaryListState(m.state.gameReview.selectedTurn + 1)
 			}
 
@@ -79,16 +78,14 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 
 		case "n":
-			sel := m.game.NextFailedTurnIdx(m.state.gameReview.selectedTurn)
-			m.updateSummaryListState(sel)
+			m.updateSummaryListState(m.nextFailedTurnIdx())
 
 		case "p":
-			sel := m.game.PrevFailedTurnIdx(m.state.gameReview.selectedTurn)
-			m.updateSummaryListState(sel)
+			m.updateSummaryListState(m.prevFailedTurnIdx())
 
 		case "ctrl+u", "pgup":
 			visible_rows := m.contentHeight - 2
-			scroll := int(math.Floor(float64(visible_rows) / 2))
+			scroll := visible_rows / 2
 			clamped := utils.Clamp(
 				m.state.gameReview.selectedTurn - scroll,
 				0,
@@ -97,11 +94,11 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		case "ctrl+d", "pgdown":
 			visible_rows := m.contentHeight - 2
-			scroll := int(math.Floor(float64(visible_rows) / 2))
+			scroll := visible_rows / 2
 			clamped := utils.Clamp(
 				m.state.gameReview.selectedTurn + scroll,
 				m.state.gameReview.selectedTurn + scroll,
-				m.game.TurnCount() - 1)
+				len(m.state.gameReview.turns) - 1)
 			m.updateSummaryListState(clamped)
 
 		case "esc":
@@ -114,12 +111,12 @@ func (m model) GameReviewUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) GameReviewView() string {
 	height := m.contentHeight - 2 // -2 for top/bottom table border rows
-	current_turn := m.game.GetTurn(m.state.gameReview.selectedTurn)
+	turn := m.getTurn(m.state.gameReview.selectedTurn)
 	return lipgloss.NewStyle().Height(m.contentHeight).Render(
 		lipgloss.JoinHorizontal(
 			lipgloss.Top,
 			m.renderTurnSummaryList(height),
-			m.renderTurnDetailView(current_turn, height)))
+			m.renderTurnDetailView(turn, height)))
 }
 
 func (m model) renderTurnSummaryList(height int) string {
@@ -133,7 +130,7 @@ func (m model) renderTurnSummaryList(height int) string {
 	list_header += border_style(strings.Repeat(border.Top, width - len(list_title) - 1))
 	list_header += border_style(border.TopRight)
 
-	last_turn_idx := m.game.TurnCount() - 1
+	last_turn_idx := len(m.state.gameReview.turns) - 1
 	// 1 space always reserved for final turn
 	visible_rows := min(last_turn_idx, height - 1)
 
@@ -147,14 +144,14 @@ func (m model) renderTurnSummaryList(height int) string {
 
 	list_items := make([]string, 0, visible_rows)
 	for i := start; i < end; i++ {
-		list_items = append(list_items, m.renderReviewSummaryRow(m.game.GetTurn(i)))
+		list_items = append(list_items, m.renderReviewSummaryRow(m.getTurn(i)))
 	}
 	if show_divider {
 		list_items = append(list_items, styles.TextDim.Render(strings.Repeat("─", width)))
 	}
 	// Pin last row to bottom
 	list_items = append(list_items,
-		m.renderReviewSummaryRow(m.game.GetTurn(last_turn_idx)),
+		m.renderReviewSummaryRow(m.getTurn(last_turn_idx)),
 	)
 
 	// TODO: cache bigger styles like this so they only need to be created once
@@ -170,7 +167,7 @@ func (m model) renderTurnSummaryList(height int) string {
 	return lipgloss.JoinVertical(lipgloss.Top, list_header, list)
 }
 
-func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
+func (m model) renderTurnDetailView(turn game.Turn, height int) string {
 	td, ok := m.state.gameReview.viewCache[turn.TurnNumber()]
 	if ok && td.detailView != "" {
 		return td.detailView
@@ -298,7 +295,7 @@ func (m model) renderTurnDetailView(turn *game.Turn, height int) string {
 	return view
 }
 
-func (m model) renderReviewSummaryRow(turn *game.Turn) string {
+func (m model) renderReviewSummaryRow(turn game.Turn) string {
 	is_turn_selected := m.state.gameReview.selectedTurn == turn.TurnNumber() - 1
 	td, ok := m.state.gameReview.viewCache[turn.TurnNumber()]
 	if ok {
@@ -336,7 +333,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 		}
 	}
 
-	final_turn_num_str := fmt.Sprintf("%d.", m.game.TurnCount())
+	final_turn_num_str := fmt.Sprintf("%d.", len(m.state.gameReview.turns))
 	turn_num_str := fmt.Sprintf("%d.", turn.TurnNumber())
 	turn_num_padding := strings.Repeat(" ", len(final_turn_num_str) - len(turn_num_str))
 
@@ -411,7 +408,7 @@ func (m model) renderReviewSummaryRow(turn *game.Turn) string {
 	return s
 }
 
-func (m model) getTurnBadges(turn *game.Turn) string {
+func (m model) getTurnBadges(turn game.Turn) string {
 	badges := make([]string, 0)
 	base_badge_style := lipgloss.NewStyle().Foreground(theme.Background).Bold(true)
 
@@ -442,9 +439,8 @@ func (m *model) updateSummaryListState(sel int) {
 	m.state.gameReview.selectedTurn = sel
 
 	scrolloff := 2
-	// TODO: this is also calculated in view; need to consolidate/store as struct prop
-	max_rows := min(m.game.TurnCount(), m.contentHeight - 2) // -2 rows for top/bottom borders
-	scrolloff_clamped := utils.Clamp(scrolloff, 0, int(math.Floor(float64(max_rows / 2))))
+	max_rows := min(len(m.state.gameReview.turns), m.contentHeight - 2) // -2 rows for top/bottom borders
+	scrolloff_clamped := utils.Clamp(scrolloff, 0, max_rows / 2)
 
 	// Scroll up
 	if sel < m.state.gameReview.visibleRowStart + scrolloff_clamped {
@@ -456,8 +452,31 @@ func (m *model) updateSummaryListState(sel int) {
 		m.state.gameReview.visibleRowStart = sel - max_rows + 1 + (scrolloff_clamped + 2)
 	}
 
-	clamped := utils.Clamp(m.state.gameReview.visibleRowStart, 0, m.game.TurnCount() - max_rows)
-	if m.state.gameReview.visibleRowStart > clamped {
-		m.state.gameReview.visibleRowStart = clamped
+	clamped := utils.Clamp(m.state.gameReview.visibleRowStart, 0, len(m.state.gameReview.turns) - max_rows)
+	m.state.gameReview.visibleRowStart = clamped
+}
+
+func (m model) getTurn(idx int) game.Turn {
+	clamped := utils.Clamp(idx, 0, len(m.state.gameReview.turns))
+	return m.state.gameReview.turns[clamped]
+}
+
+func (m model) nextFailedTurnIdx() int {
+	cur_idx := m.state.gameReview.selectedTurn
+	for i := cur_idx; i < len(m.state.gameReview.turns); i++ {
+		if (m.state.gameReview.turns[i].Strikes() > 0 || !m.state.gameReview.turns[i].Solved()) && i > cur_idx {
+			return i
+		}
 	}
+	return cur_idx
+}
+
+func (m model) prevFailedTurnIdx() int {
+	cur_idx := m.state.gameReview.selectedTurn
+	for i := cur_idx; i >= 0; i-- {
+		if (m.state.gameReview.turns[i].Strikes() > 0 || !m.state.gameReview.turns[i].Solved()) && i < cur_idx {
+			return i
+		}
+	}
+	return cur_idx
 }

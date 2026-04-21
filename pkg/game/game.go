@@ -18,8 +18,6 @@ type Game struct {
 	settings			GameSettings
 	wordLists			wordLists
 	player				Player
-	// TODO: consider making this a map[int]*Turn? key is turn number/idx
-	// Would make accessing failed turns by idx easier
 	turns				[]Turn
 }
 
@@ -92,7 +90,10 @@ func (g *Game) SubmitAnswer(answer string) []GameEvent {
 
 	if g.determineWon() {
 		g.endGame()
-		events = append(events, GameWonEvent{ Stats: g.player.stats })
+		events = append(events, GameWonEvent {
+			Stats: g.player.stats,
+			Turns: g.turns,
+		})
 		return events
 	}
 
@@ -137,6 +138,7 @@ func (g *Game) handleTimeout() []GameEvent {
 		events = append(events, strike_evt, GameOverEvent {
 			PossibleAnswer: turn.sourceWord,
 			Stats: g.player.stats,
+			Turns: g.turns,
 		})
 		return events
 	}
@@ -176,6 +178,7 @@ func (g *Game) QuitGame() []GameEvent {
 		GameOverEvent {
 			PossibleAnswer: g.currentTurn().sourceWord,
 			Stats: g.player.stats,
+			Turns: g.turns,
 		},
 		GameQuitEvent{},
 	}
@@ -205,14 +208,6 @@ func (g Game) GameActive() bool {
 	return g.gameActive
 }
 
-func (g Game) GameWon() bool {
-	return g.gameWon
-}
-
-func (g Game) TurnCount() int {
-	return len(g.turns)
-}
-
 func (g Game) CurrentTurnNumber() int {
 	return len(g.turns)
 }
@@ -220,36 +215,4 @@ func (g Game) CurrentTurnNumber() int {
 func (g Game) currentTurn() *Turn {
 	assert.Assert(len(g.turns) > 0, "Attempted to access current turn before game initialized")
 	return &g.turns[len(g.turns) - 1]
-}
-
-func (g Game) PreviousTurn() (*Turn, bool) {
-	if len(g.turns) <= 1 {
-		return nil, false
-	}
-	return &g.turns[len(g.turns) - 2], true
-}
-
-// TODO: this takes turn idx, but i'm referencing turns by number (1-based) in many places.
-// Consider pros/cons of idx vs turn number
-func (g Game) GetTurn(idx int) *Turn {
-	clamped_idx := utils.Clamp(idx, 0, len(g.turns) - 1)
-	return &g.turns[clamped_idx]
-}
-
-func (g Game) NextFailedTurnIdx(turn_idx_cur int) int {
-	for i := turn_idx_cur; i < len(g.turns); i++ {
-		if (g.turns[i].strikes > 0 || !g.turns[i].solved) && i > turn_idx_cur {
-			return i
-		}
-	}
-	return turn_idx_cur
-}
-
-func (g Game) PrevFailedTurnIdx(turn_idx_cur int) int {
-	for i := turn_idx_cur; i >= 0; i-- {
-		if (g.turns[i].strikes > 0 || !g.turns[i].solved) && i < turn_idx_cur {
-			return i
-		}
-	}
-	return turn_idx_cur
 }

@@ -12,8 +12,7 @@ import (
 )
 
 func (m model) GameReviewHudView() string {
-	// TODO: refactor review state to have ref to current turn rather than idx
-	turn := m.game.GetTurn(m.state.gameReview.selectedTurn)
+	turn := m.getTurn(m.state.gameReview.selectedTurn)
 	return lipgloss.JoinVertical(
 		lipgloss.Center,
 		m.renderTurnInfo(turn),
@@ -22,7 +21,7 @@ func (m model) GameReviewHudView() string {
 	)
 }
 
-func (m model) renderTurnInfo(turn *game.Turn) string {
+func (m model) renderTurnInfo(turn game.Turn) string {
 	health_display := m.renderHealthDisplay(turn.Health())
 	health_change_info := m.renderHealthChangeInfo(turn)
 	line := styles.TextBorder.Render(strings.Repeat("─", m.containerWidth))
@@ -34,7 +33,7 @@ func (m model) renderTurnInfo(turn *game.Turn) string {
 		line)
 }
 
-func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
+func (m model) renderReviewRemainingLetters(turn game.Turn) string {
 	var out strings.Builder
 
 	for i, c := range m.game.Settings().Alphabet.Letters() {
@@ -54,7 +53,7 @@ func (m model) renderReviewRemainingLetters(turn *game.Turn) string {
 	return out.String()
 }
 
-func (m model) renderHealthChangeInfo(turn *game.Turn) string {
+func (m model) renderHealthChangeInfo(turn game.Turn) string {
 	var health_change_info string
 
 	if turn.Strikes() > 0 {

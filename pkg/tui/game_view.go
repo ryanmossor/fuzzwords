@@ -25,6 +25,7 @@ type gameUIState struct {
 	inputRestricted		bool
 	gameOver			bool
 	gameQuit			bool
+	gameWon				bool
 	health				int
 	gameMsg				string
 	possibleFinalAnswer	string
@@ -261,13 +262,16 @@ func (m *model) handleGameEvent(event game.GameEvent) []tea.Cmd {
 		m.state.game.gameOver = true
 		m.state.game.possibleFinalAnswer = e.PossibleAnswer
 		m.state.game.stats = e.Stats
+		m.state.gameReview.turns = e.Turns
 
 	case game.GameWonEvent:
 		m.state.game.playerDamaged = false
 		m.state.game.gameOver = true
+		m.state.game.gameWon = true
 		m.state.game.gameMsg = ""
 		m.animManager.InitAnimations(animations.GameOverWin)
 		m.state.game.stats = e.Stats
+		m.state.gameReview.turns = e.Turns
 
 	default:
 		slog.Warn("Game event not handled", "type", reflect.TypeOf(e).String(), "event", e)
