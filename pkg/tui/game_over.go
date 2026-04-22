@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"fzwds/pkg/tui/animations"
+	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 	"fzwds/pkg/tui/theme"
 	"fzwds/pkg/utils"
@@ -19,7 +20,7 @@ type gameOverState struct {
 }
 
 func (m model) GameOverSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(gameOverPage)
+	m = m.SwitchPage(pages.GameOverPage)
 
 	m.footerKeymaps = []footerKeymap {
 		{key: "r", value: "review"},

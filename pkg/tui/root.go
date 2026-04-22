@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"fzwds/pkg/game"
 	anim "fzwds/pkg/tui/animations"
+	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 	"fzwds/pkg/tui/theme"
 	"log/slog"
@@ -18,18 +19,6 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-)
-
-type page string
-const (
-	aboutPage 			page = "about"
-	gameOverPage 		page = "game over"
-	gamePage 			page = "game"
-	gameReviewPage 		page = "review"
-	pokemonGenMenuPage 	page = "pokemon gens"
-	settingsPage 		page = "settings"
-	titlePage 			page = "title screen"
-    statsPage 			page = "stats"
 )
 
 type size int
@@ -87,7 +76,7 @@ type model struct {
 	debug_map			map[string]string
 
 	switched			bool
-	page				page
+	page				pages.PageName
 
 	viewport			viewport.Model
 	viewportWidth   	int
@@ -151,7 +140,7 @@ func NewModel(
 		settings: &settings,
 		settingsCopy: settings,
 
-		page: titlePage,
+		page: pages.TitlePage,
 
 		state: state {
 			pressPlay: pressPlayState {
@@ -242,19 +231,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch m.page {
-	case titlePage:
+	case pages.TitlePage:
 		m, cmd = m.TitleScreenUpdate(msg)
-	case aboutPage:
+	case pages.AboutPage:
 		m, cmd = m.AboutUpdate(msg)
-	case settingsPage:
+	case pages.SettingsPage:
 		m, cmd = m.SettingsUpdate(msg)
-	case pokemonGenMenuPage:
+	case pages.PokemonGenMenuPage:
 		m, cmd = m.PokemonGenSelectorUpdate(msg)
-	case gamePage:
+	case pages.GamePage:
 		m, cmd = m.GameUpdate(msg)
-	case gameOverPage:
+	case pages.GameOverPage:
 		m, cmd = m.GameOverUpdate(msg)
-	case gameReviewPage:
+	case pages.GameReviewPage:
 		m, cmd = m.GameReviewUpdate(msg)
 	}
 
@@ -297,7 +286,7 @@ func (m model) View() string {
 		Padding(0, 1).
 		AlignVertical(lipgloss.Center) // center all content on screen
 
-	if m.page == aboutPage {
+	if m.page == pages.AboutPage {
 		content_style = content_style.
 			Width(m.containerWidth).
 			AlignVertical(lipgloss.Top).
@@ -305,7 +294,7 @@ func (m model) View() string {
 	}
 
 	has_scroll := false
-	if m.page == settingsPage {
+	if m.page == pages.SettingsPage {
 		has_scroll = m.viewport.VisibleLineCount() < m.viewport.TotalLineCount()
 	}
 
@@ -350,7 +339,7 @@ func (m model) View() string {
 	return v
 }
 
-func (m model) SwitchPage(page page) model {
+func (m model) SwitchPage(page pages.PageName) model {
 	m.page = page
 	m.switched = true
 	return m
@@ -360,21 +349,21 @@ func (m model) getContent() string {
 	page := "unknown"
 
 	switch m.page {
-	case titlePage:
+	case pages.TitlePage:
 		page = m.TitleScreenView()
-	case aboutPage:
+	case pages.AboutPage:
 		page = m.AboutView()
-	case settingsPage:
+	case pages.SettingsPage:
 		page = m.SettingsView()
-	case pokemonGenMenuPage:
+	case pages.PokemonGenMenuPage:
 		page = m.PokemonGenSelectorView()
-	case statsPage:
+	case pages.StatsPage:
 		page = m.StatsView()
-	case gamePage:
+	case pages.GamePage:
 		page = m.GameView()
-	case gameOverPage:
+	case pages.GameOverPage:
 		page = m.GameOverView()
-	case gameReviewPage:
+	case pages.GameReviewPage:
 		page = m.GameReviewView()
 	}
 

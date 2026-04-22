@@ -3,6 +3,7 @@ package tui
 import (
 	"fzwds/pkg/constants"
 	"fzwds/pkg/tui/animations"
+	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -87,13 +88,13 @@ func (m model) TitleScreenInit() tea.Cmd {
 
 func (m model) TitleScreenSwitch() (model, tea.Cmd) {
 	// Don't switch if already here; prevents title anim reload
-	if m.page == titlePage {
+	if m.page == pages.TitlePage {
 		return m, nil
 	}
 
 	m.state.pressPlay.id += 1
 
-	m = m.SwitchPage(titlePage)
+	m = m.SwitchPage(pages.TitlePage)
 	m.footerKeymaps = []footerKeymap{
 		{key: "ctrl+p", value: "preferences"},
 		{key: "q", value: "quit"},

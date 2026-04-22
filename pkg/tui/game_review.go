@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"fzwds/pkg/game"
+	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 	"fzwds/pkg/tui/theme"
 	"fzwds/pkg/utils"
@@ -51,7 +52,7 @@ func (m model) GameReviewSwitch() (model, tea.Cmd) {
         {key: "esc", value: "back"},
 	}
 
-	m = m.SwitchPage(gameReviewPage)
+	m = m.SwitchPage(pages.GameReviewPage)
 
 	return m, nil
 }

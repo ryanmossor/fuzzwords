@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fzwds/pkg/enums"
+	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -9,7 +10,7 @@ import (
 )
 
 func (m model) AboutSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(aboutPage)
+	m = m.SwitchPage(pages.AboutPage)
 	m.footerKeymaps = []footerKeymap{
 		{key: "q", value: "quit"},
 	}

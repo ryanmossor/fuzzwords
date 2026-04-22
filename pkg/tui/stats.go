@@ -1,12 +1,14 @@
 package tui
 
 import (
+	"fzwds/pkg/tui/pages"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 func (m model) StatsSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(statsPage)
+	m = m.SwitchPage(pages.StatsPage)
 
 	m.footerKeymaps = []footerKeymap{
 		{key: "q", value: "quit"},

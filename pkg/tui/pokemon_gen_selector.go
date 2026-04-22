@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fzwds/pkg/dictionary"
 	"fzwds/pkg/game"
+	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 	"strings"
 
@@ -18,7 +19,7 @@ type pokemonMenuState struct {
 }
 
 func (m model) PokemonGenSelectorSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(pokemonGenMenuPage)
+	m = m.SwitchPage(pages.PokemonGenMenuPage)
 	m.state.pokemonMenu.selected = 1
 
 	m.footerKeymaps = []footerKeymap {

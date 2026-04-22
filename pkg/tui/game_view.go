@@ -3,6 +3,7 @@ package tui
 import (
 	"fzwds/pkg/game"
 	"fzwds/pkg/tui/animations"
+	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 	"fzwds/pkg/utils"
 	"log/slog"
@@ -75,7 +76,7 @@ func (m model) GameView() string {
 }
 
 func (m model) GameSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(gamePage)
+	m = m.SwitchPage(pages.GamePage)
 
 	m.footerKeymaps = []footerKeymap {
 		{key: "esc", value: "clear input"},

@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 	"fzwds/pkg/tui/theme"
 	"strings"
@@ -13,10 +14,10 @@ import (
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// TODO: has_header flag
 	if m.game.GameActive() ||
-	m.page == gameOverPage ||
-	m.page == gameReviewPage ||
-	m.page == settingsPage ||
-	m.page == pokemonGenMenuPage {
+	m.page == pages.GameOverPage ||
+	m.page == pages.GameReviewPage ||
+	m.page == pages.SettingsPage ||
+	m.page == pages.PokemonGenMenuPage {
 		return m, nil
 	}
 
@@ -38,10 +39,10 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) HeaderView() string {
-	if m.page == gamePage || m.page == gameOverPage {
+	if m.page == pages.GamePage || m.page == pages.GameOverPage {
 		return m.GameHudView()
 	}
-	if m.page == gameReviewPage {
+	if m.page == pages.GameReviewPage {
 		return m.GameReviewHudView()
 	}
 
@@ -50,7 +51,7 @@ func (m model) HeaderView() string {
 	body := styles.TextBody.Render
 
 	// TODO: entire header could probably be top line, custom text from model state, bottom line
-	if m.page == settingsPage || m.page == pokemonGenMenuPage {
+	if m.page == pages.SettingsPage || m.page == pages.PokemonGenMenuPage {
 		return lipgloss.JoinVertical(
 			lipgloss.Center,
 			styles.TextBorder.Render(strings.Repeat("─", m.containerWidth)),
@@ -63,11 +64,11 @@ func (m model) HeaderView() string {
 	stats := accent("s") + body(" stats")
 
 	switch m.page {
-	case titlePage:
+	case pages.TitlePage:
 		menu = bold("m main menu")
-	case aboutPage:
+	case pages.AboutPage:
 		about = bold("a about")
-	case statsPage:
+	case pages.StatsPage:
 		stats = bold("s stats")
 	}
 

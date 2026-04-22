@@ -3,6 +3,7 @@ package tui
 import (
 	"fzwds/pkg/enums"
 	"fzwds/pkg/game"
+	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 	"fzwds/pkg/utils"
 	"strconv"
@@ -27,7 +28,7 @@ const (
 )
 
 func (m model) SettingsSwitch(category settingsMenuCategory) (model, tea.Cmd) {
-	m = m.SwitchPage(settingsPage)
+	m = m.SwitchPage(pages.SettingsPage)
 	m.state.settings.category = category
 	m.state.settings.selected = m.state.settings.lastSel[category]
 

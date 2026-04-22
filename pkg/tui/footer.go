@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 	"strings"
 
@@ -14,7 +15,7 @@ type footerState struct {
 
 func (m model) FooterView() string {
 	var footer_text_right string
-	if m.game.GameActive() || m.page == gameReviewPage || m.page == gameOverPage {
+	if m.game.GameActive() || m.page == pages.GameReviewPage || m.page == pages.GameOverPage {
 		footer_text_right = fmt.Sprintf("%s ─ %s ─ %s",
 			m.game.Settings().Dictionary.String(),
 			m.game.Settings().PromptMode.String(),

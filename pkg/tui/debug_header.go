@@ -8,23 +8,6 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (p page) String() string {
-	switch p {
-	case titlePage:
-		return "Title"
-	case aboutPage:
-		return "About"
-	case settingsPage:
-		return "Settings"
-	case gamePage:
-		return "Game"
-	case gameOverPage:
-		return "Game Over"
-	default:
-		return "Unknown page"
-	}
-}
-
 func (s size) String() string {
 	switch s {
 	case undersized:
