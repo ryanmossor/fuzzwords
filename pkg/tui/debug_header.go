@@ -8,20 +8,20 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func (s size) String() string {
-	switch s {
-	case undersized:
-		return "Undersized"
-	case small:
-		return "Small"
-	case medium:
-		return "Medium"
-	case large:
-		return "Large"
-	default:
-		return "Unknown size"
-	}
-}
+// func (s size) String() string {
+// 	switch s {
+// 	case undersized:
+// 		return "Undersized"
+// 	case small:
+// 		return "Small"
+// 	case medium:
+// 		return "Medium"
+// 	case large:
+// 		return "Large"
+// 	default:
+// 		return "Unknown size"
+// 	}
+// }
 
 // TODO: make debug view a panel that appears left/right of main view rather than a finnicky header
 func (m model) DebugView() string {
@@ -31,15 +31,19 @@ func (m model) DebugView() string {
 
 	tabs := []string{
 		"viewSize " + m.debug_map["viewSize"] + " B",
-		fmt.Sprintf("input %v", !m.state.game.inputRestricted),
-		"keyPress " + m.debug_map["keyPress"],
+		// fmt.Sprintf("input %v", !m.state.game.inputRestricted),
+		// "keyPress " + m.debug_map["keyPress"],
+
+		"contentW " + m.uiContext.DebugMap["contentW"],
+		fmt.Sprintf("cntrW %d", m.uiContext.ContainerWidth),
+		// fmt.Sprintf("contH %d", m.uiContext.ContentHeight),
 
 		// fmt.Sprintf("heightContainer %d", m.height_container),
 		// fmt.Sprintf("heightContent %d", m.height_content),
 
-		fmt.Sprintf("Turn %d", m.game.CurrentTurnNumber()),
+		// fmt.Sprintf("Turn %d", m.game.CurrentTurnNumber()),
 
-		// string(m.page),
+		string(m.currentPage.GetPageName()),
 		// m.size.String(),
 	}
 
@@ -48,7 +52,7 @@ func (m model) DebugView() string {
 		BorderBottom(false).
 		Row(tabs...).
 		Row(m.memStatsView()...).
-		Width(m.containerWidth).
+		Width(m.uiContext.ContainerWidth).
 		Render()
 }
 

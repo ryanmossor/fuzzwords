@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"fzwds/pkg/game"
 	anim "fzwds/pkg/tui/animations"
+	"fzwds/pkg/tui/commands"
+	"fzwds/pkg/tui/figurethisout"
 	"fzwds/pkg/tui/pages"
 	"fzwds/pkg/tui/styles"
 	"fzwds/pkg/tui/theme"
@@ -21,28 +23,15 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type size int
-const (
-	undersized size = iota
-	small
-	medium
-	large
-)
-
-type footerKeymap struct {
-	key		string
-	value	string
-}
-
-type state struct {
-	game			gameUIState
-	gameReview		gameReviewState
-	gameOver		gameOverState
-	pressPlay		pressPlayState
-	settings		settingsState
-	pokemonMenu		pokemonMenuState
-	footer			footerState
-}
+// type state struct {
+// 	game			gameUIState
+// 	gameReview		gameReviewState
+// 	gameOver		gameOverState
+// 	// pressPlay		pressPlayState
+// 	settings		settingsState
+// 	pokemonMenu		pokemonMenuState
+// 	footer			footerState
+// }
 
 // TODO: refactor root model to have context prop that is passed to views
 // Root: orchestrator, delegates updates/view renders to pages
@@ -52,23 +41,6 @@ type state struct {
 // 	- state struct
 // Components: leaves of pages, move more complicated rendering here
 //	- eg review summary rows/detail tables, scrollable menu items (eg settings)?
-type UIContext struct {
-	Size				size
-
-	ContainerWidth		int
-	ContainerHeight		int
-
-	ContentWidth		int
-	ContentHeight		int
-
-	viewportWidth		int
-	viewportHeight		int
-
-	// ?
-	// anim?
-	// debug map? to allow pages/components to write to it
-	// footer msg?
-}
 
 type model struct {
 	ready               bool
@@ -76,23 +48,27 @@ type model struct {
 	debug_map			map[string]string
 
 	switched			bool
-	page				pages.PageName
+	// page				pages.PageName
+	currentPage			pages.Page
+	pages				map[pages.PageName]pages.Page
 
 	viewport			viewport.Model
-	viewportWidth   	int
-	viewportHeight  	int
+	// viewportWidth   	int
+	// viewportHeight  	int
 	gotoTop				bool
 	gotoBottom			bool
 
-	containerWidth  	int
-	containerHeight 	int
-	contentWidth    	int
-	contentHeight   	int
+	// containerWidth  	int
+	// containerHeight 	int
+	// contentWidth    	int
+	// contentHeight   	int
 
-	size				size
-	footerKeymaps		[]footerKeymap
+	uiContext			*figurethisout.UIContext
 
-	state				state
+	// size				figurethisout.Size
+	helpKeys		[]figurethisout.HelpKeymap
+
+	// state				state
 	game				game.Game
 	gameInput			textinput.Model
 
@@ -101,8 +77,8 @@ type model struct {
 	settingsCopy		game.Settings
 	schema				game.SettingsSchema
 
-	fps					int
-	animManager			anim.AnimationManager
+	// fps					int
+	// animManager			anim.AnimationManager
 }
 
 func NewModel(
@@ -126,13 +102,37 @@ func NewModel(
 		win_anim,
 	)
 
+	uiContext := figurethisout.UIContext {
+		DebugMap: make(map[string]string),
+		Size: figurethisout.Large,
+
+		// ContainerWidth		int
+		// ContainerHeight		int
+		//
+		// ContentWidth		int
+		// ContentHeight		int
+		//
+		// viewportWidth		int
+		// viewportHeight		int
+		//
+		FPS: 30,
+		AnimManager: mgr,
+		InputRestricted: false,
+	}
+
+	appPages := make(map[pages.PageName]pages.Page)
+	titlePage := pages.NewTitlePage(&uiContext, &settings)
+	appPages[pages.Title] = titlePage
+	appPages[pages.About] = pages.NewAboutPage(&uiContext)
+	appPages[pages.Stats] = pages.NewStatsPage(&uiContext)
+
 	return model {
 		debug: debug,
 		debug_map: make(map[string]string),
 
-		footerKeymaps: []footerKeymap {
-			{key: "ctrl+p", value: "preferences"},
-			{key: "q", value: "quit"},
+		helpKeys: []figurethisout.HelpKeymap {
+			{Key: "ctrl+p", Value: "preferences"},
+			{Key: "q", Value: "quit"},
 		},
 
 		settingsPath: settingsPath,
@@ -140,35 +140,37 @@ func NewModel(
 		settings: &settings,
 		settingsCopy: settings,
 
-		page: pages.TitlePage,
+		pages: appPages,
+		currentPage: titlePage,
 
-		state: state {
-			pressPlay: pressPlayState {
-				visible: true,
-			},
+		uiContext: &uiContext,
 
-			settings: settingsState {
-				selected: 0,
-				lastSel: make(map[settingsMenuCategory]int),
-			},
+		// page: pages.TitlePage,
 
-			pokemonMenu: pokemonMenuState {
-				genList: []int{},
-				genState: initSelectedPokemonGens(&settings),
-				selected: 1,
-			},
-		},
+		// state: state {
+		// 	// pressPlay: pressPlayState {
+		// 	// 	pressPlayVisible: true,
+		// 	// },
+		//
+		// 	settings: settingsState {
+		// 		selected: 0,
+		// 		lastSel: make(map[settingsMenuCategory]int),
+		// 	},
+		//
+		// 	pokemonMenu: pokemonMenuState {
+		// 		genList: []int{},
+		// 		genState: initSelectedPokemonGens(&settings),
+		// 		selected: 1,
+		// 	},
+		// },
 
-		fps: 30,
-		animManager: mgr,
+		// fps: 30,
+		// animManager: mgr,
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(
-		m.TitleScreenInit(),
-		m.tickCmd(),
-	)
+	return m.currentPage.Switch()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -177,48 +179,66 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	// TODO: animations/timer only enabled on title screen/game
 	// should probably not render other screens at 30fps
-	case TickMsg:
+	case commands.TickMsg:
 		if m.settings.Prefs.AnimationsEnabled {
-			m.animManager.Update(msg.Time)
+			m.uiContext.AnimManager.Update(msg.Time)
 		}
-		cmds = append(cmds, m.tickCmd())
+		cmds = append(cmds, commands.TickCmd(m.uiContext.FPS))
+
+	case pages.SwitchPageMsg:
+		p := m.pages[msg.PageName]
+		m.currentPage = p
+		cmds = append(cmds, p.Switch())
+		m.switched = true
 
 	case tea.WindowSizeMsg:
-		m.viewportWidth = msg.Width
-		m.viewportHeight = msg.Height
+		// m.viewportWidth = msg.Width
+		// m.viewportHeight = msg.Height
+		m.uiContext.ViewportWidth = msg.Width
+		m.uiContext.ViewportHeight = msg.Height
 
 		switch {
-		case m.viewportWidth < 20 || m.viewportHeight < 10:
-			m.size = undersized
-			m.containerWidth = m.viewportWidth
-			m.containerHeight = m.viewportHeight
+		case msg.Width < 20 || msg.Height < 10:
+			m.uiContext.Size = figurethisout.Undersized
+			// m.containerWidth = m.viewportWidth
+			// m.containerHeight = m.viewportHeight
+			m.uiContext.ContainerWidth = msg.Width
+			m.uiContext.ContainerHeight = msg.Height
 
-		case m.viewportWidth < 50:
-			m.size = small
-			m.containerWidth = m.viewportWidth
-			m.containerHeight = m.viewportHeight
+		case msg.Width < 50:
+			m.uiContext.Size = figurethisout.Small
+			// m.containerWidth = m.viewportWidth
+			// m.containerHeight = m.viewportHeight
+			m.uiContext.ContainerWidth = msg.Width
+			m.uiContext.ContainerHeight = msg.Height
 
-		case m.viewportWidth < 80:
-			m.size = medium
-			m.containerWidth = 50
-			m.containerHeight = min(msg.Height, 30)
+		case msg.Width < 80:
+			m.uiContext.Size = figurethisout.Medium
+			// m.containerWidth = 50
+			// m.containerHeight = min(msg.Height, 30)
+			m.uiContext.ContainerWidth = 50
+			m.uiContext.ContainerHeight = min(msg.Height, 30)
 
 		default:
-			m.size = large
-			m.containerWidth = 80
-			m.containerHeight = min(msg.Height, 30)
+			m.uiContext.Size = figurethisout.Large
+			// m.containerWidth = 80
+			// m.containerHeight = min(msg.Height, 30)
+			m.uiContext.ContainerWidth = 80
+			m.uiContext.ContainerHeight = min(msg.Height, 30)
 		}
 
-		m.contentWidth = m.containerWidth - 4
+		// m.contentWidth = m.containerWidth - 4
+		m.uiContext.ContentWidth = m.uiContext.ContainerWidth - 4
 		m = m.updateViewport()
 
 	// Currently these need to stay in main model so input is enabled again on game over screen
 	// Better way to do this?
-	case EnableInputMsg:
-		m.state.game.inputRestricted = false
+	case commands.EnableInputMsg:
+		// m.state.game.inputRestricted = false
+		m.uiContext.InputRestricted = false
 
-	case TogglePlayerDamagedMsg:
-		m.state.game.playerDamaged = false
+	// case commands.TogglePlayerDamagedMsg:
+	// 	m.state.game.playerDamaged = false
 
 	case tea.KeyMsg:
 		m.debug_map["keyPress"] = msg.String()
@@ -228,24 +248,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	var cmd tea.Cmd
+	// var cmd tea.Cmd
 
-	switch m.page {
-	case pages.TitlePage:
-		m, cmd = m.TitleScreenUpdate(msg)
-	case pages.AboutPage:
-		m, cmd = m.AboutUpdate(msg)
-	case pages.SettingsPage:
-		m, cmd = m.SettingsUpdate(msg)
-	case pages.PokemonGenMenuPage:
-		m, cmd = m.PokemonGenSelectorUpdate(msg)
-	case pages.GamePage:
-		m, cmd = m.GameUpdate(msg)
-	case pages.GameOverPage:
-		m, cmd = m.GameOverUpdate(msg)
-	case pages.GameReviewPage:
-		m, cmd = m.GameReviewUpdate(msg)
-	}
+	p, cmd := m.currentPage.Update(msg)
+	m.currentPage = p
+
+	// switch m.page {
+	// case pages.TitlePage:
+	// 	m, cmd = m.TitleScreenUpdate(msg)
+	// case pages.AboutPage:
+	// 	m, cmd = m.AboutUpdate(msg)
+	// case pages.SettingsPage:
+	// 	m, cmd = m.SettingsUpdate(msg)
+	// case pages.PokemonGenMenuPage:
+	// 	m, cmd = m.PokemonGenSelectorUpdate(msg)
+	// case pages.GamePage:
+	// 	m, cmd = m.GameUpdate(msg)
+	// case pages.GameOverPage:
+	// 	m, cmd = m.GameOverUpdate(msg)
+	// case pages.GameReviewPage:
+	// 	m, cmd = m.GameReviewUpdate(msg)
+	// }
 
 	var header_cmd tea.Cmd
 	m, header_cmd = m.HeaderUpdate(msg)
@@ -280,23 +303,26 @@ func (m model) View() string {
 	header := m.HeaderView()
 	footer := m.FooterView()
 
-	height := m.containerHeight - lipgloss.Height(header) - lipgloss.Height(footer)
+	height := m.uiContext.ContainerHeight - lipgloss.Height(header) - lipgloss.Height(footer)
 	content_style := lipgloss.NewStyle().
+		// MaxWidth(m.uiContext.ContentWidth).
 		Height(height).
-		Padding(0, 1).
-		AlignVertical(lipgloss.Center) // center all content on screen
+		Padding(0, 1)
+		// AlignVertical(lipgloss.Center) // center all content on screen
 
-	if m.page == pages.AboutPage {
-		content_style = content_style.
-			Width(m.containerWidth).
-			AlignVertical(lipgloss.Top).
-			PaddingTop(1)
-	}
+	// TODO: this is not root's concern
+	// if m.page == pages.AboutPage {
+	// 	content_style = content_style.
+	// 		Width(m.containerWidth).
+	// 		AlignVertical(lipgloss.Top).
+	// 		PaddingTop(1)
+	// }
 
 	has_scroll := false
-	if m.page == pages.SettingsPage {
-		has_scroll = m.viewport.VisibleLineCount() < m.viewport.TotalLineCount()
-	}
+	// TODO: this is not root's concern
+	// if m.page == pages.SettingsPage {
+	// 	has_scroll = m.viewport.VisibleLineCount() < m.viewport.TotalLineCount()
+	// }
 
 	var view string
 	if has_scroll {
@@ -320,13 +346,13 @@ func (m model) View() string {
 	)
 
 	v := lipgloss.Place(
-		m.viewportWidth,
-		m.viewportHeight,
+		m.uiContext.ViewportWidth,
+		m.uiContext.ViewportHeight,
 		lipgloss.Center,
 		lipgloss.Center,
 		lipgloss.NewStyle().
-			MaxWidth(m.viewportWidth).
-			MaxHeight(m.viewportHeight).
+			MaxWidth(m.uiContext.ViewportWidth).
+			MaxHeight(m.uiContext.ViewportHeight).
 			Render(child),
 		)
 
@@ -339,35 +365,37 @@ func (m model) View() string {
 	return v
 }
 
-func (m model) SwitchPage(page pages.PageName) model {
-	m.page = page
-	m.switched = true
-	return m
-}
+// func (m model) SwitchPage(page pages.PageName) model {
+// 	m.page = page
+// 	m.switched = true
+// 	return m
+// }
 
 func (m model) getContent() string {
-	page := "unknown"
+	// page := "unknown"
 
-	switch m.page {
-	case pages.TitlePage:
-		page = m.TitleScreenView()
-	case pages.AboutPage:
-		page = m.AboutView()
-	case pages.SettingsPage:
-		page = m.SettingsView()
-	case pages.PokemonGenMenuPage:
-		page = m.PokemonGenSelectorView()
-	case pages.StatsPage:
-		page = m.StatsView()
-	case pages.GamePage:
-		page = m.GameView()
-	case pages.GameOverPage:
-		page = m.GameOverView()
-	case pages.GameReviewPage:
-		page = m.GameReviewView()
-	}
+	return m.currentPage.View()
 
-	return page
+	// switch m.page {
+	// case pages.TitlePage:
+	// 	page = m.TitleScreenView()
+	// case pages.AboutPage:
+	// 	page = m.AboutView()
+	// case pages.SettingsPage:
+	// 	page = m.SettingsView()
+	// case pages.PokemonGenMenuPage:
+	// 	page = m.PokemonGenSelectorView()
+	// case pages.StatsPage:
+	// 	page = m.StatsView()
+	// case pages.GamePage:
+	// 	page = m.GameView()
+	// case pages.GameOverPage:
+	// 	page = m.GameOverView()
+	// case pages.GameReviewPage:
+	// 	page = m.GameReviewView()
+	// }
+
+	// return page
 }
 
 func (m model) updateViewport() model {
@@ -375,12 +403,12 @@ func (m model) updateViewport() model {
     footer_height := lipgloss.Height(m.FooterView())
     vertical_margin_height := header_height + footer_height
 
-    width := m.containerWidth - 4
-	m.contentHeight = m.containerHeight - vertical_margin_height
-    m.contentWidth = m.containerWidth - 4
+    width := m.uiContext.ContainerWidth - 4
+	m.uiContext.ContentHeight = m.uiContext.ContainerHeight - vertical_margin_height
+    m.uiContext.ContentWidth = m.uiContext.ContainerWidth - 4
 
     if !m.ready {
-        m.viewport = viewport.New(width, m.contentHeight)
+        m.viewport = viewport.New(width, m.uiContext.ContentHeight)
         m.viewport.YPosition = header_height
         m.viewport.HighPerformanceRendering = false
         m.ready = true
@@ -389,7 +417,7 @@ func (m model) updateViewport() model {
         m.viewport.YPosition = header_height
     } else {
         m.viewport.Width = width
-		m.viewport.Height = m.contentHeight
+		m.viewport.Height = m.uiContext.ContentHeight
 		m.viewport.GotoTop()
     }
 

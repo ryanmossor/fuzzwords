@@ -1,7 +1,9 @@
 package styles
 
 import (
+	"fzwds/pkg/enums"
 	"fzwds/pkg/tui/theme"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -87,3 +89,42 @@ func GetRainbowColors() []lipgloss.Style {
 		TextPurple,
 	}
 }
+// Highlight prompt letters in current answer
+func HighlightPromptAnswer(prompt, answer string, prompt_mode enums.PromptMode) string {
+	accent := TextAccent.Render
+	highlight := TextHighlight.Render
+
+	prompt_upper := strings.ToUpper(prompt)
+	answer_upper := strings.ToUpper(answer)
+	var sb strings.Builder
+
+	switch prompt_mode {
+	case enums.PromptModeFuzzy:
+		prompt_idx := 0
+		for _, c := range answer_upper {
+			curr_char := string(c)
+
+			if prompt_idx < len(prompt_upper) && curr_char == string(prompt_upper[prompt_idx]) {
+				sb.WriteString(highlight(curr_char))
+				prompt_idx++
+			} else {
+				sb.WriteString(accent(curr_char))
+			}
+		}
+
+	case enums.PromptModeClassic:
+		if !strings.Contains(answer_upper, prompt_upper) {
+			sb.WriteString(accent(answer_upper))
+			return sb.String()
+		}
+
+		sub_idx := strings.Index(answer_upper, prompt_upper)
+		sb.WriteString(accent(answer_upper[0:sub_idx]))
+		sb.WriteString(highlight(answer_upper[sub_idx:sub_idx + len(prompt_upper)]))
+		sb.WriteString(accent(answer_upper[sub_idx + len(prompt_upper):]))
+	}
+
+	return sb.String()
+}
+
+
