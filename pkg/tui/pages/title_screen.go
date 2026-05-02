@@ -4,9 +4,11 @@ import (
 	"fzwds/pkg/constants"
 	"fzwds/pkg/game"
 	"fzwds/pkg/tui/animations"
+	"fzwds/pkg/tui/ascii"
 	"fzwds/pkg/tui/commands"
 	"fzwds/pkg/tui/figurethisout"
 	"fzwds/pkg/tui/styles"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -97,14 +99,9 @@ func (p *TitlePage) Update(msg tea.Msg) (Page, tea.Cmd) {
 }
 
 func (p TitlePage) View() string {
-	yellow := styles.TextYellow
-	style := lipgloss.NewStyle().
-		AlignVertical(lipgloss.Center).
-		Height(p.uiContext.ContentHeight)
-
-	// Initialize []string of size equal to height of each "glyph".
+	// Initialize []string of size equal to height of tallest "glyph".
 	// This maintains consistent vertical spacing on title screen even when no glyphs are displayed.
-	logo := make([]string, len(letters['f']))
+	logoGlyphs := make([]string, ascii.MaxHeight(constants.FULL_GAME_TITLE, ascii.CoderMini))
 
 	switch p.uiContext.Size {
 	case figurethisout.Large:
@@ -113,20 +110,15 @@ func (p TitlePage) View() string {
 		if !p.uiContext.Settings.Prefs.AnimationsEnabled || !ok {
 			// Display yellow logo if animation state could not be retrieved
 			for _, c := range constants.FULL_GAME_TITLE {
-				logo = drawGlyph(byte(c), logo, yellow)
+				logoGlyphs = drawGlyph(c, logoGlyphs, styles.TextYellow)
 			}
-
-			logo = append([]string{"\n\n\n"}, logo...) // prepend top padding
-			logo = append(logo, "\n\n\n\n") // append bottom padding
-			logo = append(logo, p.pressPlayText())
-
-			return style.Render(lipgloss.JoinVertical(lipgloss.Center, logo...))
+			return p.renderLogo(logoGlyphs)
 		}
 
 		switch anim.Phase {
 		case animations.AbbreviatedTitlePhase:
-			for _, ch := range constants.ABBR_GAME_TITLE {
-				logo = drawGlyph(byte(ch), logo, yellow)
+			for _, c := range constants.ABBR_GAME_TITLE {
+				logoGlyphs = drawGlyph(c, logoGlyphs, styles.TextYellow)
 			}
 
 		case animations.TypingFullTitlePhase, animations.FullTitlePausePhase:
@@ -135,13 +127,13 @@ func (p TitlePage) View() string {
 
 			prompt_idx := 0
 			for i := range anim.TypedLetters {
-				current_title_char := constants.FULL_GAME_TITLE[i]
+				current_title_char := rune(constants.FULL_GAME_TITLE[i])
 
 				style := base
 				for j := prompt_idx; j < len(constants.ABBR_GAME_TITLE); j++ {
-					ch := constants.ABBR_GAME_TITLE[j]
+					c := rune(constants.ABBR_GAME_TITLE[j])
 
-					is_prompt_letter := ch == current_title_char
+					is_prompt_letter := c == current_title_char
 					if is_prompt_letter {
 						style = highlight
 						prompt_idx++
@@ -149,14 +141,14 @@ func (p TitlePage) View() string {
 					}
 				}
 
-				logo = drawGlyph(byte(current_title_char), logo, style)
+				logoGlyphs = drawGlyph(current_title_char, logoGlyphs, style)
 			}
 
 		case animations.FullTitleRainbowScrollPhase:
-			for i, ch := range constants.FULL_GAME_TITLE {
+			for i, c := range constants.FULL_GAME_TITLE {
 				style_idx := (anim.ColorIdx + i + len(anim.Colors)) % len(anim.Colors)
 				style := anim.Colors[style_idx]
-				logo = drawGlyph(byte(ch), logo, style)
+				logoGlyphs = drawGlyph(c, logoGlyphs, style)
 			}
 
 		case animations.TitleResetPhase:
@@ -165,87 +157,34 @@ func (p TitlePage) View() string {
 
 	default:
 		for _, c := range constants.ABBR_GAME_TITLE {
-			logo = drawGlyph(byte(c), logo, yellow)
+			logoGlyphs = drawGlyph(c, logoGlyphs, styles.TextYellow)
 		}
 	}
 
-	logo = append([]string{"\n\n\n"}, logo...) // prepend top padding
-	logo = append(logo, "\n\n\n\n") // append bottom padding
-	logo = append(logo, p.pressPlayText())
-
-	return style.Render(lipgloss.JoinVertical(lipgloss.Center, logo...))
+	return p.renderLogo(logoGlyphs)
 }
 
-func (p TitlePage) pressPlayText() string {
+func (p TitlePage) renderLogo(logoGlyphs []string) string {
+	var pressPlayText string
 	if p.uiContext.Settings.Prefs.AnimationsEnabled && !p.pressPlayVisible {
-		return hidden
+		pressPlayText = hidden
+	} else {
+		pressPlayText = visible
 	}
-	return visible
+
+	logoStr := lipgloss.NewStyle().Padding(4, 0).Render(strings.Join(logoGlyphs, "\n"))
+
+	style := lipgloss.NewStyle().
+		AlignVertical(lipgloss.Center).
+		Height(p.uiContext.ContentHeight)
+
+	return style.Render(lipgloss.JoinVertical(lipgloss.Center, logoStr, pressPlayText))
 }
 
-func drawGlyph(char byte, logo []string, style lipgloss.Style) []string {
-	char_glyph := letters[char]
+func drawGlyph(char rune, logo []string, style lipgloss.Style) []string {
+	char_glyph := ascii.CoderMini[char]
 	for i, line := range char_glyph {
 		logo[i] = logo[i] + style.Render(line) + " "
 	}
 	return logo
-}
-
-var letters = map[byte][]string {
-	'f': {
-		"  ▄▄",
-		" ██ ",
-		"▀██▀",
-		" ██ ",
-		" ██ ",
-	},
-	'u': {
-		"     ",
-		"     ",
-		"██ ██",
-		"██ ██",
-		"▀██▀█",
-	},
-	'z': {
-		"     ",
-		"     ",
-		"▀▀▀██",
-		"  ▄█▀",
-		"▄██▄▄",
-	},
-	'w': {
-		"       ",
-		"       ",
-		"██   ██",
-		"██ █ ██",
-		" ██▀██ ",
-	},
-	'o': {
-		"     ",
-		"     ",
-		"▄███▄",
-		"██ ██",
-		"▀███▀",
-	},
-	'r': {
-		"     ",
-		"     ",
-		"████▄",
-		"██ ▀▀",
-		"██   ",
-	},
-	'd': {
-		"   ▄▄",
-		"   ██",
-		"▄████",
-		"██ ██",
-		"▀████",
-	},
-	's': {
-		"     ",
-		"     ",
-		"▄█▀▀▀",
-		"▀███▄",
-		"▄▄▄█▀",
-	},
 }
