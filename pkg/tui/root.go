@@ -94,6 +94,7 @@ func NewModel(
 	appPages[pages.Stats] = pages.NewStatsPage(&uiContext)
 	appPages[pages.Settings] = pages.NewGameSettingsPage(&uiContext)
 	appPages[pages.Preferences] = pages.NewPreferencesPage(&uiContext)
+	appPages[pages.PokemonGenMenu] = pages.NewPokemonMenuPage(&uiContext)
 
 	return model {
 		debug: debug,
@@ -107,14 +108,6 @@ func NewModel(
 		pages: appPages,
 		currentPage: titlePage,
 		uiContext: &uiContext,
-
-		// state: state {
-		// 	pokemonMenu: pokemonMenuState {
-		// 		genList: []int{},
-		// 		genState: initSelectedPokemonGens(&settings),
-		// 		selected: 1,
-		// 	},
-		// },
 	}
 }
 
