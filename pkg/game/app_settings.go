@@ -1,10 +1,12 @@
 package game
 
 import (
+	"encoding/json"
 	"fmt"
 	"fzwds/pkg/enums"
 	"fzwds/pkg/utils"
 	"log/slog"
+	"os"
 	"reflect"
 )
 
@@ -333,4 +335,15 @@ func ValidateSettingValue(schema_item SettingsSchemaItem, value any) bool {
 	}
 
 	return false
+}
+
+func (s Settings) WriteSettings(path string) {
+	data, err := json.MarshalIndent(s, "", "    ")
+	if err != nil {
+		slog.Error("Error marshaling settings", "error", err)
+	}
+
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		slog.Error("Error writing settings.json", "error", err)
+	}
 }

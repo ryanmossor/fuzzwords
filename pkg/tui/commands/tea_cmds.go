@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"fmt"
+	"fzwds/pkg/game"
+	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -31,20 +34,19 @@ func TogglePlayerDamagedCmd() tea.Cmd {
 	})
 }
 
-// func (m model) terminalBellCmd(force bool) tea.Cmd {
-// 	if force || m.settings.Prefs.BellEnabled {
-// 		return func() tea.Msg {
-// 			// Send BEL character
-// 			fmt.Fprint(os.Stdout, "\a")
-// 			return nil
-// 		}
-// 	}
-// 	return nil
-// }
+func TerminalBellCmd(prefs game.GeneralPreferences, force bool) tea.Cmd {
+	if force || prefs.BellEnabled {
+		return func() tea.Msg {
+			fmt.Fprint(os.Stdout, "\a") // send BEL character
+			return nil
+		}
+	}
+	return nil
+}
 
-// func(m model) saveSettingsCmd(settings game.Settings, path string) tea.Cmd {
-// 	return func() tea.Msg {
-// 		writeSettings(settings, path)
-// 		return nil
-// 	}
-// }
+func SaveSettingsCmd(settings game.Settings, path string) tea.Cmd {
+	return func() tea.Msg {
+		settings.WriteSettings(path)
+		return nil
+	}
+}

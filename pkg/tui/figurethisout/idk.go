@@ -1,6 +1,9 @@
 package figurethisout
 
-import "fzwds/pkg/tui/animations"
+import (
+	"fzwds/pkg/game"
+	"fzwds/pkg/tui/animations"
+)
 
 type HelpKeymap struct {
 	Key		string
@@ -31,6 +34,13 @@ type UIContext struct {
 	FPS					int
 	AnimManager			animations.AnimationManager
 	InputRestricted		bool
+
+	// TODO: separate settings struct for path, schema etc?
+	// pass settings only to game-related pages which need it, prefs only to other pages
+	// maybe include prefs on uiContext?
+	SettingsPath		string
+	Settings			*game.Settings
+	Schema				game.SettingsSchema
 
 	// footer msg?
 }

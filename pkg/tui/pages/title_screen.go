@@ -51,7 +51,7 @@ type PressPlayTickMsg struct {
 	Id		int
 }
 func (p TitlePage) pressPlayFlashCmd() tea.Cmd {
-	if !p.settings.Prefs.AnimationsEnabled {
+	if !p.uiContext.Settings.Prefs.AnimationsEnabled {
 		return nil
 	}
 	return tea.Tick(850 * time.Millisecond, func(t time.Time) tea.Msg {
@@ -76,12 +76,9 @@ func (p *TitlePage) Update(msg tea.Msg) (Page, tea.Cmd) {
 		case "a":
 			return p, SwitchPageCmd(About)
 		case "enter":
-			// return m.SettingsSwitch(gameSettings)
 			return p, SwitchPageCmd(Settings)
 		case "ctrl+p":
-			// return m.SettingsSwitch(preferences)
-			// TODO: preferences, settings pages each constructed w/ NewSettingsPage
-			return p, SwitchPageCmd(Settings)
+			return p, SwitchPageCmd(Preferences)
 		case "q":
 			return p, tea.Quit
 		}
@@ -101,6 +98,9 @@ func (p *TitlePage) Update(msg tea.Msg) (Page, tea.Cmd) {
 
 func (p TitlePage) View() string {
 	yellow := styles.TextYellow
+	style := lipgloss.NewStyle().
+		AlignVertical(lipgloss.Center).
+		Height(p.uiContext.ContentHeight)
 
 	// Initialize []string of size equal to height of each "glyph".
 	// This maintains consistent vertical spacing on title screen even when no glyphs are displayed.
@@ -110,17 +110,17 @@ func (p TitlePage) View() string {
 	case figurethisout.Large:
 		a, _ := p.uiContext.AnimManager.Get(animations.TitleLogo)
 		anim, ok := a.(*animations.TitleScreenLogoAnim)
-		if !p.settings.Prefs.AnimationsEnabled || !ok {
+		if !p.uiContext.Settings.Prefs.AnimationsEnabled || !ok {
 			// Display yellow logo if animation state could not be retrieved
-			for _, ch := range constants.FULL_GAME_TITLE {
-				logo = drawGlyph(byte(ch), logo, yellow)
+			for _, c := range constants.FULL_GAME_TITLE {
+				logo = drawGlyph(byte(c), logo, yellow)
 			}
 
-			logo = append([]string{"\n", "\n"}, logo...) // prepend top padding
-			logo = append(logo, "\n\n\n") // append bottom padding
+			logo = append([]string{"\n\n\n"}, logo...) // prepend top padding
+			logo = append(logo, "\n\n\n\n") // append bottom padding
 			logo = append(logo, p.pressPlayText())
 
-			return lipgloss.JoinVertical(lipgloss.Center, logo...)
+			return style.Render(lipgloss.JoinVertical(lipgloss.Center, logo...))
 		}
 
 		switch anim.Phase {
@@ -173,14 +173,11 @@ func (p TitlePage) View() string {
 	logo = append(logo, "\n\n\n\n") // append bottom padding
 	logo = append(logo, p.pressPlayText())
 
-	return lipgloss.JoinVertical(
-		lipgloss.Center,
-		logo...
-	)
+	return style.Render(lipgloss.JoinVertical(lipgloss.Center, logo...))
 }
 
 func (p TitlePage) pressPlayText() string {
-	if p.settings.Prefs.AnimationsEnabled && !p.pressPlayVisible {
+	if p.uiContext.Settings.Prefs.AnimationsEnabled && !p.pressPlayVisible {
 		return hidden
 	}
 	return visible

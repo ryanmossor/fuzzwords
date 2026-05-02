@@ -23,16 +23,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// type state struct {
-// 	game			gameUIState
-// 	gameReview		gameReviewState
-// 	gameOver		gameOverState
-// 	// pressPlay		pressPlayState
-// 	settings		settingsState
-// 	pokemonMenu		pokemonMenuState
-// 	footer			footerState
-// }
-
 // TODO: refactor root model to have context prop that is passed to views
 // Root: orchestrator, delegates updates/view renders to pages
 // Page: branches of root, interface
@@ -48,37 +38,19 @@ type model struct {
 	debug_map			map[string]string
 
 	switched			bool
-	// page				pages.PageName
 	currentPage			pages.Page
 	pages				map[pages.PageName]pages.Page
 
 	viewport			viewport.Model
-	// viewportWidth   	int
-	// viewportHeight  	int
 	gotoTop				bool
 	gotoBottom			bool
 
-	// containerWidth  	int
-	// containerHeight 	int
-	// contentWidth    	int
-	// contentHeight   	int
-
 	uiContext			*figurethisout.UIContext
 
-	// size				figurethisout.Size
-	helpKeys		[]figurethisout.HelpKeymap
+	helpKeys			[]figurethisout.HelpKeymap
 
-	// state				state
 	game				game.Game
 	gameInput			textinput.Model
-
-	settingsPath		string
-	settings			*game.Settings
-	settingsCopy		game.Settings
-	schema				game.SettingsSchema
-
-	// fps					int
-	// animManager			anim.AnimationManager
 }
 
 func NewModel(
@@ -105,19 +77,14 @@ func NewModel(
 	uiContext := figurethisout.UIContext {
 		DebugMap: make(map[string]string),
 		Size: figurethisout.Large,
-
-		// ContainerWidth		int
-		// ContainerHeight		int
-		//
-		// ContentWidth		int
-		// ContentHeight		int
-		//
-		// viewportWidth		int
-		// viewportHeight		int
-		//
 		FPS: 30,
 		AnimManager: mgr,
+		// TODO: idk if this needs to be shared
 		InputRestricted: false,
+
+		SettingsPath: settingsPath,
+		Settings: &settings,
+		Schema: schema,
 	}
 
 	appPages := make(map[pages.PageName]pages.Page)
@@ -125,6 +92,8 @@ func NewModel(
 	appPages[pages.Title] = titlePage
 	appPages[pages.About] = pages.NewAboutPage(&uiContext)
 	appPages[pages.Stats] = pages.NewStatsPage(&uiContext)
+	appPages[pages.Settings] = pages.NewGameSettingsPage(&uiContext)
+	appPages[pages.Preferences] = pages.NewPreferencesPage(&uiContext)
 
 	return model {
 		debug: debug,
@@ -135,37 +104,17 @@ func NewModel(
 			{Key: "q", Value: "quit"},
 		},
 
-		settingsPath: settingsPath,
-		schema: schema,
-		settings: &settings,
-		settingsCopy: settings,
-
 		pages: appPages,
 		currentPage: titlePage,
-
 		uiContext: &uiContext,
 
-		// page: pages.TitlePage,
-
 		// state: state {
-		// 	// pressPlay: pressPlayState {
-		// 	// 	pressPlayVisible: true,
-		// 	// },
-		//
-		// 	settings: settingsState {
-		// 		selected: 0,
-		// 		lastSel: make(map[settingsMenuCategory]int),
-		// 	},
-		//
 		// 	pokemonMenu: pokemonMenuState {
 		// 		genList: []int{},
 		// 		genState: initSelectedPokemonGens(&settings),
 		// 		selected: 1,
 		// 	},
 		// },
-
-		// fps: 30,
-		// animManager: mgr,
 	}
 }
 
@@ -180,7 +129,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// TODO: animations/timer only enabled on title screen/game
 	// should probably not render other screens at 30fps
 	case commands.TickMsg:
-		if m.settings.Prefs.AnimationsEnabled {
+		if m.uiContext.Settings.Prefs.AnimationsEnabled {
 			m.uiContext.AnimManager.Update(msg.Time)
 		}
 		cmds = append(cmds, commands.TickCmd(m.uiContext.FPS))
@@ -192,42 +141,31 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.switched = true
 
 	case tea.WindowSizeMsg:
-		// m.viewportWidth = msg.Width
-		// m.viewportHeight = msg.Height
 		m.uiContext.ViewportWidth = msg.Width
 		m.uiContext.ViewportHeight = msg.Height
 
 		switch {
 		case msg.Width < 20 || msg.Height < 10:
 			m.uiContext.Size = figurethisout.Undersized
-			// m.containerWidth = m.viewportWidth
-			// m.containerHeight = m.viewportHeight
 			m.uiContext.ContainerWidth = msg.Width
 			m.uiContext.ContainerHeight = msg.Height
 
 		case msg.Width < 50:
 			m.uiContext.Size = figurethisout.Small
-			// m.containerWidth = m.viewportWidth
-			// m.containerHeight = m.viewportHeight
 			m.uiContext.ContainerWidth = msg.Width
 			m.uiContext.ContainerHeight = msg.Height
 
 		case msg.Width < 80:
 			m.uiContext.Size = figurethisout.Medium
-			// m.containerWidth = 50
-			// m.containerHeight = min(msg.Height, 30)
 			m.uiContext.ContainerWidth = 50
 			m.uiContext.ContainerHeight = min(msg.Height, 30)
 
 		default:
 			m.uiContext.Size = figurethisout.Large
-			// m.containerWidth = 80
-			// m.containerHeight = min(msg.Height, 30)
 			m.uiContext.ContainerWidth = 80
 			m.uiContext.ContainerHeight = min(msg.Height, 30)
 		}
 
-		// m.contentWidth = m.containerWidth - 4
 		m.uiContext.ContentWidth = m.uiContext.ContainerWidth - 4
 		m = m.updateViewport()
 
@@ -248,27 +186,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// var cmd tea.Cmd
-
 	p, cmd := m.currentPage.Update(msg)
 	m.currentPage = p
-
-	// switch m.page {
-	// case pages.TitlePage:
-	// 	m, cmd = m.TitleScreenUpdate(msg)
-	// case pages.AboutPage:
-	// 	m, cmd = m.AboutUpdate(msg)
-	// case pages.SettingsPage:
-	// 	m, cmd = m.SettingsUpdate(msg)
-	// case pages.PokemonGenMenuPage:
-	// 	m, cmd = m.PokemonGenSelectorUpdate(msg)
-	// case pages.GamePage:
-	// 	m, cmd = m.GameUpdate(msg)
-	// case pages.GameOverPage:
-	// 	m, cmd = m.GameOverUpdate(msg)
-	// case pages.GameReviewPage:
-	// 	m, cmd = m.GameReviewUpdate(msg)
-	// }
 
 	var header_cmd tea.Cmd
 	m, header_cmd = m.HeaderUpdate(msg)
@@ -282,7 +201,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m = m.updateViewport()
 		m.switched = false
 	}
-	m.viewport.SetContent(m.getContent())
+	m.viewport.SetContent(m.currentPage.View())
 	m.viewport, cmd = m.viewport.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -333,7 +252,7 @@ func (m model) View() string {
 			m.getScrollbar(),
 		)
 	} else {
-		view = m.getContent()
+		view = m.currentPage.View()
 	}
 
 	debug_view := m.DebugView()
@@ -365,39 +284,6 @@ func (m model) View() string {
 	return v
 }
 
-// func (m model) SwitchPage(page pages.PageName) model {
-// 	m.page = page
-// 	m.switched = true
-// 	return m
-// }
-
-func (m model) getContent() string {
-	// page := "unknown"
-
-	return m.currentPage.View()
-
-	// switch m.page {
-	// case pages.TitlePage:
-	// 	page = m.TitleScreenView()
-	// case pages.AboutPage:
-	// 	page = m.AboutView()
-	// case pages.SettingsPage:
-	// 	page = m.SettingsView()
-	// case pages.PokemonGenMenuPage:
-	// 	page = m.PokemonGenSelectorView()
-	// case pages.StatsPage:
-	// 	page = m.StatsView()
-	// case pages.GamePage:
-	// 	page = m.GameView()
-	// case pages.GameOverPage:
-	// 	page = m.GameOverView()
-	// case pages.GameReviewPage:
-	// 	page = m.GameReviewView()
-	// }
-
-	// return page
-}
-
 func (m model) updateViewport() model {
     header_height := lipgloss.Height(m.HeaderView())
     footer_height := lipgloss.Height(m.FooterView())
@@ -426,7 +312,7 @@ func (m model) updateViewport() model {
 
 func (m model) getScrollbar() string {
 	viewport_height := m.viewport.Height
-	content_height := lipgloss.Height(m.getContent())
+	content_height := lipgloss.Height(m.currentPage.View())
 	if viewport_height >= content_height {
 		return ""
 	}
@@ -490,18 +376,7 @@ func LoadSettings(schema game.SettingsSchema) (game.Settings, string) {
 	}
 
 	settings.ValidateSettings(schema)
-	writeSettings(settings, path)
+	settings.WriteSettings(path)
 
 	return settings, path
-}
-
-func writeSettings(settings game.Settings, path string) {
-	data, err := json.MarshalIndent(settings, "", "    ")
-	if err != nil {
-		slog.Error("Error marshaling settings", "error", err)
-	}
-
-	if err := os.WriteFile(path, data, 0644); err != nil {
-		slog.Error("Error writing settings.json", "error", err)
-	}
 }
